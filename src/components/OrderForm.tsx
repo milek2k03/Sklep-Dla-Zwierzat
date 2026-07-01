@@ -136,7 +136,7 @@ export function OrderForm() {
   const deliveryCost = getDeliveryCost(deliveryMethod, subtotal);
   const total = subtotal + deliveryCost;
 
-  const onSubmit = (values: OrderFormValues) => {
+  const onSubmit = async (values: OrderFormValues) => {
     if (items.length === 0) {
       toast.error("Koszyk jest pusty", {
         description: "Dodaj produkty przed złożeniem zamówienia.",
@@ -144,7 +144,57 @@ export function OrderForm() {
       return;
     }
 
-    const order: LocalOrder = {
+    const payload = {
+      ...values,
+      items: items.map((item) => ({
+        slug: item.product.slug,
+        quantity: item.quantity,
+      })),
+    };
+
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = (await response.json().catch(() => null)) as
+      | { order?: LocalOrder; error?: string; message?: string }
+      | null;
+
+    if (response.ok && result?.order) {
+      saveOrder(result.order);
+      setSubmittedOrder(result.order);
+      clearCart();
+      reset(defaultValues);
+      toast.success("Zamówienie zostało zapisane");
+      return;
+    }
+
+    if (response.status === 503 && result?.error === "SUPABASE_NOT_CONFIGURED") {
+      const localOrder = createLocalFallbackOrder(values);
+
+      saveOrder(localOrder);
+      setSubmittedOrder(localOrder);
+      clearCart();
+      reset(defaultValues);
+      toast.warning("Tryb testowy", {
+        description:
+          "Supabase nie jest skonfigurowany, więc zamówienie zapisano lokalnie.",
+      });
+      return;
+    }
+
+    toast.error("Nie udało się złożyć zamówienia", {
+      description:
+        result?.message ?? "Spróbuj ponownie lub skontaktuj się ze sklepem.",
+    });
+  };
+
+  function createLocalFallbackOrder(values: OrderFormValues): LocalOrder {
+    return {
       id: createOrderId(),
       createdAt: createOrderTimestamp(),
       customer: {
@@ -161,13 +211,7 @@ export function OrderForm() {
       total,
       items,
     };
-
-    saveOrder(order);
-    setSubmittedOrder(order);
-    clearCart();
-    reset(defaultValues);
-    toast.success("Zamówienie zostało przyjęte");
-  };
+  }
 
   if (!isHydrated) {
     return (
