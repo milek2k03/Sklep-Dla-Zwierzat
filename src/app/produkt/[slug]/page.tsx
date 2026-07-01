@@ -1,0 +1,146 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft, Check, RotateCcw, Star, Truck } from "lucide-react";
+import { ProductImagePlaceholder } from "@/components/ProductImagePlaceholder";
+import { ProductPurchaseControls } from "@/components/ProductPurchaseControls";
+import { formatPrice } from "@/lib/format";
+import { getProductBySlug, products } from "@/lib/products";
+
+type ProductPageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+export function generateStaticParams() {
+  return products.map((product) => ({
+    slug: product.slug,
+  }));
+}
+
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = getProductBySlug(slug);
+
+  if (!product) {
+    return {
+      title: "Produkt | Pawly",
+    };
+  }
+
+  return {
+    title: `${product.name} | Pawly`,
+    description: product.description,
+  };
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { slug } = await params;
+  const product = getProductBySlug(slug);
+
+  if (!product) {
+    notFound();
+  }
+
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <Link
+        href="/produkty"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f5a52] transition hover:text-[#1f1f1f]"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Wróć do produktów
+      </Link>
+
+      <div className="mt-8 grid gap-10 lg:grid-cols-[0.95fr_1fr] lg:items-start">
+        <ProductImagePlaceholder product={product} className="lg:sticky lg:top-24" />
+
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-[#f5efe5] px-4 py-2 text-sm font-semibold text-[#b65320]">
+              {product.category}
+            </span>
+            {product.tag ? (
+              <span className="rounded-full bg-[#fff1e8] px-4 py-2 text-sm font-semibold text-[#b65320]">
+                {product.tag}
+              </span>
+            ) : null}
+          </div>
+
+          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[#1f1f1f] sm:text-5xl">
+            {product.name}
+          </h1>
+
+          <div className="mt-4 flex items-center gap-2 text-sm text-[#6d675f]">
+            <Star
+              className="h-4 w-4 fill-[#f6b84b] text-[#f6b84b]"
+              aria-hidden="true"
+            />
+            <span className="font-semibold text-[#1f1f1f]">
+              {product.rating}
+            </span>
+            <span>({product.reviewCount} opinii)</span>
+          </div>
+
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-[#5f5a52]">
+            {product.description}
+          </p>
+
+          <div className="mt-7 flex items-baseline gap-3">
+            <span className="text-4xl font-semibold text-[#1f1f1f]">
+              {formatPrice(product.price)}
+            </span>
+            {product.compareAtPrice ? (
+              <span className="text-lg text-[#8a8177] line-through">
+                {formatPrice(product.compareAtPrice)}
+              </span>
+            ) : null}
+          </div>
+
+          <div className="mt-8 rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm">
+            <ProductPurchaseControls product={product} />
+          </div>
+
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-[#1f1f1f]">
+              Co zyskujesz
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {product.features.map((feature) => (
+                <div key={feature} className="flex items-center gap-3 text-sm">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f5efe5] text-[#b65320]">
+                    <Check className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="text-[#5f5a52]">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-[#eee7db] bg-white p-5">
+              <Truck className="h-5 w-5 text-[#b65320]" aria-hidden="true" />
+              <h2 className="mt-4 text-base font-semibold text-[#1f1f1f]">
+                Dostawa
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[#6d675f]">
+                Wysyłka 24h dla dostępnych produktów. Darmowa dostawa od 199 zł.
+              </p>
+            </div>
+            <div className="rounded-lg border border-[#eee7db] bg-white p-5">
+              <RotateCcw className="h-5 w-5 text-[#b65320]" aria-hidden="true" />
+              <h2 className="mt-4 text-base font-semibold text-[#1f1f1f]">
+                Zwrot
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[#6d675f]">
+                Masz 30 dni na spokojną decyzję i prosty kontakt w sprawie
+                zwrotu.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
