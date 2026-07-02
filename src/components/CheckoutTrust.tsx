@@ -3,18 +3,18 @@ import { HandCoins, RotateCcw, ShieldCheck } from "lucide-react";
 const trustItems = [
   {
     icon: HandCoins,
-    title: "Płatność ręczna",
-    text: "BLIK lub przelew po potwierdzeniu.",
+    title: "Płatność online",
+    text: "Bezpieczna płatność obsługiwana przez Stripe.",
   },
   {
     icon: ShieldCheck,
-    title: "Bezpieczny etap testowy",
-    text: "Bez logowania i bez zewnętrznych płatności.",
+    title: "Status zamówienia",
+    text: "Sprawdzisz płatność, wysyłkę i tracking po numerze zamówienia.",
   },
   {
     icon: RotateCcw,
-    title: "14 dni na odstąpienie",
-    text: "Regulamin zostanie dopracowany przed sprzedażą.",
+    title: "30 dni na zwrot",
+    text: "Zwroty, reklamacje i wymiany zgłosisz przez status zamówienia.",
   },
 ];
 

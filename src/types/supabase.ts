@@ -25,6 +25,49 @@ export type Database = {
         };
         Relationships: [];
       };
+      discount_codes: {
+        Row: {
+          id: string;
+          code: string;
+          percent: number;
+          scope_type: "all" | "category" | "product";
+          scope_value: string | null;
+          time_mode: "permanent" | "scheduled" | "recurring";
+          starts_at: string | null;
+          ends_at: string | null;
+          weekdays: number[];
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          percent: number;
+          scope_type?: "all" | "category" | "product";
+          scope_value?: string | null;
+          time_mode?: "permanent" | "scheduled" | "recurring";
+          starts_at?: string | null;
+          ends_at?: string | null;
+          weekdays?: number[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          percent?: number;
+          scope_type?: "all" | "category" | "product";
+          scope_value?: string | null;
+          time_mode?: "permanent" | "scheduled" | "recurring";
+          starts_at?: string | null;
+          ends_at?: string | null;
+          weekdays?: number[];
+          is_active?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       orders: {
         Row: {
           id: string;
@@ -35,12 +78,34 @@ export type Database = {
           customer_phone: string;
           delivery_method: string;
           delivery_address: string;
+          delivery_city: string | null;
+          delivery_street: string | null;
+          delivery_building_number: string | null;
+          delivery_postal_code: string | null;
+          delivery_country: string;
           pickup_point: string | null;
           notes: string | null;
           subtotal: number;
+          discount_code: string | null;
+          discount_total: number;
           delivery_cost: number;
           total: number;
-          payment_method: "manual";
+          payment_method: "manual" | "stripe";
+          stripe_checkout_session_id: string | null;
+          stripe_payment_intent_id: string | null;
+          stripe_refund_id: string | null;
+          paid_at: string | null;
+          refunded_at: string | null;
+          refund_reason: string | null;
+          refund_email_sent_at: string | null;
+          stock_restored_at: string | null;
+          customer_email_sent_at: string | null;
+          admin_email_sent_at: string | null;
+          shipping_carrier: string | null;
+          tracking_number: string | null;
+          tracking_url: string | null;
+          shipped_at: string | null;
+          shipping_email_sent_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -53,17 +118,60 @@ export type Database = {
           customer_phone: string;
           delivery_method: string;
           delivery_address: string;
+          delivery_city?: string | null;
+          delivery_street?: string | null;
+          delivery_building_number?: string | null;
+          delivery_postal_code?: string | null;
+          delivery_country?: string;
           pickup_point?: string | null;
           notes?: string | null;
           subtotal: number;
+          discount_code?: string | null;
+          discount_total?: number;
           delivery_cost: number;
           total: number;
-          payment_method?: "manual";
+          payment_method?: "manual" | "stripe";
+          stripe_checkout_session_id?: string | null;
+          stripe_payment_intent_id?: string | null;
+          stripe_refund_id?: string | null;
+          paid_at?: string | null;
+          refunded_at?: string | null;
+          refund_reason?: string | null;
+          refund_email_sent_at?: string | null;
+          stock_restored_at?: string | null;
+          customer_email_sent_at?: string | null;
+          admin_email_sent_at?: string | null;
+          shipping_carrier?: string | null;
+          tracking_number?: string | null;
+          tracking_url?: string | null;
+          shipped_at?: string | null;
+          shipping_email_sent_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           status?: "new" | "confirmed" | "paid" | "shipped" | "cancelled";
+          delivery_city?: string | null;
+          delivery_street?: string | null;
+          delivery_building_number?: string | null;
+          delivery_postal_code?: string | null;
+          delivery_country?: string;
+          payment_method?: "manual" | "stripe";
+          stripe_checkout_session_id?: string | null;
+          stripe_payment_intent_id?: string | null;
+          stripe_refund_id?: string | null;
+          paid_at?: string | null;
+          refunded_at?: string | null;
+          refund_reason?: string | null;
+          refund_email_sent_at?: string | null;
+          stock_restored_at?: string | null;
+          customer_email_sent_at?: string | null;
+          admin_email_sent_at?: string | null;
+          shipping_carrier?: string | null;
+          tracking_number?: string | null;
+          tracking_url?: string | null;
+          shipped_at?: string | null;
+          shipping_email_sent_at?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -100,9 +208,347 @@ export type Database = {
           },
         ];
       };
+      order_events: {
+        Row: {
+          id: string;
+          order_id: string;
+          event_type:
+            | "status_changed"
+            | "payment_paid"
+            | "payment_failed"
+            | "checkout_expired"
+            | "stock_restored"
+            | "tracking_updated"
+            | "email_sent"
+            | "refund_created"
+            | "return_case_created"
+            | "return_case_updated"
+            | "return_case_closed";
+          from_status: "new" | "confirmed" | "paid" | "shipped" | "cancelled" | null;
+          to_status: "new" | "confirmed" | "paid" | "shipped" | "cancelled" | null;
+          actor_type: "admin" | "stripe" | "system";
+          actor_id: string | null;
+          message: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          event_type:
+            | "status_changed"
+            | "payment_paid"
+            | "payment_failed"
+            | "checkout_expired"
+            | "stock_restored"
+            | "tracking_updated"
+            | "email_sent"
+            | "refund_created"
+            | "return_case_created"
+            | "return_case_updated"
+            | "return_case_closed";
+          from_status?: "new" | "confirmed" | "paid" | "shipped" | "cancelled" | null;
+          to_status?: "new" | "confirmed" | "paid" | "shipped" | "cancelled" | null;
+          actor_type: "admin" | "stripe" | "system";
+          actor_id?: string | null;
+          message?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      product_categories: {
+        Row: {
+          name: string;
+          created_at: string;
+        };
+        Insert: {
+          name: string;
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+        };
+        Relationships: [];
+      };
+      products: {
+        Row: {
+          sku: string;
+          slug: string;
+          name: string;
+          price: number;
+          compare_at_price: number | null;
+          category: string;
+          rating: number;
+          review_count: number;
+          description: string;
+          tag: string | null;
+          features: string[];
+          image_url: string | null;
+          is_active: boolean;
+          is_bundle: boolean;
+          stock_quantity: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          sku?: string;
+          slug: string;
+          name: string;
+          price: number;
+          compare_at_price?: number | null;
+          category: string;
+          rating?: number;
+          review_count?: number;
+          description: string;
+          tag?: string | null;
+          features?: string[];
+          image_url?: string | null;
+          is_active?: boolean;
+          is_bundle?: boolean;
+          stock_quantity?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          sku?: string;
+          slug?: string;
+          name?: string;
+          price?: number;
+          compare_at_price?: number | null;
+          category?: string;
+          rating?: number;
+          review_count?: number;
+          description?: string;
+          tag?: string | null;
+          features?: string[];
+          image_url?: string | null;
+          is_active?: boolean;
+          is_bundle?: boolean;
+          stock_quantity?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      product_bundle_items: {
+        Row: {
+          bundle_sku: string;
+          component_sku: string;
+          quantity: number;
+          created_at: string;
+        };
+        Insert: {
+          bundle_sku: string;
+          component_sku: string;
+          quantity: number;
+          created_at?: string;
+        };
+        Update: {
+          bundle_sku?: string;
+          component_sku?: string;
+          quantity?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_bundle_items_bundle_sku_fkey";
+            columns: ["bundle_sku"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["sku"];
+          },
+          {
+            foreignKeyName: "product_bundle_items_component_sku_fkey";
+            columns: ["component_sku"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["sku"];
+          },
+        ];
+      };
+      return_cases: {
+        Row: {
+          id: string;
+          case_number: string;
+          order_id: string;
+          case_type: "return" | "claim" | "exchange";
+          status:
+            | "reported"
+            | "awaiting_package"
+            | "package_received"
+            | "accepted"
+            | "rejected"
+            | "closed";
+          customer_message: string | null;
+          admin_notes: string | null;
+          requested_refund_amount: number;
+          approved_refund_amount: number;
+          stripe_refund_id: string | null;
+          refunded_at: string | null;
+          stock_processed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          case_number?: string;
+          order_id: string;
+          case_type: "return" | "claim" | "exchange";
+          status?:
+            | "reported"
+            | "awaiting_package"
+            | "package_received"
+            | "accepted"
+            | "rejected"
+            | "closed";
+          customer_message?: string | null;
+          admin_notes?: string | null;
+          requested_refund_amount?: number;
+          approved_refund_amount?: number;
+          stripe_refund_id?: string | null;
+          refunded_at?: string | null;
+          stock_processed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          case_type?: "return" | "claim" | "exchange";
+          status?:
+            | "reported"
+            | "awaiting_package"
+            | "package_received"
+            | "accepted"
+            | "rejected"
+            | "closed";
+          customer_message?: string | null;
+          admin_notes?: string | null;
+          requested_refund_amount?: number;
+          approved_refund_amount?: number;
+          stripe_refund_id?: string | null;
+          refunded_at?: string | null;
+          stock_processed_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "return_cases_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      return_case_items: {
+        Row: {
+          id: string;
+          return_case_id: string;
+          order_item_id: string;
+          product_slug: string;
+          product_name: string;
+          quantity: number;
+          restock_action: "pending" | "restock" | "discard";
+          condition_note: string | null;
+          restocked_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          return_case_id: string;
+          order_item_id: string;
+          product_slug: string;
+          product_name: string;
+          quantity: number;
+          restock_action?: "pending" | "restock" | "discard";
+          condition_note?: string | null;
+          restocked_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          quantity?: number;
+          restock_action?: "pending" | "restock" | "discard";
+          condition_note?: string | null;
+          restocked_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "return_case_items_return_case_id_fkey";
+            columns: ["return_case_id"];
+            isOneToOne: false;
+            referencedRelation: "return_cases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "return_case_items_order_item_id_fkey";
+            columns: ["order_item_id"];
+            isOneToOne: false;
+            referencedRelation: "order_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      cancel_paid_order_after_refund: {
+        Args: {
+          p_order_id: string;
+          p_refund_id: string;
+          p_refund_reason?: string | null;
+        };
+        Returns: Array<{
+          order_id: string;
+          status: "new" | "confirmed" | "paid" | "shipped" | "cancelled";
+          stock_restored_at: string;
+          stripe_refund_id: string | null;
+          refunded_at: string;
+        }>;
+      };
+      cancel_order_and_restore_stock: {
+        Args: {
+          p_order_id: string | null;
+          p_checkout_session_id: string | null;
+        };
+        Returns: Array<{
+          order_id: string;
+          status: "new" | "confirmed" | "paid" | "shipped" | "cancelled";
+          stock_restored_at: string;
+        }>;
+      };
+      complete_return_case: {
+        Args: {
+          p_return_case_id: string;
+          p_refund_id?: string | null;
+          p_refund_amount?: number;
+        };
+        Returns: Array<{
+          return_case_id: string;
+          status: string;
+          stock_processed_at: string;
+          stripe_refund_id: string | null;
+          refunded_at: string | null;
+        }>;
+      };
+      create_order_with_stock: {
+        Args: {
+          p_order: Json;
+          p_items: Json;
+        };
+        Returns: Array<{
+          order_id: string;
+          order_number: string;
+          created_at: string;
+        }>;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

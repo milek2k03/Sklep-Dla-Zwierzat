@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { ProductImagePlaceholder } from "@/components/ProductImagePlaceholder";
 import { formatPrice } from "@/lib/format";
+import { getStockLabel } from "@/lib/inventory";
 import type { Product } from "@/types/product";
 
 type ProductCardProps = {
@@ -10,6 +11,8 @@ type ProductCardProps = {
 };
 
 export function ProductCard({ product }: ProductCardProps) {
+  const stockLabel = getStockLabel(product);
+
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#d7cab9] hover:shadow-xl hover:shadow-[#4b3420]/[0.08]">
       <Link href={`/produkt/${product.slug}`} className="block p-3 pb-0">
@@ -36,6 +39,11 @@ export function ProductCard({ product }: ProductCardProps) {
         <p className="mt-2 line-clamp-2 min-h-11 text-sm leading-6 text-[#6d675f]">
           {product.description}
         </p>
+        {stockLabel ? (
+          <p className="mt-3 text-sm font-semibold text-[#b65320]">
+            {stockLabel}
+          </p>
+        ) : null}
 
         <div className="mt-4 flex items-center gap-2 text-sm text-[#6d675f]">
           <Star

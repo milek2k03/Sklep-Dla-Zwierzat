@@ -18,11 +18,24 @@ import { CheckoutSteps } from "@/components/CheckoutSteps";
 import { CheckoutTrust } from "@/components/CheckoutTrust";
 import { FreeDeliveryMeter } from "@/components/FreeDeliveryMeter";
 import {
+  DELIVERY_COUNTRY,
+  formatDeliveryAddress,
+  isPolishPostalCode,
+  normalizePolishPostalCode,
+} from "@/lib/address";
+import {
   deliveryOptions,
+  deliveryMethodValues,
   getDeliveryCost,
   getDeliveryOption,
+  getPickupPointCodeError,
+  getPickupPointLabel,
+  getPickupPointPlaceholder,
+  normalizePickupPointCode,
+  requiresPickupPoint,
 } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
+import { getAvailableStock, getStockLabel } from "@/lib/inventory";
 import { cn } from "@/lib/utils";
 import { useCartHydrated, useCartStore } from "@/lib/cart-store";
 import type { DeliveryMethod } from "@/types/cart";
@@ -36,28 +49,57 @@ const orderSchema = z
       .string()
       .min(7, "Podaj numer telefonu.")
       .regex(/^[0-9+\-\s()]+$/, "Numer telefonu zawiera niedozwolone znaki."),
-    deliveryMethod: z.enum([
-      "inpost-paczkomat",
-      "inpost-kurier",
-      "dpd-kurier",
-      "odbior-lokalny",
-    ]),
-    address: z.string().min(5, "Podaj adres dostawy lub odbioru."),
+    deliveryMethod: z.enum(deliveryMethodValues),
+    city: z.string().optional(),
+    street: z.string().optional(),
+    buildingNumber: z.string().optional(),
+    postalCode: z.string().optional(),
     pickupPoint: z.string().optional(),
     notes: z.string().optional(),
+    discountCode: z.string().max(40).optional(),
     termsAccepted: z
       .boolean()
       .refine((value) => value, "Zaakceptuj regulamin sklepu."),
   })
   .superRefine((data, context) => {
-    if (
-      data.deliveryMethod === "inpost-paczkomat" &&
-      !data.pickupPoint?.trim()
-    ) {
+    const pickupPointError = requiresPickupPoint(data.deliveryMethod)
+      ? getPickupPointCodeError(data.deliveryMethod, data.pickupPoint)
+      : null;
+
+    if (pickupPointError) {
       context.addIssue({
         code: "custom",
         path: ["pickupPoint"],
-        message: "Podaj numer paczkomatu.",
+        message: pickupPointError,
+      });
+    }
+
+    const requiredAddressFields = [
+      ["city", data.city, "Podaj miejscowość."],
+      ["street", data.street, "Podaj ulicę."],
+      [
+        "buildingNumber",
+        data.buildingNumber,
+        "Podaj numer domu / mieszkania.",
+      ],
+      ["postalCode", data.postalCode, "Podaj kod pocztowy."],
+    ] as const;
+
+    requiredAddressFields.forEach(([field, value, message]) => {
+      if (!value?.trim()) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message,
+        });
+      }
+    });
+
+    if (data.postalCode?.trim() && !isPolishPostalCode(data.postalCode)) {
+      context.addIssue({
+        code: "custom",
+        path: ["postalCode"],
+        message: "Podaj kod pocztowy w formacie 00-000.",
       });
     }
   });
@@ -69,9 +111,13 @@ const defaultValues: OrderFormValues = {
   email: "",
   phone: "",
   deliveryMethod: "inpost-paczkomat",
-  address: "",
+  city: "",
+  street: "",
+  buildingNumber: "",
+  postalCode: "",
   pickupPoint: "",
   notes: "",
+  discountCode: "",
   termsAccepted: false,
 };
 
@@ -135,11 +181,24 @@ export function OrderForm() {
   );
   const deliveryCost = getDeliveryCost(deliveryMethod, subtotal);
   const total = subtotal + deliveryCost;
+  const isPickupDelivery = requiresPickupPoint(deliveryMethod);
+  const pickupPointLabel = getPickupPointLabel(deliveryMethod);
+  const pickupPointPlaceholder = getPickupPointPlaceholder(deliveryMethod);
+  const hasUnavailableItems = items.some(
+    (item) => item.quantity > getAvailableStock(item.product),
+  );
 
   const onSubmit = async (values: OrderFormValues) => {
     if (items.length === 0) {
       toast.error("Koszyk jest pusty", {
         description: "Dodaj produkty przed złożeniem zamówienia.",
+      });
+      return;
+    }
+
+    if (hasUnavailableItems) {
+      toast.error("Popraw ilości w koszyku", {
+        description: "Niektóre produkty przekraczają dostępny stan magazynowy.",
       });
       return;
     }
@@ -161,15 +220,26 @@ export function OrderForm() {
     });
 
     const result = (await response.json().catch(() => null)) as
-      | { order?: LocalOrder; error?: string; message?: string }
+      | {
+          order?: LocalOrder;
+          checkoutUrl?: string;
+          error?: string;
+          message?: string;
+        }
       | null;
 
     if (response.ok && result?.order) {
       saveOrder(result.order);
-      setSubmittedOrder(result.order);
       clearCart();
       reset(defaultValues);
-      toast.success("Zamówienie zostało zapisane");
+      toast.success("Przekierowanie do płatności");
+
+      if (result.checkoutUrl) {
+        window.location.assign(result.checkoutUrl);
+        return;
+      }
+
+      setSubmittedOrder(result.order);
       return;
     }
 
@@ -201,13 +271,24 @@ export function OrderForm() {
         fullName: values.fullName,
         email: values.email,
         phone: values.phone,
-        address: values.address,
-        pickupPoint: values.pickupPoint?.trim() || undefined,
+        address: getFormattedAddress(values),
+        city: values.city?.trim(),
+        street: values.street?.trim(),
+        buildingNumber: values.buildingNumber?.trim(),
+        postalCode: values.postalCode
+          ? normalizePolishPostalCode(values.postalCode)
+          : undefined,
+        country: DELIVERY_COUNTRY,
+        pickupPoint: requiresPickupPoint(values.deliveryMethod)
+          ? normalizePickupPointCode(values.pickupPoint ?? "")
+          : undefined,
         notes: values.notes?.trim() || undefined,
       },
       deliveryMethod: values.deliveryMethod,
       deliveryCost,
       subtotal,
+      discountCode: values.discountCode?.trim().toUpperCase() || undefined,
+      discountTotal: 0,
       total,
       items,
     };
@@ -245,7 +326,7 @@ export function OrderForm() {
               <div className="rounded-lg bg-white/76 p-4 text-sm text-[#35594d] shadow-sm">
                 <p className="font-semibold">Następny krok</p>
                 <p className="mt-1 leading-6">
-                  Potwierdzimy zamówienie i przekażemy dane do płatności.
+                  Przekierujemy Cię do bezpiecznej płatności online.
                 </p>
               </div>
             </div>
@@ -259,9 +340,9 @@ export function OrderForm() {
                   aria-hidden="true"
                 />
                 <p className="text-sm leading-6 text-[#5f5a52]">
-                  Zamówienie zostało przyjęte. Na tym etapie płatność odbywa
-                  się ręcznie: BLIK na telefon lub przelew bankowy. Po
-                  potwierdzeniu zamówienia otrzymasz dane do płatności.
+                  Zamówienie zostało przyjęte. Płatność odbywa się online przez
+                  Stripe, a status zamówienia zmieni się automatycznie po
+                  potwierdzeniu płatności.
                 </p>
               </div>
 
@@ -296,6 +377,17 @@ export function OrderForm() {
                   <span>Produkty</span>
                   <span>{formatPrice(submittedOrder.subtotal)}</span>
                 </div>
+                {submittedOrder.discountTotal ? (
+                  <div className="flex justify-between text-[#2f6b3f]">
+                    <span>
+                      Rabat {submittedOrder.discountCode}
+                      {submittedOrder.discountPercent
+                        ? ` (${submittedOrder.discountPercent}%)`
+                        : ""}
+                    </span>
+                    <span>-{formatPrice(submittedOrder.discountTotal)}</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between text-[#6d675f]">
                   <span>Dostawa: {delivery.name}</span>
                   <span>{formatPrice(submittedOrder.deliveryCost)}</span>
@@ -358,7 +450,8 @@ export function OrderForm() {
               Dane do zamówienia
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-[#6d675f]">
-              Wypełnij dane, a my potwierdzimy szczegóły płatności ręcznej.
+              Wypełnij dane, a następnie przejdź do bezpiecznej płatności
+              online.
             </p>
           </div>
 
@@ -401,6 +494,10 @@ export function OrderForm() {
               title="Dostawa"
               description="Wybierz sposób dostawy i uzupełnij dane adresowe."
             >
+              <div className="rounded-lg bg-[#f7f1e8] px-4 py-3 text-sm leading-6 text-[#6d675f]">
+                Wysyłka jest realizowana wyłącznie na terenie Polski.
+              </div>
+
               <div>
                 <span className="text-sm font-semibold text-[#1f1f1f]">
                   Metoda dostawy
@@ -445,20 +542,51 @@ export function OrderForm() {
                 </div>
               </div>
 
-              <Field label="Adres dostawy" error={errors.address?.message}>
-                <textarea
-                  {...register("address")}
-                  className="field-input min-h-24 resize-y"
-                  autoComplete="street-address"
-                />
-              </Field>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Miejscowość" error={errors.city?.message}>
+                  <input
+                    {...register("city")}
+                    className="field-input"
+                    autoComplete="address-level2"
+                  />
+                </Field>
+                <Field label="Kod pocztowy" error={errors.postalCode?.message}>
+                  <input
+                    {...register("postalCode")}
+                    className="field-input"
+                    inputMode="numeric"
+                    placeholder="00-000"
+                    autoComplete="postal-code"
+                  />
+                </Field>
+                <Field label="Ulica" error={errors.street?.message}>
+                  <input
+                    {...register("street")}
+                    className="field-input"
+                    autoComplete="address-line1"
+                  />
+                </Field>
+                <Field
+                  label="Numer domu / mieszkania"
+                  error={errors.buildingNumber?.message}
+                >
+                  <input
+                    {...register("buildingNumber")}
+                    className="field-input"
+                    autoComplete="address-line2"
+                  />
+                </Field>
+              </div>
 
-              <Field
-                label="Numer paczkomatu / punktu odbioru"
-                error={errors.pickupPoint?.message}
-              >
-                <input {...register("pickupPoint")} className="field-input" />
-              </Field>
+              {isPickupDelivery ? (
+                <Field label={pickupPointLabel} error={errors.pickupPoint?.message}>
+                  <input
+                    {...register("pickupPoint")}
+                    className="field-input"
+                    placeholder={pickupPointPlaceholder}
+                  />
+                </Field>
+              ) : null}
             </FormSection>
 
             <FormSection
@@ -469,6 +597,15 @@ export function OrderForm() {
                 <textarea
                   {...register("notes")}
                   className="field-input min-h-24 resize-y"
+                />
+              </Field>
+
+              <Field label="Kod rabatowy" error={errors.discountCode?.message}>
+                <input
+                  {...register("discountCode")}
+                  className="field-input uppercase"
+                  placeholder="np. WEEKSAVE"
+                  autoComplete="off"
                 />
               </Field>
 
@@ -500,7 +637,7 @@ export function OrderForm() {
               <button
                 type="submit"
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#e86f2c] px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(232,111,44,0.22)] transition hover:-translate-y-0.5 hover:bg-[#cf5f25] disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={isSubmitting}
+                disabled={isSubmitting || hasUnavailableItems}
               >
                 {isSubmitting ? "Składanie zamówienia..." : "Złóż zamówienie"}
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -543,6 +680,11 @@ export function OrderForm() {
                     {item.product.name}
                   </p>
                   <p className="mt-1 text-[#7a746d]">Ilość: {item.quantity}</p>
+                  {getStockLabel(item.product) ? (
+                    <p className="mt-1 font-semibold text-[#b65320]">
+                      {getStockLabel(item.product)}
+                    </p>
+                  ) : null}
                 </div>
                 <span className="font-semibold text-[#1f1f1f]">
                   {formatPrice(item.product.price * item.quantity)}
@@ -555,6 +697,10 @@ export function OrderForm() {
             <div className="flex justify-between text-[#6d675f]">
               <span>Produkty</span>
               <span>{formatPrice(subtotal)}</span>
+            </div>
+            <div className="rounded-lg bg-[#f7f1e8] px-4 py-3 text-xs leading-5 text-[#6d675f]">
+              Jeśli wpiszesz kod rabatowy, rabat zostanie zweryfikowany i
+              naliczony przy składaniu zamówienia.
             </div>
             <div className="flex justify-between text-[#6d675f]">
               <span>Dostawa</span>
@@ -569,6 +715,15 @@ export function OrderForm() {
       </div>
     </section>
   );
+}
+
+function getFormattedAddress(values: OrderFormValues) {
+  return formatDeliveryAddress({
+    street: values.street,
+    buildingNumber: values.buildingNumber,
+    postalCode: values.postalCode,
+    city: values.city,
+  });
 }
 
 function FormSection({

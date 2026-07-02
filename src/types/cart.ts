@@ -9,7 +9,7 @@ export type DeliveryMethod =
   | "inpost-paczkomat"
   | "inpost-kurier"
   | "dpd-kurier"
-  | "odbior-lokalny";
+  | "dpd-paczkomat";
 
 export type DeliveryOption = {
   id: DeliveryMethod;

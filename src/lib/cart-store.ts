@@ -5,10 +5,18 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { useSyncExternalStore } from "react";
 import type { CartItem } from "@/types/cart";
 import type { Product } from "@/types/product";
+import { clampQuantityToStock, getAvailableStock } from "@/lib/inventory";
+
+type AddItemResult = {
+  added: number;
+  requested: number;
+  stock: number;
+  quantityInCart: number;
+};
 
 type CartState = {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number) => void;
+  addItem: (product: Product, quantity?: number) => AddItemResult;
   removeItem: (slug: string) => void;
   updateQuantity: (slug: string, quantity: number) => void;
   clearCart: () => void;
@@ -29,27 +37,54 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       addItem: (product, quantity = 1) => {
-        const nextQuantity = normalizeQuantity(quantity);
+        const requestedQuantity = normalizeQuantity(quantity);
+        const stock = getAvailableStock(product);
+        let result: AddItemResult = {
+          added: 0,
+          requested: requestedQuantity,
+          stock,
+          quantityInCart: 0,
+        };
 
         set((state) => {
           const existingItem = state.items.find(
             (item) => item.product.slug === product.slug,
           );
+          const existingQuantity = existingItem?.quantity ?? 0;
+          const capacity = Math.max(0, stock - existingQuantity);
+          const addedQuantity = Math.min(requestedQuantity, capacity);
+          const quantityInCart = existingQuantity + addedQuantity;
+
+          result = {
+            added: addedQuantity,
+            requested: requestedQuantity,
+            stock,
+            quantityInCart,
+          };
+
+          if (addedQuantity <= 0) {
+            return state;
+          }
 
           if (!existingItem) {
             return {
-              items: [...state.items, { product, quantity: nextQuantity }],
+              items: [
+                ...state.items,
+                { product, quantity: clampQuantityToStock(product, addedQuantity) },
+              ],
             };
           }
 
           return {
             items: state.items.map((item) =>
               item.product.slug === product.slug
-                ? { ...item, quantity: item.quantity + nextQuantity }
+                ? { ...item, product, quantity: quantityInCart }
                 : item,
             ),
           };
         });
+
+        return result;
       },
       removeItem: (slug) => {
         set((state) => ({
@@ -67,11 +102,21 @@ export const useCartStore = create<CartState>()(
           }
 
           return {
-            items: state.items.map((item) =>
-              item.product.slug === slug
-                ? { ...item, quantity: Math.min(nextQuantity, 99) }
-                : item,
-            ),
+            items: state.items.flatMap((item) => {
+              if (item.product.slug !== slug) {
+                return [item];
+              }
+
+              const cappedQuantity = Math.min(
+                nextQuantity,
+                getAvailableStock(item.product),
+                99,
+              );
+
+              return cappedQuantity > 0
+                ? [{ ...item, quantity: cappedQuantity }]
+                : [];
+            }),
           };
         });
       },

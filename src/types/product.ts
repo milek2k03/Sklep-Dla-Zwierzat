@@ -1,6 +1,7 @@
-export type ProductCategory = "Spacer" | "Auto" | "Dom" | "Zestawy";
+export type ProductCategory = string;
 
 export type Product = {
+  id: string;
   slug: string;
   name: string;
   price: number;
@@ -11,4 +12,8 @@ export type Product = {
   description: string;
   tag?: string;
   features: string[];
+  isActive?: boolean;
+  isBundle?: boolean;
+  stockQuantity?: number;
+  imageUrl?: string;
 };

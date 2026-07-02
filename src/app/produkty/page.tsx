@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
 import { ProductGrid } from "@/components/ProductGrid";
-import { products } from "@/lib/products";
+import { getProductCategories, getPublishedProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: "Produkty | Pawly",
   description: "Praktyczne akcesoria dla psów na spacer, do auta i do domu.",
 };
 
-export default function ProductsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProductsPage() {
+  const [products, categories] = await Promise.all([
+    getPublishedProducts(),
+    getProductCategories(),
+  ]);
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-      <ProductGrid products={products} />
+      <ProductGrid products={products} categories={categories} />
     </section>
   );
 }

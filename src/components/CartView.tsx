@@ -199,8 +199,8 @@ export function CartView() {
               aria-hidden="true"
             />
             <p className="text-xs leading-5 text-[#6d675f]">
-              Zamówienie potwierdzimy ręcznie. Dane do płatności otrzymasz po
-              weryfikacji koszyka.
+              Wysyłka jest dostępna tylko na terenie Polski. Płatność odbywa
+              się online po uzupełnieniu danych zamówienia.
             </p>
           </div>
 

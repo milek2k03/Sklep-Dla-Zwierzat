@@ -5,7 +5,11 @@ import { ArrowLeft, Check, RotateCcw, Star, Truck } from "lucide-react";
 import { ProductImagePlaceholder } from "@/components/ProductImagePlaceholder";
 import { ProductPurchaseControls } from "@/components/ProductPurchaseControls";
 import { formatPrice } from "@/lib/format";
-import { getProductBySlug, products } from "@/lib/products";
+import { getStockLabel } from "@/lib/inventory";
+import {
+  getPublishedProductBySlug,
+  products,
+} from "@/lib/products";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -17,11 +21,13 @@ export function generateStaticParams() {
   }));
 }
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getPublishedProductBySlug(slug);
 
   if (!product) {
     return {
@@ -37,11 +43,13 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getPublishedProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
+
+  const stockLabel = getStockLabel(product);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -60,6 +68,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="flex flex-wrap items-center gap-3">
             <span className="rounded-full bg-[#f5efe5] px-4 py-2 text-sm font-semibold text-[#b65320]">
               {product.category}
+            </span>
+            <span className="rounded-full border border-[#eee7db] bg-white px-4 py-2 text-sm font-semibold text-[#6d675f]">
+              ID: {product.id}
             </span>
             {product.tag ? (
               <span className="rounded-full bg-[#fff1e8] px-4 py-2 text-sm font-semibold text-[#b65320]">
@@ -97,6 +108,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </span>
             ) : null}
           </div>
+          {stockLabel ? (
+            <p className="mt-3 text-sm font-semibold text-[#b65320]">
+              {stockLabel}
+            </p>
+          ) : null}
 
           <div className="mt-8 rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm">
             <ProductPurchaseControls product={product} />

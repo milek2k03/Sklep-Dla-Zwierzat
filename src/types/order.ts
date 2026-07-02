@@ -5,6 +5,11 @@ export type OrderCustomer = {
   email: string;
   phone: string;
   address: string;
+  city?: string;
+  street?: string;
+  buildingNumber?: string;
+  postalCode?: string;
+  country: string;
   pickupPoint?: string;
   notes?: string;
 };
@@ -16,6 +21,9 @@ export type LocalOrder = {
   deliveryMethod: DeliveryMethod;
   deliveryCost: number;
   subtotal: number;
+  discountCode?: string;
+  discountPercent?: number;
+  discountTotal?: number;
   total: number;
   items: CartItem[];
 };

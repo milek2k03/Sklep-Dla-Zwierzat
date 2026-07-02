@@ -1,23 +1,41 @@
 import { z } from "zod";
-import { getDeliveryCost } from "@/lib/delivery";
-import { getProductBySlug } from "@/lib/products";
+import {
+  formatDeliveryAddress,
+  isPolishPostalCode,
+  normalizePolishPostalCode,
+  DELIVERY_COUNTRY,
+} from "@/lib/address";
+import {
+  deliveryMethodValues,
+  getDeliveryCost,
+  getPickupPointCodeError,
+  normalizePickupPointCode,
+  requiresPickupPoint,
+} from "@/lib/delivery";
+import {
+  applyDiscountToItems,
+  normalizeDiscountCode,
+  type DiscountCodeRow,
+} from "@/lib/discounts";
+import { getAvailableStock } from "@/lib/inventory";
+import { getProductBySlug, products } from "@/lib/products";
 import type { CartItem, DeliveryMethod } from "@/types/cart";
 import type { LocalOrder } from "@/types/order";
+import type { Product } from "@/types/product";
 
 export const orderRequestSchema = z
   .object({
     fullName: z.string().min(3).max(120),
     email: z.string().email().max(180),
     phone: z.string().min(7).max(40).regex(/^[0-9+\-\s()]+$/),
-    deliveryMethod: z.enum([
-      "inpost-paczkomat",
-      "inpost-kurier",
-      "dpd-kurier",
-      "odbior-lokalny",
-    ]),
-    address: z.string().min(5).max(600),
+    deliveryMethod: z.enum(deliveryMethodValues),
+    city: z.string().max(100).optional(),
+    street: z.string().max(140).optional(),
+    buildingNumber: z.string().max(40).optional(),
+    postalCode: z.string().max(12).optional(),
     pickupPoint: z.string().max(120).optional(),
     notes: z.string().max(1000).optional(),
+    discountCode: z.string().max(40).optional(),
     termsAccepted: z.literal(true),
     items: z
       .array(
@@ -30,14 +48,44 @@ export const orderRequestSchema = z
       .max(50),
   })
   .superRefine((data, context) => {
-    if (
-      data.deliveryMethod === "inpost-paczkomat" &&
-      !data.pickupPoint?.trim()
-    ) {
+    const pickupPointError = requiresPickupPoint(data.deliveryMethod)
+      ? getPickupPointCodeError(data.deliveryMethod, data.pickupPoint)
+      : null;
+
+    if (pickupPointError) {
       context.addIssue({
         code: "custom",
         path: ["pickupPoint"],
-        message: "Numer paczkomatu jest wymagany.",
+        message: pickupPointError,
+      });
+    }
+
+    const requiredAddressFields = [
+      ["city", data.city, "Miejscowość jest wymagana."],
+      ["street", data.street, "Ulica jest wymagana."],
+      [
+        "buildingNumber",
+        data.buildingNumber,
+        "Numer domu / mieszkania jest wymagany.",
+      ],
+      ["postalCode", data.postalCode, "Kod pocztowy jest wymagany."],
+    ] as const;
+
+    requiredAddressFields.forEach(([field, value, message]) => {
+      if (!value?.trim()) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message,
+        });
+      }
+    });
+
+    if (data.postalCode?.trim() && !isPolishPostalCode(data.postalCode)) {
+      context.addIssue({
+        code: "custom",
+        path: ["postalCode"],
+        message: "Podaj kod pocztowy w formacie 00-000.",
       });
     }
   });
@@ -54,13 +102,33 @@ export class UnknownOrderProductsError extends Error {
   }
 }
 
+export class InsufficientOrderStockError extends Error {
+  readonly items: Array<{
+    slug: string;
+    requested: number;
+    available: number;
+  }>;
+
+  constructor(
+    items: Array<{ slug: string; requested: number; available: number }>,
+  ) {
+    super("INSUFFICIENT_ORDER_STOCK");
+    this.name = "InsufficientOrderStockError";
+    this.items = items;
+  }
+}
+
 export function buildVerifiedOrder(
   input: OrderRequest,
   orderNumber: string,
+  productCatalog: Product[] = products,
+  discount: DiscountCodeRow | null = null,
 ): LocalOrder {
   const missingSlugs = new Set<string>();
   const items = input.items.reduce<CartItem[]>((acc, requestedItem) => {
-    const product = getProductBySlug(requestedItem.slug);
+    const product =
+      productCatalog.find((catalogProduct) => catalogProduct.slug === requestedItem.slug) ??
+      getProductBySlug(requestedItem.slug);
 
     if (!product) {
       missingSlugs.add(requestedItem.slug);
@@ -90,14 +158,46 @@ export function buildVerifiedOrder(
     throw new Error("ORDER_HAS_NO_VALID_ITEMS");
   }
 
+  const insufficientItems = items
+    .map((item) => ({
+      slug: item.product.slug,
+      requested: item.quantity,
+      available: getAvailableStock(item.product),
+    }))
+    .filter((item) => item.requested > item.available);
+
+  if (insufficientItems.length > 0) {
+    throw new InsufficientOrderStockError(insufficientItems);
+  }
+
   const subtotal = roundMoney(
     items.reduce(
       (total, item) => total + item.product.price * item.quantity,
       0,
     ),
   );
-  const deliveryCost = getDeliveryCost(input.deliveryMethod, subtotal);
-  const total = roundMoney(subtotal + deliveryCost);
+  const appliedDiscount = input.discountCode
+    ? applyDiscountToItems(discount, items)
+    : null;
+  const discountTotal = appliedDiscount?.total ?? 0;
+  const discountedSubtotal = roundMoney(Math.max(0, subtotal - discountTotal));
+  const deliveryCost = getDeliveryCost(input.deliveryMethod, discountedSubtotal);
+  const total = roundMoney(discountedSubtotal + deliveryCost);
+  const pickupPoint = requiresPickupPoint(input.deliveryMethod)
+    ? normalizePickupPointCode(input.pickupPoint ?? "")
+    : undefined;
+  const city = input.city?.trim();
+  const street = input.street?.trim();
+  const buildingNumber = input.buildingNumber?.trim();
+  const postalCode = input.postalCode
+    ? normalizePolishPostalCode(input.postalCode)
+    : undefined;
+  const address = formatDeliveryAddress({
+    street,
+    buildingNumber,
+    postalCode,
+    city,
+  });
 
   return {
     id: orderNumber,
@@ -106,13 +206,21 @@ export function buildVerifiedOrder(
       fullName: input.fullName,
       email: input.email,
       phone: input.phone,
-      address: input.address,
-      pickupPoint: input.pickupPoint?.trim() || undefined,
+      address,
+      city,
+      street,
+      buildingNumber,
+      postalCode,
+      country: DELIVERY_COUNTRY,
+      pickupPoint,
       notes: input.notes?.trim() || undefined,
     },
     deliveryMethod: input.deliveryMethod as DeliveryMethod,
     deliveryCost,
     subtotal,
+    discountCode: appliedDiscount?.code ?? normalizeDiscountCode(input.discountCode),
+    discountPercent: appliedDiscount?.percent,
+    discountTotal,
     total,
     items,
   };

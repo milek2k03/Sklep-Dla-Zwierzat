@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Car, Home, Package, PawPrint } from "lucide-react";
-import { categoryAssets } from "@/lib/category-assets";
+import { categoryAssets, defaultCategoryAsset } from "@/lib/category-assets";
 import type { ProductCategory } from "@/types/product";
 
 const categories: Array<{
@@ -60,7 +60,7 @@ export function CategoryShowcase() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {categories.map((category) => {
           const Icon = category.icon;
-          const asset = categoryAssets[category.title];
+          const asset = categoryAssets[category.title] ?? defaultCategoryAsset;
 
           return (
             <Link

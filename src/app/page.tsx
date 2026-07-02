@@ -4,9 +4,16 @@ import { CategoryShowcase } from "@/components/CategoryShowcase";
 import { FeaturedProduct } from "@/components/FeaturedProduct";
 import { Hero } from "@/components/Hero";
 import { ProductCard } from "@/components/ProductCard";
-import { bestsellerProducts, featuredProduct } from "@/lib/products";
+import { getBestsellerProducts, getFeaturedProduct } from "@/lib/products";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const [bestsellerProducts, featuredProduct] = await Promise.all([
+    getBestsellerProducts(),
+    getFeaturedProduct(),
+  ]);
+
   return (
     <>
       <Hero />
@@ -38,7 +45,7 @@ export default function Home() {
         </div>
       </section>
 
-      <FeaturedProduct product={featuredProduct} />
+      {featuredProduct ? <FeaturedProduct product={featuredProduct} /> : null}
 
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="max-w-2xl">

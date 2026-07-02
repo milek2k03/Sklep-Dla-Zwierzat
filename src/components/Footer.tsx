@@ -36,6 +36,12 @@ export function Footer() {
         <div>
           <h2 className="text-sm font-semibold text-[#1f1f1f]">Informacje</h2>
           <div className="mt-4 flex flex-col gap-3 text-sm text-[#6d675f]">
+            <Link
+              href="/zamowienie/status"
+              className="transition hover:text-[#1f1f1f]"
+            >
+              Status zamówienia
+            </Link>
             <Link href="/regulamin" className="transition hover:text-[#1f1f1f]">
               Regulamin
             </Link>

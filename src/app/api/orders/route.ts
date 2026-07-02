@@ -3,9 +3,14 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import {
   buildVerifiedOrder,
   createOrderNumber,
+  InsufficientOrderStockError,
   orderRequestSchema,
   UnknownOrderProductsError,
 } from "@/lib/order-server";
+import { normalizeDiscountCode } from "@/lib/discounts";
+import { getPublishedProducts } from "@/lib/products";
+import { getStripeEnv, hasStripeCheckoutEnv } from "@/lib/stripe/env";
+import { getStripeClient } from "@/lib/stripe/server";
 import { hasSupabaseServiceEnv } from "@/lib/supabase/env";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 
@@ -58,8 +63,59 @@ export async function POST(request: NextRequest) {
   const orderNumber = createOrderNumber();
   let order: ReturnType<typeof buildVerifiedOrder>;
 
+  if (!hasSupabaseServiceEnv()) {
+    return NextResponse.json(
+      {
+        error: "SUPABASE_NOT_CONFIGURED",
+        message: "Backend Supabase nie jest jeszcze skonfigurowany.",
+      },
+      { status: 503 },
+    );
+  }
+
+  if (!hasStripeCheckoutEnv()) {
+    return NextResponse.json(
+      {
+        error: "STRIPE_NOT_CONFIGURED",
+        message: "Stripe nie jest jeszcze skonfigurowany.",
+      },
+      { status: 503 },
+    );
+  }
+
+  const supabase = createSupabaseServiceClient();
+
   try {
-    order = buildVerifiedOrder(parsedPayload.data, orderNumber);
+    const productCatalog = await getPublishedProducts();
+    const discountCode = normalizeDiscountCode(parsedPayload.data.discountCode);
+    const { data: discount, error: discountError } = discountCode
+      ? await supabase
+          .from("discount_codes")
+          .select("*")
+          .eq("code", discountCode)
+          .maybeSingle()
+      : { data: null, error: null };
+
+    if (discountError) {
+      console.error("Failed to fetch discount code", discountError);
+    }
+
+    order = buildVerifiedOrder(
+      parsedPayload.data,
+      orderNumber,
+      productCatalog,
+      discount,
+    );
+
+    if (discountCode && !order.discountCode) {
+      return NextResponse.json(
+        {
+          error: "INVALID_DISCOUNT",
+          message: "Kod rabatowy jest nieaktywny albo nie pasuje do koszyka.",
+        },
+        { status: 422 },
+      );
+    }
   } catch (error) {
     if (error instanceof UnknownOrderProductsError) {
       return NextResponse.json(
@@ -67,6 +123,17 @@ export async function POST(request: NextRequest) {
           error: "UNKNOWN_PRODUCTS",
           message: "Koszyk zawiera produkt spoza katalogu.",
           details: { slugs: error.slugs },
+        },
+        { status: 422 },
+      );
+    }
+
+    if (error instanceof InsufficientOrderStockError) {
+      return NextResponse.json(
+        {
+          error: "INSUFFICIENT_STOCK",
+          message: "Koszyk przekracza dostępny stan magazynowy.",
+          details: { items: error.items },
         },
         { status: 422 },
       );
@@ -83,40 +150,53 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!hasSupabaseServiceEnv()) {
-    return NextResponse.json(
-      {
-        error: "SUPABASE_NOT_CONFIGURED",
-        message: "Backend Supabase nie jest jeszcze skonfigurowany.",
-      },
-      { status: 503 },
-    );
-  }
-
-  const supabase = createSupabaseServiceClient();
-
   const { data: insertedOrder, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      order_number: order.id,
-      customer_full_name: order.customer.fullName,
-      customer_email: order.customer.email,
-      customer_phone: order.customer.phone,
-      delivery_method: order.deliveryMethod,
-      delivery_address: order.customer.address,
-      pickup_point: order.customer.pickupPoint ?? null,
-      notes: order.customer.notes ?? null,
-      subtotal: order.subtotal,
-      delivery_cost: order.deliveryCost,
-      total: order.total,
-      payment_method: "manual",
-      status: "new",
+    .rpc("create_order_with_stock", {
+      p_order: {
+        order_number: order.id,
+        customer_full_name: order.customer.fullName,
+        customer_email: order.customer.email,
+        customer_phone: order.customer.phone,
+        delivery_method: order.deliveryMethod,
+        delivery_address: order.customer.address,
+        delivery_city: order.customer.city ?? null,
+        delivery_street: order.customer.street ?? null,
+        delivery_building_number: order.customer.buildingNumber ?? null,
+        delivery_postal_code: order.customer.postalCode ?? null,
+        delivery_country: order.customer.country,
+        pickup_point: order.customer.pickupPoint ?? null,
+        notes: order.customer.notes ?? null,
+        subtotal: order.subtotal,
+        discount_code: order.discountCode || null,
+        discount_total: order.discountTotal ?? 0,
+        delivery_cost: order.deliveryCost,
+        total: order.total,
+        payment_method: "stripe",
+        status: "new",
+      },
+      p_items: order.items.map((item) => ({
+        product_slug: item.product.slug,
+        product_name: item.product.name,
+        unit_price: item.product.price,
+        quantity: item.quantity,
+        line_total: Math.round(item.product.price * item.quantity * 100) / 100,
+      })),
     })
-    .select("id, order_number, created_at")
     .single();
 
   if (orderError || !insertedOrder) {
-    console.error("Failed to insert order", orderError);
+    if (orderError?.message === "ORDER_INSUFFICIENT_STOCK") {
+      return NextResponse.json(
+        {
+          error: "INSUFFICIENT_STOCK",
+          message: "Koszyk przekracza dostępny stan magazynowy.",
+          details: parseStockErrorDetails(orderError.details),
+        },
+        { status: 422 },
+      );
+    }
+
+    console.error("Failed to create order with stock update", orderError);
 
     return NextResponse.json(
       {
@@ -127,28 +207,82 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { error: itemsError } = await supabase.from("order_items").insert(
-    order.items.map((item) => ({
-      order_id: insertedOrder.id,
-      product_slug: item.product.slug,
-      product_name: item.product.name,
-      unit_price: item.product.price,
-      quantity: item.quantity,
-      line_total: Math.round(item.product.price * item.quantity * 100) / 100,
-    })),
-  );
+  const stripe = getStripeClient();
+  const appUrl = getStripeEnv().appUrl.replace(/\/$/, "");
+  const checkoutSession = await stripe.checkout.sessions.create({
+    mode: "payment",
+    client_reference_id: insertedOrder.order_number,
+    customer_email: order.customer.email,
+    metadata: {
+      order_id: insertedOrder.order_id,
+      order_number: insertedOrder.order_number,
+    },
+    line_items: [
+      ...order.items.map((item) => ({
+        quantity: item.quantity,
+        price_data: {
+          currency: "pln",
+          unit_amount: toStripeAmount(item.product.price),
+          product_data: {
+            name: item.product.name,
+            metadata: {
+              product_slug: item.product.slug,
+              product_id: item.product.id,
+            },
+          },
+        },
+      })),
+      ...(order.deliveryCost > 0
+        ? [
+            {
+              quantity: 1,
+              price_data: {
+                currency: "pln",
+                unit_amount: toStripeAmount(order.deliveryCost),
+                product_data: {
+                  name: "Dostawa",
+                },
+              },
+            },
+          ]
+        : []),
+    ],
+    discounts:
+      order.discountTotal && order.discountTotal > 0
+        ? [
+            {
+              coupon: await createCheckoutDiscountCoupon(
+                order.discountCode ?? "RABAT",
+                order.discountTotal,
+              ),
+            },
+          ]
+        : undefined,
+    success_url: `${appUrl}/zamowienie/sukces?order=${encodeURIComponent(insertedOrder.order_number)}`,
+    cancel_url: `${appUrl}/koszyk?payment=cancelled&order=${encodeURIComponent(insertedOrder.order_number)}`,
+  });
 
-  if (itemsError) {
-    console.error("Failed to insert order items", itemsError);
-    await supabase.from("orders").delete().eq("id", insertedOrder.id);
+  if (!checkoutSession.url) {
+    console.error("Stripe checkout session has no URL", checkoutSession.id);
 
     return NextResponse.json(
       {
-        error: "ORDER_ITEMS_INSERT_FAILED",
-        message: "Zamówienie zapisano bez pozycji. Skontaktuj się ze sklepem.",
+        error: "STRIPE_CHECKOUT_FAILED",
+        message: "Nie udało się uruchomić płatności Stripe.",
       },
       { status: 500 },
     );
+  }
+
+  const { error: stripeUpdateError } = await supabase
+    .from("orders")
+    .update({
+      stripe_checkout_session_id: checkoutSession.id,
+    })
+    .eq("id", insertedOrder.order_id);
+
+  if (stripeUpdateError) {
+    console.error("Failed to store Stripe session ID", stripeUpdateError);
   }
 
   return NextResponse.json({
@@ -157,6 +291,7 @@ export async function POST(request: NextRequest) {
       id: insertedOrder.order_number,
       createdAt: insertedOrder.created_at,
     },
+    checkoutUrl: checkoutSession.url,
   });
 }
 
@@ -168,4 +303,32 @@ function getClientIp(request: NextRequest) {
   }
 
   return request.headers.get("x-real-ip") ?? "unknown";
+}
+
+function parseStockErrorDetails(details: string | null | undefined) {
+  if (!details) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(details) as unknown;
+  } catch {
+    return details;
+  }
+}
+
+function toStripeAmount(value: number) {
+  return Math.round(value * 100);
+}
+
+async function createCheckoutDiscountCoupon(name: string, discountTotal: number) {
+  const stripe = getStripeClient();
+  const coupon = await stripe.coupons.create({
+    name,
+    amount_off: toStripeAmount(discountTotal),
+    currency: "pln",
+    duration: "once",
+  });
+
+  return coupon.id;
 }

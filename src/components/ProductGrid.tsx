@@ -2,15 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
-import { productCategories } from "@/lib/products";
 import { cn } from "@/lib/utils";
 import type { Product, ProductCategory } from "@/types/product";
 
 type ProductGridProps = {
   products: Product[];
+  categories: Array<"Wszystkie" | ProductCategory>;
 };
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({ products, categories }: ProductGridProps) {
   const [activeCategory, setActiveCategory] = useState<
     "Wszystkie" | ProductCategory
   >("Wszystkie");
@@ -63,7 +63,7 @@ export function ProductGrid({ products }: ProductGridProps) {
       </div>
 
       <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
-        {productCategories.map((category) => (
+        {categories.map((category) => (
           <button
             key={category}
             type="button"

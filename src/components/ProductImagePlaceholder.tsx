@@ -3,12 +3,12 @@ import { Car, Home, Package, PawPrint } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 import type { Product } from "@/types/product";
 import type { ProductCategory } from "@/types/product";
-import { categoryAssets } from "@/lib/category-assets";
+import { categoryAssets, defaultCategoryAsset } from "@/lib/category-assets";
 import { cn } from "@/lib/utils";
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
-const categoryIcons: Record<ProductCategory, IconComponent> = {
+const categoryIcons: Partial<Record<ProductCategory, IconComponent>> = {
   Spacer: PawPrint,
   Auto: Car,
   Dom: Home,
@@ -26,8 +26,8 @@ export function ProductImagePlaceholder({
   className,
   priorityLabel,
 }: ProductImagePlaceholderProps) {
-  const Icon = categoryIcons[product.category];
-  const asset = categoryAssets[product.category];
+  const Icon = categoryIcons[product.category] ?? Package;
+  const asset = categoryAssets[product.category] ?? defaultCategoryAsset;
 
   return (
     <div
@@ -39,7 +39,7 @@ export function ProductImagePlaceholder({
       role="img"
     >
       <Image
-        src={asset.src}
+        src={product.imageUrl || asset.src}
         alt=""
         fill
         sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"

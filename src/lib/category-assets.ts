@@ -1,8 +1,14 @@
 import type { ProductCategory } from "@/types/product";
 
-export const categoryAssets: Record<
-  ProductCategory,
-  { src: string; alt: string; objectPosition: string; accent: string }
+export const defaultCategoryAsset = {
+  src: "/images/categories/zestawy.jpg",
+  alt: "Produkt Pawly w jasnej sesji produktowej",
+  objectPosition: "50% 50%",
+  accent: "text-[#7b3f32]",
+};
+
+export const categoryAssets: Partial<
+  Record<ProductCategory, { src: string; alt: string; objectPosition: string; accent: string }>
 > = {
   Spacer: {
     src: "/images/categories/spacer.jpg",
