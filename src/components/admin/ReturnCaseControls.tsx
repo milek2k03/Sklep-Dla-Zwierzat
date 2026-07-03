@@ -2,6 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { formatPrice } from "@/lib/format";
+import {
+  getReturnCondition,
+  getReturnConditionLabel,
+  returnConditions,
+  type ReturnCondition,
+} from "@/lib/return-conditions";
 import type { Database } from "@/types/supabase";
 
 type ReturnCaseStatus =
@@ -15,6 +21,8 @@ type ReturnCaseControlItem = {
   id: string;
   productName: string;
   restockAction: RestockAction;
+  returnCondition: ReturnCondition | null;
+  disposalReason: string | null;
   conditionNote: string | null;
 };
 
@@ -56,20 +64,41 @@ export function ReturnCaseControls({
 }) {
   const [selectedStatus, setSelectedStatus] = useState<ReturnCaseStatus>(status);
   const [notes, setNotes] = useState(adminNotes ?? "");
-  const [restockActions, setRestockActions] = useState<Record<string, RestockAction>>(
+  const [returnConditionByItem, setReturnConditionByItem] = useState<
+    Record<string, ReturnCondition>
+  >(
     () =>
       Object.fromEntries(
-        items.map((item) => [item.id, item.restockAction]),
-      ) as Record<string, RestockAction>,
+        items.map((item) => [item.id, getReturnCondition(item)]),
+      ) as Record<string, ReturnCondition>,
+  );
+  const [disposalReasons, setDisposalReasons] = useState<Record<string, string>>(
+    () =>
+      Object.fromEntries(
+        items.map((item) => [
+          item.id,
+          item.disposalReason ?? item.conditionNote ?? "",
+        ]),
+      ) as Record<string, string>,
   );
   const canClose = selectedStatus === "accepted" || selectedStatus === "rejected";
   const hasPendingStockDecision = useMemo(
-    () => items.some((item) => restockActions[item.id] === "pending"),
-    [items, restockActions],
+    () => items.some((item) => returnConditionByItem[item.id] === "needs_review"),
+    [items, returnConditionByItem],
+  );
+  const hasMissingDisposalReason = useMemo(
+    () =>
+      items.some(
+        (item) =>
+          returnConditionByItem[item.id] === "unsellable" &&
+          (disposalReasons[item.id] ?? "").trim().length === 0,
+      ),
+    [disposalReasons, items, returnConditionByItem],
   );
   const supportsMoneyRefund = caseType !== "exchange";
   const canRefund = supportsMoneyRefund && selectedStatus === "accepted";
-  const closeDisabled = !canClose || hasPendingStockDecision;
+  const closeDisabled =
+    !canClose || hasPendingStockDecision || hasMissingDisposalReason;
 
   return (
     <div className="grid gap-5 p-5 lg:grid-cols-2 lg:items-start">
@@ -132,28 +161,45 @@ export function ReturnCaseControls({
               {item.productName}
             </p>
             <select
-              name={`restockAction:${item.id}`}
+              name={`returnCondition:${item.id}`}
               className="field-input mt-2 min-h-10 py-2"
-              value={restockActions[item.id] ?? "pending"}
+              value={returnConditionByItem[item.id] ?? "needs_review"}
               onChange={(event) =>
-                setRestockActions((currentActions) => ({
-                  ...currentActions,
-                  [item.id]: event.target.value as RestockAction,
+                setReturnConditionByItem((currentConditions) => ({
+                  ...currentConditions,
+                  [item.id]: event.target.value as ReturnCondition,
                 }))
               }
             >
-              <option value="pending" disabled={canClose}>
-                Nie decyduj teraz
-              </option>
-              <option value="restock">Wróć na magazyn</option>
-              <option value="discard">Nie wraca na magazyn</option>
+              {returnConditions.map((condition) => (
+                <option
+                  disabled={condition === "needs_review" && canClose}
+                  key={condition}
+                  value={condition}
+                >
+                  {getReturnConditionLabel(condition)}
+                </option>
+              ))}
             </select>
-            <input
-              name={`conditionNote:${item.id}`}
-              className="field-input mt-2 min-h-10 py-2"
-              defaultValue={item.conditionNote ?? ""}
-              placeholder="Stan produktu / uwagi"
-            />
+            {returnConditionByItem[item.id] === "unsellable" ? (
+              <label className="mt-2 block">
+                <span className="text-xs font-semibold text-[#6d675f]">
+                  Powód niewrócenia na magazyn
+                </span>
+                <input
+                  name={`disposalReason:${item.id}`}
+                  className="field-input mt-1 min-h-10 py-2"
+                  placeholder="np. zabrudzony, uszkodzony, pogryziony, brak opakowania"
+                  value={disposalReasons[item.id] ?? ""}
+                  onChange={(event) =>
+                    setDisposalReasons((currentReasons) => ({
+                      ...currentReasons,
+                      [item.id]: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            ) : null}
           </div>
         ))}
 
@@ -198,6 +244,10 @@ export function ReturnCaseControls({
         ) : hasPendingStockDecision ? (
           <p className="text-xs leading-5 text-[#a64022]">
             Przed zamknięciem wybierz decyzję magazynową dla każdego produktu.
+          </p>
+        ) : hasMissingDisposalReason ? (
+          <p className="text-xs leading-5 text-[#a64022]">
+            Dla produktów niewracających na magazyn wpisz powód.
           </p>
         ) : (
           <p className="text-xs leading-5 text-[#7a746d]">

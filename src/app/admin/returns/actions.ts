@@ -7,6 +7,12 @@ import {
   sendReturnCaseCreatedEmail,
   sendReturnCaseStatusEmail,
 } from "@/lib/email/order-emails";
+import {
+  getRestockActionForCondition,
+  getReturnToStock,
+  returnConditions,
+  type ReturnCondition,
+} from "@/lib/return-conditions";
 import { getStripeClient } from "@/lib/stripe/server";
 import { getAdminSession } from "@/lib/supabase/admin";
 import {
@@ -32,7 +38,6 @@ const caseStatuses = [
   "rejected",
   "closed",
 ] as const;
-const restockActions = ["pending", "restock", "discard"] as const;
 
 export async function createReturnCaseAction(formData: FormData) {
   const adminSession = await requireAdmin();
@@ -273,6 +278,38 @@ export async function closeReturnCaseAction(formData: FormData) {
     );
   }
 
+  const itemDecisions = caseItems.map((item) => {
+    const returnCondition = getEnumValue(
+      getRequiredString(formData, `returnCondition:${item.id}`),
+      returnConditions,
+      "Niepoprawna decyzja magazynowa.",
+    ) as ReturnCondition;
+    const disposalReason =
+      returnCondition === "unsellable"
+        ? getOptionalString(formData, `disposalReason:${item.id}`)
+        : null;
+
+    if (returnCondition === "needs_review") {
+      redirect(
+        "/admin/returns?error=Przed zamknięciem sprawy wybierz, czy produkt wraca na magazyn albo oznacz go jako niewracający.",
+      );
+    }
+
+    if (returnCondition === "unsellable" && !disposalReason) {
+      redirect(
+        "/admin/returns?error=Dla produktów niewracających na magazyn wpisz powód.",
+      );
+    }
+
+    return {
+      id: item.id,
+      disposalReason,
+      restockAction: getRestockActionForCondition(returnCondition),
+      returnCondition,
+      returnToStock: getReturnToStock(returnCondition),
+    };
+  });
+
   if (
     returnCase.status !== submittedStatus ||
     (returnCase.admin_notes ?? "") !== submittedAdminNotes
@@ -302,27 +339,18 @@ export async function closeReturnCaseAction(formData: FormData) {
   }
 
   const itemUpdates = await Promise.all(
-    caseItems.map((item) => {
-      const restockAction = getEnumValue(
-        getRequiredString(formData, `restockAction:${item.id}`),
-        restockActions,
-        "Niepoprawna decyzja magazynowa.",
-      );
-
-      if (restockAction === "pending") {
-        redirect(
-          "/admin/returns?error=Przed zamknięciem sprawy wybierz decyzję magazynową dla każdego produktu.",
-        );
-      }
-
-      return supabase
+    itemDecisions.map((decision) =>
+      supabase
         .from("return_case_items")
         .update({
-          restock_action: restockAction,
-          condition_note: getOptionalString(formData, `conditionNote:${item.id}`) || null,
+          restock_action: decision.restockAction,
+          return_condition: decision.returnCondition,
+          return_to_stock: decision.returnToStock,
+          disposal_reason: decision.disposalReason,
+          condition_note: decision.disposalReason,
         })
-        .eq("id", item.id);
-    }),
+        .eq("id", decision.id),
+    ),
   );
   const itemUpdateError = itemUpdates.find((result) => result.error)?.error;
 

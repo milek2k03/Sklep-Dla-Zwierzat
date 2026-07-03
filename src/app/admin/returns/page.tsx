@@ -9,6 +9,11 @@ import {
 } from "@/app/admin/returns/actions";
 import { ReturnCaseControls } from "@/components/admin/ReturnCaseControls";
 import { formatPrice } from "@/lib/format";
+import {
+  getReturnCondition,
+  getReturnConditionLabel,
+  returnConditionBadgeClasses,
+} from "@/lib/return-conditions";
 import { getAdminSession } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
@@ -467,8 +472,19 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
               </span>
             </span>
             <span className="text-[#6d675f]">Ilość: {item.quantity}</span>
-            <span className="text-[#6d675f] sm:text-right">
-              {getRestockActionLabel(item.restock_action)}
+            <span className="sm:text-right">
+              <span
+                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                  returnConditionBadgeClasses[getReturnCondition(item)]
+                }`}
+              >
+                {getReturnConditionLabel(getReturnCondition(item))}
+              </span>
+              {item.disposal_reason ? (
+                <span className="mt-1 block text-xs leading-5 text-[#7a746d]">
+                  {item.disposal_reason}
+                </span>
+              ) : null}
             </span>
           </div>
         ))}
@@ -491,6 +507,8 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
             id: item.id,
             productName: item.product_name,
             restockAction: item.restock_action,
+            returnCondition: item.return_condition,
+            disposalReason: item.disposal_reason,
             conditionNote: item.condition_note,
           }))}
           returnItemsTotal={returnItemsTotal}
@@ -500,16 +518,6 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
       )}
     </article>
   );
-}
-
-function getRestockActionLabel(action: ReturnCaseItemRow["restock_action"]) {
-  const labels: Record<typeof action, string> = {
-    pending: "Decyzja później",
-    restock: "Wraca na magazyn",
-    discard: "Nie wraca",
-  };
-
-  return labels[action];
 }
 
 function getReturnItemsTotal(items: ReturnCaseItemWithOrderItem[]) {

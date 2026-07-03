@@ -526,7 +526,10 @@ export type Database = {
           product_name: string;
           quantity: number;
           restock_action: "pending" | "restock" | "discard";
+          return_condition: "sellable" | "unsellable" | "needs_review";
+          return_to_stock: boolean;
           condition_note: string | null;
+          disposal_reason: string | null;
           restocked_at: string | null;
           created_at: string;
         };
@@ -538,14 +541,20 @@ export type Database = {
           product_name: string;
           quantity: number;
           restock_action?: "pending" | "restock" | "discard";
+          return_condition?: "sellable" | "unsellable" | "needs_review";
+          return_to_stock?: boolean;
           condition_note?: string | null;
+          disposal_reason?: string | null;
           restocked_at?: string | null;
           created_at?: string;
         };
         Update: {
           quantity?: number;
           restock_action?: "pending" | "restock" | "discard";
+          return_condition?: "sellable" | "unsellable" | "needs_review";
+          return_to_stock?: boolean;
           condition_note?: string | null;
+          disposal_reason?: string | null;
           restocked_at?: string | null;
         };
         Relationships: [
