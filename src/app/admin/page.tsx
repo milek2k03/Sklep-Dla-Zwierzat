@@ -886,6 +886,7 @@ function StatusFilterLink({
   return (
     <Link
       href={href}
+      scroll={false}
       className={[
         "inline-flex min-h-10 items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition",
         isActive
