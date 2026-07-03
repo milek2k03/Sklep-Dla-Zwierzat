@@ -83,9 +83,8 @@ export default async function AdminExpensesPage({
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6d675f]">
               Zapisuj wydatki związane ze sklepem: towar, opakowania, wysyłkę,
-              domenę, hosting, marketing, opłaty płatnicze i zwroty środków.
-              To nie zastępuje porady księgowej, ale daje porządek i eksport
-              do arkusza.
+              domenę, hosting, marketing i opłaty płatnicze. To nie zastępuje
+              porady księgowej, ale daje porządek i eksport do arkusza.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">

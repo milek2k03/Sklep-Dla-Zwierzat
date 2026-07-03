@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { sendPaidOrderEmails } from "@/lib/email/order-emails";
-import { recordRefundExpense } from "@/lib/refund-expenses";
 import { getStripeWebhookSecret } from "@/lib/stripe/env";
 import { getStripeClient } from "@/lib/stripe/server";
 import { hasSupabaseServiceEnv } from "@/lib/supabase/env";
@@ -63,10 +62,6 @@ export async function POST(request: NextRequest) {
       event.data.object as Stripe.Checkout.Session,
       event.type,
     );
-  }
-
-  if (event.type === "refund.created") {
-    await recordStripeRefundExpense(event.data.object as Stripe.Refund);
   }
 
   return NextResponse.json({ received: true });
@@ -207,69 +202,6 @@ async function cancelOrderAndRestoreStock(
     metadata: {
       checkoutSessionId: session.id,
     },
-  });
-}
-
-async function recordStripeRefundExpense(refund: Stripe.Refund) {
-  if (refund.amount <= 0) {
-    return;
-  }
-
-  const orderId = refund.metadata?.order_id ?? null;
-  const orderNumberFromMetadata = refund.metadata?.order_number ?? null;
-  const returnCaseNumber = refund.metadata?.return_case_number ?? null;
-  const paymentIntentId =
-    typeof refund.payment_intent === "string"
-      ? refund.payment_intent
-      : refund.payment_intent?.id ?? null;
-
-  if (orderNumberFromMetadata) {
-    await recordRefundExpense({
-      amount: refund.amount / 100,
-      orderNumber: orderNumberFromMetadata,
-      refundId: refund.id,
-      reason: "Zwrot zarejestrowany przez webhook Stripe.",
-      returnCaseNumber,
-    });
-    return;
-  }
-
-  const supabase = createSupabaseServiceClient();
-  const orderResult = orderId
-    ? await supabase
-      .from("orders")
-      .select("order_number")
-      .eq("id", orderId)
-      .maybeSingle()
-    : paymentIntentId
-      ? await supabase
-          .from("orders")
-          .select("order_number")
-          .eq("stripe_payment_intent_id", paymentIntentId)
-          .maybeSingle()
-      : null;
-
-  if (!orderResult) {
-    return;
-  }
-
-  const { data: order, error } = orderResult;
-
-  if (error) {
-    console.error("Failed to find order for Stripe refund expense", error);
-    return;
-  }
-
-  if (!order) {
-    return;
-  }
-
-  await recordRefundExpense({
-    amount: refund.amount / 100,
-    orderNumber: order.order_number,
-    refundId: refund.id,
-    reason: "Zwrot zarejestrowany przez webhook Stripe.",
-    returnCaseNumber,
   });
 }
 

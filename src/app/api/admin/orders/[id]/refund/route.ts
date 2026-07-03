@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendRefundedOrderEmail } from "@/lib/email/order-emails";
-import { recordRefundExpense } from "@/lib/refund-expenses";
 import { getStripeClient } from "@/lib/stripe/server";
 import { getAdminSession } from "@/lib/supabase/admin";
 import {
@@ -153,12 +152,6 @@ export async function POST(
     );
 
     refundId = refund.id;
-    await recordRefundExpense({
-      amount: productRefundAmount,
-      orderNumber: currentOrder.order_number,
-      refundId,
-      reason,
-    });
   } catch (error) {
     console.error("Failed to create Stripe refund", error);
 
