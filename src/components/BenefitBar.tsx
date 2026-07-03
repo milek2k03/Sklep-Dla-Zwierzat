@@ -2,7 +2,7 @@ import { Clock3, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 
 const benefits = [
   { icon: Truck, label: "Darmowa dostawa od 199 zł" },
-  { icon: RotateCcw, label: "30 dni na zwrot" },
+  { icon: RotateCcw, label: "14 dni na zwrot" },
   { icon: ShieldCheck, label: "Bezpieczne zakupy" },
   { icon: Clock3, label: "Wysyłka 24h" },
 ];

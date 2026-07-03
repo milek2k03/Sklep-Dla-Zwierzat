@@ -179,7 +179,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 Zwrot
               </h2>
               <p className="mt-2 text-sm leading-6 text-[#6d675f]">
-                Masz 30 dni na spokojną decyzję i prosty kontakt w sprawie
+                Masz 14 dni na spokojną decyzję i prosty kontakt w sprawie
                 zwrotu.
               </p>
             </div>

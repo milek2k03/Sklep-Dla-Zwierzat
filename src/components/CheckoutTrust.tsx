@@ -13,7 +13,7 @@ const trustItems = [
   },
   {
     icon: RotateCcw,
-    title: "30 dni na zwrot",
+    title: "14 dni na zwrot",
     text: "Zwroty, reklamacje i wymiany zgłosisz przez status zamówienia.",
   },
 ];

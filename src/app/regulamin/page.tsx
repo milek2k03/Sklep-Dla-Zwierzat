@@ -76,7 +76,7 @@ const sections = [
   {
     title: "7. Odstąpienie od umowy i zwrot produktów",
     content: [
-      "Konsument ma ustawowe prawo odstąpienia od umowy zawartej przez internet w terminie 14 dni od otrzymania rzeczy. Pawly dobrowolnie wydłuża ten termin do 30 dni dla zakupów dokonanych w sklepie.",
+      "Konsument ma ustawowe prawo odstąpienia od umowy zawartej przez internet w terminie 14 dni od otrzymania rzeczy.",
       "Aby zgłosić zwrot, klient powinien wejść na stronę Status zamówienia, podać numer zamówienia i e-mail, a następnie wybrać produkty oraz ilości objęte zwrotem.",
       "Zwrot może obejmować całe zamówienie, część zamówienia albo wybrane sztuki danego produktu.",
       "Zwrot płatności za produkty jest wykonywany po otrzymaniu zwracanych produktów albo potwierdzenia ich odesłania, zgodnie z obowiązującymi przepisami.",
