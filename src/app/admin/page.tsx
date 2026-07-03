@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   Boxes,
   Clock3,
+  FileSpreadsheet,
   PackageCheck,
   RotateCcw,
   Search,
@@ -137,6 +138,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             >
               Zwroty
             </Link>
+            <Link
+              href="/api/admin/sales-ledger/export"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#d7cab9] px-5 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
+            >
+              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+              Eksport ewidencji CSV
+            </Link>
             <AdminSignOutButton />
           </div>
         </div>
@@ -149,6 +157,53 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       ) : null}
 
       <AdminDashboard dashboard={dashboard} statusCounts={statusCounts} />
+
+      <section className="mt-6 rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[#9b6f39]">
+              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+              Ewidencja sprzedaży
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-[#1f1f1f]">
+              Eksport CSV
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6d675f]">
+              Pobierz arkusz z opłaconymi zamówieniami, produktami, kosztami
+              dostawy, zwrotami i sumą narastającą. Plik otworzysz w Excelu albo
+              Google Sheets.
+            </p>
+          </div>
+          <form
+            action="/api/admin/sales-ledger/export"
+            className="grid gap-3 sm:grid-cols-[150px_150px_auto]"
+          >
+            <label className="block text-sm font-semibold text-[#1f1f1f]">
+              Od
+              <input
+                className="field-input mt-2 min-h-10 py-2"
+                name="from"
+                type="date"
+              />
+            </label>
+            <label className="block text-sm font-semibold text-[#1f1f1f]">
+              Do
+              <input
+                className="field-input mt-2 min-h-10 py-2"
+                name="to"
+                type="date"
+              />
+            </label>
+            <button
+              type="submit"
+              className="inline-flex min-h-10 items-center justify-center gap-2 self-end rounded-full bg-[#1f1f1f] px-5 text-sm font-semibold text-white transition hover:bg-[#34302d]"
+            >
+              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+              Pobierz CSV
+            </button>
+          </form>
+        </div>
+      </section>
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-[#eee7db] bg-white p-3 shadow-sm">
         <div className="flex min-w-max gap-2">
