@@ -8,6 +8,7 @@ export const expenseCategoryLabels: Record<ExpenseCategory, string> = {
   packaging: "Pakowanie",
   shipping: "Wysyłka / dostawy",
   stripe_fee: "Opłaty Stripe",
+  refund: "Zwroty środków",
   domain: "Domena",
   hosting: "Hosting / narzędzia",
   marketing: "Marketing",
