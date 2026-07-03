@@ -7,6 +7,7 @@ import {
   Clock3,
   FileSpreadsheet,
   PackageCheck,
+  ReceiptText,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -119,7 +120,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               RLS i serwerowej weryfikacji roli.
             </p>
           </div>
-          <div className="flex flex-col gap-3 sm:items-end">
+          <div className="grid gap-3 sm:grid-cols-2 lg:w-[460px]">
             <Link
               href="/admin/discounts"
               className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d7cab9] px-5 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
@@ -139,13 +140,29 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               Zwroty
             </Link>
             <Link
+              href="/admin/expenses"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#d7cab9] px-5 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
+            >
+              <ReceiptText className="h-4 w-4" aria-hidden="true" />
+              Koszty
+            </Link>
+            <Link
               href="/api/admin/sales-ledger/export"
               className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#d7cab9] px-5 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
             >
               <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
-              Eksport ewidencji CSV
+              Sprzedaż CSV
             </Link>
-            <AdminSignOutButton />
+            <Link
+              href="/api/admin/expenses/export"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#d7cab9] px-5 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
+            >
+              <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+              Koszty CSV
+            </Link>
+            <div className="sm:col-span-2">
+              <AdminSignOutButton />
+            </div>
           </div>
         </div>
       </div>
@@ -302,108 +319,71 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
         ) : (
           <div className="divide-y divide-[#eee7db]">
-            {orders.map((order) => (
-              <article key={order.id} className="p-5 sm:p-6">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="text-lg font-semibold text-[#1f1f1f]">
-                        {order.order_number}
-                      </h2>
-                      <span className="rounded-full bg-[#f7f1e8] px-3 py-1 text-xs font-semibold text-[#6d675f]">
-                        {orderStatusLabels[order.status]}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm text-[#6d675f]">
-                      {order.customer_full_name} • {order.customer_email} •{" "}
-                      {order.customer_phone}
-                    </p>
-                    <p className="mt-1 text-sm text-[#6d675f]">
-                      {new Date(order.created_at).toLocaleString("pl-PL")}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-[#1f1f1f] px-4 py-3 text-right text-white">
-                    <p className="text-xs text-white/62">Razem</p>
-                    <p className="text-xl font-semibold">
-                      {formatPrice(Number(order.total))}
-                    </p>
-                    {Number(order.discount_total) > 0 ? (
-                      <p className="mt-1 text-xs text-white/68">
-                        Rabat: -{formatPrice(Number(order.discount_total))}
+            {orders.map((order) => {
+              const latestEvent = getLatestOrderEvent(order.order_events);
+
+              return (
+                <article key={order.id} className="p-4 sm:p-5">
+                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(260px,1fr)_160px_170px] xl:items-start">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="truncate text-base font-semibold text-[#1f1f1f]">
+                          {order.order_number}
+                        </h2>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f7f1e8] px-3 py-1 text-xs font-semibold text-[#6d675f]">
+                          <span
+                            className={[
+                              "h-2.5 w-2.5 rounded-full",
+                              getStatusDotClassName(order.status),
+                            ].join(" ")}
+                            aria-hidden="true"
+                          />
+                          {orderStatusLabels[order.status]}
+                        </span>
+                      </div>
+                      <p className="mt-2 truncate text-sm font-medium text-[#1f1f1f]">
+                        {order.customer_full_name}
                       </p>
-                    ) : null}
-                  </div>
-                  <div className="lg:text-right">
-                    <AdminOrderStatusSelect
-                      orderId={order.id}
-                      status={order.status}
-                      shippingCarrier={order.shipping_carrier}
-                      trackingNumber={order.tracking_number}
-                      trackingUrl={order.tracking_url}
-                    />
-                    {order.status === "paid" &&
-                    order.payment_method === "stripe" &&
-                    order.stripe_payment_intent_id &&
-                    !order.stripe_refund_id ? (
-                      <AdminRefundButton
-                        orderId={order.id}
-                        orderNumber={order.order_number}
-                      />
-                    ) : null}
-                    {order.status === "paid" || order.status === "shipped" ? (
-                      <Link
-                        href={`/admin/returns?order=${order.id}`}
-                        className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-full border border-[#d7cab9] bg-white px-4 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
-                      >
-                        Zwrot / reklamacja
-                      </Link>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_300px]">
-                  <div className="rounded-lg bg-[#fffdf8] p-4">
-                    <p className="text-sm font-semibold text-[#1f1f1f]">
-                      Produkty
-                    </p>
-                    <div className="mt-3 space-y-2">
-                      {order.order_items.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex justify-between gap-3 text-sm text-[#6d675f]"
-                        >
-                          <span className="min-w-0">
-                            <span className="block text-[#1f1f1f]">
-                              {item.product_name} × {item.quantity}
-                            </span>
-                            <span className="mt-1 block text-xs">
-                              ID: {getOrderItemProductId(item.product_slug)}
-                            </span>
-                          </span>
-                          <span className="font-semibold text-[#1f1f1f]">
-                            {formatPrice(Number(item.line_total))}
-                          </span>
-                        </div>
-                      ))}
+                      <p className="mt-1 truncate text-sm text-[#6d675f]">
+                        {order.customer_email} • {order.customer_phone}
+                      </p>
+                      <p className="mt-1 text-xs text-[#7a746d]">
+                        {new Date(order.created_at).toLocaleString("pl-PL")}
+                      </p>
                     </div>
-                  </div>
 
-                  <div className="rounded-lg bg-[#fffdf8] p-4 text-sm text-[#6d675f]">
-                    <p className="font-semibold text-[#1f1f1f]">Dostawa</p>
-                    <p className="mt-2">
-                      {getAdminDeliveryName(order.delivery_method)}
-                    </p>
-                    <p className="mt-1">{order.delivery_address}</p>
-                    {order.shipping_carrier || order.tracking_number ? (
-                      <div className="mt-3 border-t border-[#eee7db] pt-3">
-                        <p>
-                          Przewoźnik:{" "}
-                          <span className="font-semibold text-[#1f1f1f]">
-                            {order.shipping_carrier ?? "-"}
-                          </span>
+                    <div className="min-w-0 rounded-lg bg-[#fffdf8] px-3 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#8a8177]">
+                        Produkty
+                      </p>
+                      <p className="mt-1 truncate text-sm font-semibold text-[#1f1f1f]">
+                        {formatOrderItemsPreview(order.order_items)}
+                      </p>
+                      {latestEvent ? (
+                        <p className="mt-2 truncate text-xs text-[#7a746d]">
+                          Ostatnio: {formatOrderEvent(latestEvent)}
                         </p>
+                      ) : null}
+                    </div>
+
+                    <div className="rounded-lg bg-[#1f1f1f] px-4 py-3 text-white xl:text-right">
+                      <p className="text-xs text-white/62">Razem</p>
+                      <p className="mt-1 text-xl font-semibold">
+                        {formatPrice(Number(order.total))}
+                      </p>
+                      {Number(order.discount_total) > 0 ? (
+                        <p className="mt-1 text-xs text-white/68">
+                          Rabat: -{formatPrice(Number(order.discount_total))}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div className="text-sm text-[#6d675f] xl:text-right">
+                      <p className="font-semibold text-[#1f1f1f]">
+                        {order.shipping_carrier ?? getAdminDeliveryName(order.delivery_method)}
+                      </p>
+                      {order.tracking_number ? (
                         <p className="mt-1">
-                          Tracking:{" "}
                           {order.tracking_url ? (
                             <a
                               href={order.tracking_url}
@@ -411,93 +391,203 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                               rel="noreferrer"
                               className="font-semibold text-[#1f1f1f] underline-offset-4 hover:underline"
                             >
-                              {order.tracking_number ?? order.tracking_url}
+                              {order.tracking_number}
                             </a>
                           ) : (
                             <span className="font-semibold text-[#1f1f1f]">
-                              {order.tracking_number ?? "-"}
+                              {order.tracking_number}
                             </span>
                           )}
                         </p>
-                        {order.shipped_at ? (
-                          <p className="mt-1">
-                            Wysłano:{" "}
-                            {new Date(order.shipped_at).toLocaleString("pl-PL")}
-                          </p>
-                        ) : null}
-                      </div>
-                    ) : null}
-                    {order.discount_code ? (
-                      <p className="mt-3 border-t border-[#eee7db] pt-3">
-                        Kod rabatowy:{" "}
-                        <span className="font-semibold text-[#1f1f1f]">
-                          {order.discount_code}
-                        </span>
-                      </p>
-                    ) : null}
-                    {order.stripe_refund_id ? (
-                      <div className="mt-3 border-t border-[#eee7db] pt-3">
-                        <p>
-                          Zwrot Stripe:{" "}
-                          <span className="font-semibold text-[#1f1f1f]">
-                            {order.stripe_refund_id}
-                          </span>
+                      ) : (
+                        <p className="mt-1 text-xs text-[#8a8177]">
+                          Brak trackingu
                         </p>
-                        {order.refunded_at ? (
-                          <p className="mt-1">
-                            Zwrócono:{" "}
-                            {new Date(order.refunded_at).toLocaleString(
-                              "pl-PL",
-                            )}
-                          </p>
-                        ) : null}
-                        {order.refund_reason ? (
-                          <p className="mt-1">Powód: {order.refund_reason}</p>
-                        ) : null}
-                      </div>
-                    ) : null}
-                    {order.pickup_point ? (
-                      <p className="mt-1">Punkt: {order.pickup_point}</p>
-                    ) : null}
-                    {order.notes ? (
-                      <p className="mt-3 border-t border-[#eee7db] pt-3">
-                        {order.notes}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-                {order.order_events.length > 0 ? (
-                  <div className="mt-4 rounded-lg bg-[#fffdf8] p-4 text-sm">
-                    <p className="font-semibold text-[#1f1f1f]">Historia</p>
-                    <div className="mt-3 space-y-2">
-                      {[...order.order_events]
-                        .sort(
-                          (firstEvent, secondEvent) =>
-                            new Date(secondEvent.created_at).getTime() -
-                            new Date(firstEvent.created_at).getTime(),
-                        )
-                        .slice(0, 6)
-                        .map((event) => (
-                          <div
-                            key={event.id}
-                            className="border-b border-[#eee7db] pb-2 last:border-b-0 last:pb-0"
-                          >
-                            <p className="font-medium text-[#1f1f1f]">
-                              {formatOrderEvent(event)}
-                            </p>
-                            <p className="mt-1 text-xs text-[#7a746d]">
-                              {new Date(event.created_at).toLocaleString(
-                                "pl-PL",
-                              )}{" "}
-                              • {formatEventActor(event.actor_type)}
-                            </p>
-                          </div>
-                        ))}
+                      )}
                     </div>
                   </div>
-                ) : null}
-              </article>
-            ))}
+
+                  <div className="mt-4 grid gap-3 lg:grid-cols-[380px_minmax(0,1fr)]">
+                    <details className="group rounded-lg border border-[#eee7db] bg-white">
+                      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-[#1f1f1f] marker:hidden">
+                        Obsługa zamówienia
+                        <span className="ml-2 text-xs font-medium text-[#7a746d]">
+                          status, tracking, zwrot
+                        </span>
+                      </summary>
+                      <div className="border-t border-[#eee7db] p-4">
+                        <AdminOrderStatusSelect
+                          orderId={order.id}
+                          status={order.status}
+                          shippingCarrier={order.shipping_carrier}
+                          trackingNumber={order.tracking_number}
+                          trackingUrl={order.tracking_url}
+                        />
+                        {order.status === "paid" &&
+                        order.payment_method === "stripe" &&
+                        order.stripe_payment_intent_id &&
+                        !order.stripe_refund_id ? (
+                          <AdminRefundButton
+                            orderId={order.id}
+                            orderNumber={order.order_number}
+                          />
+                        ) : null}
+                        {order.status === "paid" || order.status === "shipped" ? (
+                          <Link
+                            href={`/admin/returns?order=${order.id}`}
+                            className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-full border border-[#d7cab9] bg-white px-4 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
+                          >
+                            Zwrot / reklamacja
+                          </Link>
+                        ) : null}
+                      </div>
+                    </details>
+
+                    <details className="group rounded-lg border border-[#eee7db] bg-white">
+                      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-[#1f1f1f] marker:hidden">
+                        Szczegóły
+                        <span className="ml-2 text-xs font-medium text-[#7a746d]">
+                          produkty, dostawa, historia
+                        </span>
+                      </summary>
+                      <div className="grid gap-4 border-t border-[#eee7db] p-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+                        <div className="rounded-lg bg-[#fffdf8] p-4">
+                          <p className="text-sm font-semibold text-[#1f1f1f]">
+                            Produkty
+                          </p>
+                          <div className="mt-3 space-y-2">
+                            {order.order_items.map((item) => (
+                              <div
+                                key={item.id}
+                                className="flex justify-between gap-3 text-sm text-[#6d675f]"
+                              >
+                                <span className="min-w-0">
+                                  <span className="block text-[#1f1f1f]">
+                                    {item.product_name} × {item.quantity}
+                                  </span>
+                                  <span className="mt-1 block text-xs">
+                                    ID: {getOrderItemProductId(item.product_slug)}
+                                  </span>
+                                </span>
+                                <span className="font-semibold text-[#1f1f1f]">
+                                  {formatPrice(Number(item.line_total))}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="rounded-lg bg-[#fffdf8] p-4 text-sm text-[#6d675f]">
+                          <p className="font-semibold text-[#1f1f1f]">Dostawa</p>
+                          <p className="mt-2">
+                            {getAdminDeliveryName(order.delivery_method)}
+                          </p>
+                          <p className="mt-1">{order.delivery_address}</p>
+                          {order.pickup_point ? (
+                            <p className="mt-1">Punkt: {order.pickup_point}</p>
+                          ) : null}
+                          {order.shipping_carrier || order.tracking_number ? (
+                            <div className="mt-3 border-t border-[#eee7db] pt-3">
+                              <p>
+                                Przewoźnik:{" "}
+                                <span className="font-semibold text-[#1f1f1f]">
+                                  {order.shipping_carrier ?? "-"}
+                                </span>
+                              </p>
+                              <p className="mt-1">
+                                Tracking:{" "}
+                                {order.tracking_url ? (
+                                  <a
+                                    href={order.tracking_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="font-semibold text-[#1f1f1f] underline-offset-4 hover:underline"
+                                  >
+                                    {order.tracking_number ?? order.tracking_url}
+                                  </a>
+                                ) : (
+                                  <span className="font-semibold text-[#1f1f1f]">
+                                    {order.tracking_number ?? "-"}
+                                  </span>
+                                )}
+                              </p>
+                              {order.shipped_at ? (
+                                <p className="mt-1">
+                                  Wysłano:{" "}
+                                  {new Date(order.shipped_at).toLocaleString("pl-PL")}
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : null}
+                          {order.discount_code ? (
+                            <p className="mt-3 border-t border-[#eee7db] pt-3">
+                              Kod rabatowy:{" "}
+                              <span className="font-semibold text-[#1f1f1f]">
+                                {order.discount_code}
+                              </span>
+                            </p>
+                          ) : null}
+                          {order.stripe_refund_id ? (
+                            <div className="mt-3 border-t border-[#eee7db] pt-3">
+                              <p>
+                                Zwrot Stripe:{" "}
+                                <span className="font-semibold text-[#1f1f1f]">
+                                  {order.stripe_refund_id}
+                                </span>
+                              </p>
+                              {order.refunded_at ? (
+                                <p className="mt-1">
+                                  Zwrócono:{" "}
+                                  {new Date(order.refunded_at).toLocaleString(
+                                    "pl-PL",
+                                  )}
+                                </p>
+                              ) : null}
+                              {order.refund_reason ? (
+                                <p className="mt-1">Powód: {order.refund_reason}</p>
+                              ) : null}
+                            </div>
+                          ) : null}
+                          {order.notes ? (
+                            <p className="mt-3 border-t border-[#eee7db] pt-3">
+                              {order.notes}
+                            </p>
+                          ) : null}
+                        </div>
+
+                        {order.order_events.length > 0 ? (
+                          <div className="rounded-lg bg-[#fffdf8] p-4 text-sm xl:col-span-2">
+                            <p className="font-semibold text-[#1f1f1f]">
+                              Historia
+                            </p>
+                            <div className="mt-3 grid gap-2 lg:grid-cols-2">
+                              {getSortedOrderEvents(order.order_events)
+                                .slice(0, 8)
+                                .map((event) => (
+                                  <div
+                                    key={event.id}
+                                    className="rounded-lg border border-[#eee7db] bg-white p-3"
+                                  >
+                                    <p className="font-medium text-[#1f1f1f]">
+                                      {formatOrderEvent(event)}
+                                    </p>
+                                    <p className="mt-1 text-xs text-[#7a746d]">
+                                      {new Date(event.created_at).toLocaleString(
+                                        "pl-PL",
+                                      )}{" "}
+                                      • {formatEventActor(event.actor_type)}
+                                    </p>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </details>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </div>
@@ -840,6 +930,32 @@ function getAdminDeliveryName(deliveryMethod: string) {
   return (
     deliveryOptions.find((option) => option.id === deliveryMethod)?.name ??
     deliveryMethod
+  );
+}
+
+function formatOrderItemsPreview(
+  items: Database["public"]["Tables"]["order_items"]["Row"][],
+) {
+  if (items.length === 0) {
+    return "Brak produktów";
+  }
+
+  return items.map((item) => `${item.product_name} × ${item.quantity}`).join(" • ");
+}
+
+function getLatestOrderEvent(
+  events: Database["public"]["Tables"]["order_events"]["Row"][],
+) {
+  return getSortedOrderEvents(events)[0] ?? null;
+}
+
+function getSortedOrderEvents(
+  events: Database["public"]["Tables"]["order_events"]["Row"][],
+) {
+  return [...events].sort(
+    (firstEvent, secondEvent) =>
+      new Date(secondEvent.created_at).getTime() -
+      new Date(firstEvent.created_at).getTime(),
   );
 }
 

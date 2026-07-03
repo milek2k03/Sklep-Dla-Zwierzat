@@ -68,6 +68,70 @@ export type Database = {
         };
         Relationships: [];
       };
+      expense_entries: {
+        Row: {
+          id: string;
+          expense_date: string;
+          category:
+            | "goods"
+            | "packaging"
+            | "shipping"
+            | "stripe_fee"
+            | "domain"
+            | "hosting"
+            | "marketing"
+            | "other";
+          description: string;
+          amount: number;
+          vendor: string | null;
+          document_number: string | null;
+          document_url: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          expense_date?: string;
+          category:
+            | "goods"
+            | "packaging"
+            | "shipping"
+            | "stripe_fee"
+            | "domain"
+            | "hosting"
+            | "marketing"
+            | "other";
+          description: string;
+          amount: number;
+          vendor?: string | null;
+          document_number?: string | null;
+          document_url?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          expense_date?: string;
+          category?:
+            | "goods"
+            | "packaging"
+            | "shipping"
+            | "stripe_fee"
+            | "domain"
+            | "hosting"
+            | "marketing"
+            | "other";
+          description?: string;
+          amount?: number;
+          vendor?: string | null;
+          document_number?: string | null;
+          document_url?: string | null;
+          notes?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       orders: {
         Row: {
           id: string;
