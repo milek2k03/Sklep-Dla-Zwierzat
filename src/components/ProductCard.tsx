@@ -65,7 +65,9 @@ export function ProductCard({ product }: ProductCardProps) {
           ) : null}
         </div>
 
-        <AddToCartButton product={product} className="mt-5 w-full" />
+        <div className="mt-auto pt-5">
+          <AddToCartButton product={product} className="w-full" />
+        </div>
       </div>
     </article>
   );
