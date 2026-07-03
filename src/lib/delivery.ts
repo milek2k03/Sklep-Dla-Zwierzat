@@ -18,25 +18,25 @@ export const deliveryOptions: DeliveryOption[] = [
   {
     id: "inpost-paczkomat",
     name: "InPost Paczkomat",
-    price: 15.99,
+    price: 0.01,
     description: "Odbiór w wybranym paczkomacie.",
   },
   {
     id: "inpost-kurier",
     name: "InPost Kurier",
-    price: 17.99,
+    price: 0.01,
     description: "Dostawa kurierem pod wskazany adres.",
   },
   {
     id: "dpd-kurier",
     name: "DPD Kurier",
-    price: 18.99,
+    price: 0.01,
     description: "Klasyczna przesyłka kurierska.",
   },
   {
     id: "dpd-paczkomat",
     name: "DPD Pickup / automat",
-    price: 14.99,
+    price: 0.01,
     description: "Odbiór w punkcie lub automacie DPD.",
   },
 ];

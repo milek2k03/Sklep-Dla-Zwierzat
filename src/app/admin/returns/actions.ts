@@ -343,9 +343,7 @@ export async function closeReturnCaseAction(formData: FormData) {
     } catch (error) {
       redirect(
         `/admin/returns?error=${encodeURIComponent(
-          error instanceof Error
-            ? error.message
-            : "Nie udało się zlecić zwrotu Stripe.",
+          getRefundErrorMessage(error),
         )}`,
       );
     }
@@ -436,6 +434,35 @@ async function createPartialRefund({
   );
 
   return refund.id;
+}
+
+function getRefundErrorMessage(error: unknown) {
+  const stripeError = error as {
+    code?: string;
+    message?: string;
+    statusCode?: number;
+    type?: string;
+  };
+
+  if (stripeError.type === "StripeConnectionError") {
+    return "Nie udało się połączyć ze Stripe i potwierdzić zwrotu. Sprawdź połączenie z internetem/DNS/VPN albo spróbuj ponownie za chwilę.";
+  }
+
+  if (stripeError.type === "StripeAuthenticationError") {
+    return "Stripe odrzucił klucz API. Sprawdź STRIPE_SECRET_KEY w konfiguracji.";
+  }
+
+  if (stripeError.type === "StripePermissionError") {
+    return "Stripe nie pozwolił wykonać zwrotu dla tego konta lub klucza API.";
+  }
+
+  if (stripeError.type === "StripeInvalidRequestError" && stripeError.message) {
+    return `Stripe odrzucił zwrot: ${stripeError.message}`;
+  }
+
+  return error instanceof Error
+    ? error.message
+    : "Nie udało się zlecić zwrotu Stripe.";
 }
 
 async function requireAdmin() {

@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 const storeEmail = process.env.ORDER_NOTIFICATION_EMAIL ?? "pawlyassista@gmail.com";
+const storePhone = process.env.STORE_PHONE ?? "+48 531 353 773";
 const returnAddressLines = getReturnAddressLines();
 const sellerName = "Miłosz Czech";
 const sellerAddressLines = ["ul. Żwirowa 24", "86-070 Czarże", "Polska"];
@@ -24,7 +25,7 @@ const sections = [
       "Sprzedaż jest prowadzona w ramach działalności nierejestrowanej, o której mowa w art. 5 ustawy Prawo przedsiębiorców, o ile spełnione są warunki ustawowe dla tej formy działalności.",
       `Adres do korespondencji, zwrotów i reklamacji: ${sellerAddressLines.join(", ")}.`,
       `Kontakt e-mail: ${storeEmail}.`,
-      "Numer telefonu kontaktowego należy uzupełnić przed uruchomieniem sprzedaży produkcyjnej.",
+      `Telefon kontaktowy: ${storePhone}.`,
     ],
   },
   {
@@ -126,7 +127,7 @@ const sections = [
       "Regulamin obowiązuje od dnia publikacji na stronie sklepu.",
       "Zmiany regulaminu nie naruszają praw nabytych klientów, którzy złożyli zamówienie przed zmianą regulaminu.",
       "W sprawach nieuregulowanych regulaminem stosuje się przepisy prawa polskiego, w szczególności przepisy dotyczące praw konsumenta.",
-      "Ten regulamin należy zweryfikować i uzupełnić o numer telefonu oraz docelową politykę prywatności przed sprzedażą produkcyjną.",
+      "Ten regulamin należy zweryfikować przed sprzedażą produkcyjną oraz po każdej zmianie formy sprzedaży, operatorów usług lub zakresu danych przetwarzanych w sklepie.",
     ],
   },
 ];
@@ -147,10 +148,9 @@ export default function TermsPage() {
       </p>
 
       <div className="mt-8 rounded-lg border border-[#f3cbbd] bg-[#fff8f4] p-5 text-sm leading-6 text-[#7a3b24]">
-        <strong>Do uzupełnienia przed produkcją:</strong> numer telefonu
-        kontaktowego oraz docelowa polityka prywatności. Jeżeli forma sprzedaży
+        <strong>Do weryfikacji przed produkcją:</strong> jeżeli forma sprzedaży
         zmieni się z działalności nierejestrowanej na działalność gospodarczą,
-        trzeba będzie też uzupełnić dane rejestrowe, np. NIP/REGON.
+        trzeba będzie uzupełnić dane rejestrowe, np. NIP/REGON.
       </div>
 
       <div className="mt-6 space-y-4">
