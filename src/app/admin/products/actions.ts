@@ -19,6 +19,7 @@ export async function createProductAction(formData: FormData) {
   await requireAdmin();
 
   const product = await parseProductFormOrRedirect(formData);
+  product.sku = product.sku || createProductSku(product.slug);
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("products").insert(product);
 
@@ -125,6 +126,10 @@ export async function importProductsAction(formData: FormData) {
   }
 
   if (productsWithoutSku.length > 0) {
+    productsWithoutSku.forEach((product) => {
+      product.sku = createProductSku(product.slug);
+    });
+
     const { error } = await supabase.from("products").insert(productsWithoutSku);
 
     if (error) {
@@ -373,6 +378,21 @@ function normalizeSlug(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 120);
+}
+
+function createProductSku(slug: string) {
+  const slugPart = slug
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24);
+  const randomPart = globalThis.crypto
+    .randomUUID()
+    .replaceAll("-", "")
+    .slice(0, 8)
+    .toUpperCase();
+
+  return `PWL-${slugPart || "PROD"}-${randomPart}`;
 }
 
 function getImportedString(row: Record<string, unknown>, keys: string[]) {
