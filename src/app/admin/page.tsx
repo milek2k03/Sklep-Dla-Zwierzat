@@ -680,57 +680,100 @@ function AdminDashboard({
 
   return (
     <div className="mt-6 space-y-6">
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="rounded-lg border border-[#1f1f1f] bg-[#1f1f1f] p-5 text-white shadow-sm">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="overflow-hidden rounded-lg border border-[#244a34] bg-[#111817] p-5 text-white shadow-sm ring-1 ring-[#62e89c]/10">
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-white/70">
-                Czysty zysk z transakcji
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#7ff0a6]">
+                Wynik sprzedaży
               </p>
-              <p className="mt-2 text-3xl font-semibold tracking-tight">
+              <h2 className="mt-2 text-base font-semibold text-white">
+                Czysty zysk z transakcji
+              </h2>
+              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
                 {formatPrice(dashboard.financials.netProfit)}
               </p>
+              <p className="mt-2 text-sm font-medium text-[#b7c9c0]">
+                Cena sprzedaży minus cena zakupu
+              </p>
             </div>
-            <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e8f4ea] text-[#2f6b3f]">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#2f6b3f] bg-[#173323] text-[#8df2b2]">
               <TrendingUp className="h-6 w-6" aria-hidden="true" />
             </span>
           </div>
-          <div className="mt-4 grid gap-2 text-sm text-white/72 sm:grid-cols-3">
-            <span>Sprzedaż: {formatPrice(dashboard.financials.salesTotal)}</span>
-            <span>Koszt zakupu: {formatPrice(dashboard.financials.purchaseCostTotal)}</span>
-            <span>Transakcje: {dashboard.financials.transactionCount}</span>
+          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#8ea69a]">
+                Sprzedaż
+              </p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {formatPrice(dashboard.financials.salesTotal)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#8ea69a]">
+                Koszt zakupu
+              </p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {formatPrice(dashboard.financials.purchaseCostTotal)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#8ea69a]">
+                Transakcje
+              </p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {dashboard.financials.transactionCount}
+              </p>
+            </div>
           </div>
-          <p className="mt-3 text-xs leading-5 text-white/58">
-            Liczone jako suma cen sprzedaży produktów minus suma cen zakupu dla
-            zamówień opłaconych i wysłanych.
+          <p className="mt-4 rounded-lg border border-[#244a34] bg-[#0d1412] p-3 text-xs leading-5 text-[#c6d7ce]">
+            Suma z zamówień opłaconych i wysłanych. Nie miesza się z refundami,
+            żeby wynik sprzedaży i straty były widoczne osobno.
           </p>
         </div>
 
-        <div className="rounded-lg border border-[#f0d5c6] bg-[#fff8f4] p-5 shadow-sm">
+        <div className="overflow-hidden rounded-lg border border-[#55302d] bg-[#191313] p-5 text-white shadow-sm ring-1 ring-[#ff9b85]/10">
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-[#8a4b2b]">
-                Straty łącznie
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#ffb09b]">
+                Koszty po zwrotach
               </p>
-              <p className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f]">
+              <h2 className="mt-2 text-base font-semibold text-white">
+                Straty łącznie
+              </h2>
+              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
                 {formatPrice(dashboard.financials.totalLoss)}
               </p>
+              <p className="mt-2 text-sm font-medium text-[#d5b7ae]">
+                Refundy klientom plus towar poza sprzedażą
+              </p>
             </div>
-            <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#ffe5d6] text-[#a64022]">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#7a3a32] bg-[#331d1b] text-[#ffb09b]">
               <PackageX className="h-6 w-6" aria-hidden="true" />
             </span>
           </div>
-          <div className="mt-4 grid gap-2 text-sm text-[#6d675f] sm:grid-cols-2">
-            <span>
-              Zwroty klientom: {formatPrice(dashboard.financials.customerRefundLoss)}
-            </span>
-            <span>
-              Towar poza sprzedażą: {formatPrice(dashboard.financials.inventoryLoss)}
-            </span>
+          <div className="mt-5 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#bfa098]">
+                Zwroty klientom
+              </p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {formatPrice(dashboard.financials.customerRefundLoss)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#bfa098]">
+                Towar poza sprzedażą
+              </p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {formatPrice(dashboard.financials.inventoryLoss)}
+              </p>
+            </div>
           </div>
-          <p className="mt-3 text-xs leading-5 text-[#8a8177]">
-            Towar nienadający się do sprzedaży jest liczony po cenie zakupu,
-            osobno od pieniędzy zwracanych klientom.
+          <p className="mt-4 rounded-lg border border-[#55302d] bg-[#120e0e] p-3 text-xs leading-5 text-[#e2c7bf]">
+            Towar nienadający się do sprzedaży jest liczony po cenie zakupu.
+            Refundy są liczone oddzielnie od straty magazynowej.
           </p>
         </div>
       </div>
