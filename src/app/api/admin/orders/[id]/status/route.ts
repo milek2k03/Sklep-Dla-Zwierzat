@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendShippedOrderEmail } from "@/lib/email/order-emails";
+import { getShippingCarrierForDeliveryMethod } from "@/lib/delivery";
 import {
   canTransitionOrderStatus,
   isOrderStatus,
@@ -83,9 +84,6 @@ export async function PATCH(
   const normalizedTrackingNumber = trackingNumber
     ? normalizeTrackingNumber(trackingNumber)
     : null;
-  const finalTrackingUrl =
-    normalizeTrackingUrl(trackingUrl) ??
-    getTrackingUrl(normalizedShippingCarrier, normalizedTrackingNumber);
 
   if (!isOrderStatus(status)) {
     return NextResponse.json(
@@ -98,7 +96,7 @@ export async function PATCH(
   const serverSupabase = await createSupabaseServerClient();
   const { data: currentOrder, error: currentOrderError } = await serverSupabase
     .from("orders")
-    .select("id, status, stock_restored_at")
+    .select("id, status, stock_restored_at, delivery_method")
     .eq("id", id)
     .single();
 
@@ -137,6 +135,13 @@ export async function PATCH(
     );
   }
 
+  const effectiveShippingCarrier =
+    normalizedShippingCarrier ??
+    getShippingCarrierForDeliveryMethod(currentOrder.delivery_method);
+  const finalTrackingUrl =
+    normalizeTrackingUrl(trackingUrl) ??
+    getTrackingUrl(effectiveShippingCarrier, normalizedTrackingNumber);
+
   if (status === "shipped") {
     if (currentOrder.status !== "paid" && currentOrder.status !== "shipped") {
       return NextResponse.json(
@@ -148,7 +153,7 @@ export async function PATCH(
       );
     }
 
-    if (!normalizedShippingCarrier || !normalizedTrackingNumber) {
+    if (!effectiveShippingCarrier || !normalizedTrackingNumber) {
       return NextResponse.json(
         {
           error: "SHIPMENT_DETAILS_REQUIRED",
@@ -173,7 +178,7 @@ export async function PATCH(
             .from("orders")
             .update({
               status,
-              shipping_carrier: normalizedShippingCarrier,
+              shipping_carrier: effectiveShippingCarrier,
               tracking_number: normalizedTrackingNumber,
               tracking_url: finalTrackingUrl,
               shipped_at: new Date().toISOString(),
@@ -207,7 +212,7 @@ export async function PATCH(
     fromStatus: currentOrder.status,
     toStatus: status,
     actorId: adminSession.userId,
-    shippingCarrier: normalizedShippingCarrier,
+    shippingCarrier: effectiveShippingCarrier,
     trackingNumber: normalizedTrackingNumber,
     trackingUrl: finalTrackingUrl,
   });

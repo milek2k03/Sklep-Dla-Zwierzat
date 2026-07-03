@@ -1,4 +1,5 @@
 import type { DeliveryMethod, DeliveryOption } from "@/types/cart";
+import { normalizeShippingCarrier } from "@/lib/tracking";
 
 export const FREE_DELIVERY_THRESHOLD = 199;
 
@@ -43,6 +44,26 @@ export const deliveryOptions: DeliveryOption[] = [
 
 export function getDeliveryOption(method: DeliveryMethod) {
   return deliveryOptions.find((option) => option.id === method) ?? deliveryOptions[0];
+}
+
+export function getShippingCarrierForDeliveryMethod(
+  method: string | null | undefined,
+) {
+  if (!method) {
+    return null;
+  }
+
+  const normalizedMethod = method.toLowerCase();
+
+  if (normalizedMethod.includes("inpost")) {
+    return normalizeShippingCarrier("InPost");
+  }
+
+  if (normalizedMethod.includes("dpd")) {
+    return normalizeShippingCarrier("DPD");
+  }
+
+  return null;
 }
 
 export function requiresPickupPoint(method: DeliveryMethod) {

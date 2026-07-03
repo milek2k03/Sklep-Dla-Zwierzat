@@ -12,19 +12,12 @@ import { CartItem } from "@/components/CartItem";
 import { CheckoutSteps } from "@/components/CheckoutSteps";
 import { CheckoutTrust } from "@/components/CheckoutTrust";
 import { FreeDeliveryMeter } from "@/components/FreeDeliveryMeter";
-import {
-  deliveryOptions,
-  getDeliveryCost,
-} from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import { useCartHydrated, useCartStore } from "@/lib/cart-store";
 
 export function CartView() {
   const items = useCartStore((state) => state.items);
   const itemCount = useCartStore((state) => state.getItemsCount());
-  const deliveryMethod = useCartStore((state) => state.deliveryMethod);
-  const setDeliveryMethod = useCartStore((state) => state.setDeliveryMethod);
   const isHydrated = useCartHydrated();
 
   const subtotal = useMemo(
@@ -35,8 +28,6 @@ export function CartView() {
       ),
     [items],
   );
-  const deliveryCost = getDeliveryCost(deliveryMethod, subtotal);
-  const total = subtotal + deliveryCost;
 
   if (!isHydrated) {
     return (
@@ -133,48 +124,19 @@ export function CartView() {
                 Podsumowanie
               </h2>
               <p className="mt-1 text-xs text-[#7a746d]">
-                Wybierz dostawę przed przejściem dalej.
+                Metodę dostawy wybierzesz w danych zamówienia.
               </p>
             </div>
           </div>
 
-          <div className="mt-6 space-y-3">
-            {deliveryOptions.map((option) => {
-              const finalCost = getDeliveryCost(option.id, subtotal);
-              const isSelected = deliveryMethod === option.id;
-
-              return (
-                <label
-                  key={option.id}
-                  className={cn(
-                    "flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition",
-                    isSelected
-                      ? "border-[#1f1f1f] bg-[#fffdf8] shadow-sm"
-                      : "border-[#eee7db] hover:border-[#d8ccbd]",
-                  )}
-                >
-                  <input
-                    type="radio"
-                    name="delivery"
-                    value={option.id}
-                    checked={isSelected}
-                    onChange={() => setDeliveryMethod(option.id)}
-                    className="mt-1 accent-[#1f1f1f]"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-[#1f1f1f]">
-                      {option.name}
-                    </span>
-                    <span className="mt-1 block text-xs leading-5 text-[#7a746d]">
-                      {option.description}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-sm font-semibold text-[#1f1f1f]">
-                    {formatPrice(finalCost)}
-                  </span>
-                </label>
-              );
-            })}
+          <div className="mt-6 rounded-lg border border-[#eee7db] bg-[#fffdf8] p-4">
+            <p className="text-sm font-semibold text-[#1f1f1f]">
+              Następny krok: dane i dostawa
+            </p>
+            <p className="mt-2 text-sm leading-6 text-[#6d675f]">
+              W kolejnym kroku wybierzesz InPost lub DPD i uzupełnisz adres albo
+              punkt odbioru.
+            </p>
           </div>
 
           <div className="mt-6 space-y-3 border-t border-[#eee7db] pt-5 text-sm">
@@ -184,11 +146,11 @@ export function CartView() {
             </div>
             <div className="flex justify-between text-[#6d675f]">
               <span>Dostawa</span>
-              <span>{formatPrice(deliveryCost)}</span>
+              <span>wybierzesz dalej</span>
             </div>
             <div className="flex justify-between rounded-lg bg-[#1f1f1f] px-4 py-3 text-base font-semibold text-white">
-              <span>Razem</span>
-              <span>{formatPrice(total)}</span>
+              <span>Suma produktów</span>
+              <span>{formatPrice(subtotal)}</span>
             </div>
           </div>
 

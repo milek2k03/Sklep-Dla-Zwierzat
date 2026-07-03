@@ -7,7 +7,6 @@ import {
   Check,
   HandCoins,
   PackageCheck,
-  Pencil,
   ShoppingBag,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -26,6 +25,7 @@ import {
 } from "@/lib/address";
 import {
   deliveryMethodValues,
+  deliveryOptions,
   getDeliveryCost,
   getDeliveryOption,
   getPickupPointCodeError,
@@ -36,6 +36,7 @@ import {
 } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import { getAvailableStock, getStockLabel } from "@/lib/inventory";
+import { cn } from "@/lib/utils";
 import { useCartHydrated, useCartStore } from "@/lib/cart-store";
 import type { DeliveryMethod } from "@/types/cart";
 import type { LocalOrder } from "@/types/order";
@@ -151,6 +152,7 @@ function createOrderTimestamp() {
 export function OrderForm() {
   const items = useCartStore((state) => state.items);
   const selectedDeliveryMethod = useCartStore((state) => state.deliveryMethod);
+  const setDeliveryMethod = useCartStore((state) => state.setDeliveryMethod);
   const clearCart = useCartStore((state) => state.clearCart);
   const isHydrated = useCartHydrated();
   const [submittedOrder, setSubmittedOrder] = useState<LocalOrder | null>(null);
@@ -499,7 +501,7 @@ export function OrderForm() {
 
             <FormSection
               title="Dostawa"
-              description="Metoda dostawy została wybrana w koszyku. Tutaj uzupełnij tylko dane adresowe."
+              description="Wybierz metodę dostawy i uzupełnij dane adresowe."
             >
               <div className="rounded-lg bg-[#f7f1e8] px-4 py-3 text-sm leading-6 text-[#6d675f]">
                 Wysyłka jest realizowana wyłącznie na terenie Polski.
@@ -507,32 +509,51 @@ export function OrderForm() {
 
               <input type="hidden" {...register("deliveryMethod")} />
 
-              <div className="rounded-lg border border-[#d7cab9] bg-[#fffdf8] p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[#8a8177]">
-                      Wybrana metoda dostawy
-                    </p>
-                    <p className="mt-1 text-base font-semibold text-[#1f1f1f]">
-                      {getDeliveryOption(deliveryMethod).name}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-[#6d675f]">
-                      {getDeliveryOption(deliveryMethod).description}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 sm:flex-col sm:items-end">
-                    <span className="text-base font-semibold text-[#1f1f1f]">
-                      {formatPrice(deliveryCost)}
-                    </span>
-                    <Link
-                      href="/koszyk"
-                      className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full border border-[#d7cab9] bg-white px-4 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
+              <div className="grid gap-3 sm:grid-cols-2">
+                {deliveryOptions.map((option) => {
+                  const isSelected = deliveryMethod === option.id;
+                  const optionCost = getDeliveryCost(option.id, subtotal);
+
+                  return (
+                    <label
+                      key={option.id}
+                      className={cn(
+                        "flex min-h-24 cursor-pointer items-start gap-3 rounded-lg border p-4 transition",
+                        isSelected
+                          ? "border-[#1f1f1f] bg-[#fffdf8] shadow-sm"
+                          : "border-[#eee7db] bg-white hover:border-[#d8ccbd]",
+                      )}
                     >
-                      <Pencil className="h-4 w-4" aria-hidden="true" />
-                      Zmień
-                    </Link>
-                  </div>
-                </div>
+                      <input
+                        type="radio"
+                        name="delivery-method-choice"
+                        value={option.id}
+                        checked={isSelected}
+                        onChange={() => {
+                          setValue("deliveryMethod", option.id, {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+                          setDeliveryMethod(option.id);
+                        }}
+                        className="mt-1 accent-[#1f1f1f]"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-start justify-between gap-3">
+                          <span className="font-semibold text-[#1f1f1f]">
+                            {option.name}
+                          </span>
+                          <span className="shrink-0 font-semibold text-[#1f1f1f]">
+                            {formatPrice(optionCost)}
+                          </span>
+                        </span>
+                        <span className="mt-1 block text-sm leading-6 text-[#7a746d]">
+                          {option.description}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">

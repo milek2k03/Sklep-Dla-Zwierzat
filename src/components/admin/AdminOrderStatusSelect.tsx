@@ -8,6 +8,7 @@ import {
   orderStatuses,
   type OrderStatus,
 } from "@/lib/order-status";
+import { getShippingCarrierForDeliveryMethod } from "@/lib/delivery";
 import {
   getTrackingUrl,
   normalizeShippingCarrier,
@@ -16,12 +17,14 @@ import {
 } from "@/lib/tracking";
 
 export function AdminOrderStatusSelect({
+  deliveryMethod,
   orderId,
   shippingCarrier,
   status,
   trackingNumber,
   trackingUrl,
 }: {
+  deliveryMethod: string;
   orderId: string;
   shippingCarrier: string | null;
   status: OrderStatus;
@@ -29,8 +32,10 @@ export function AdminOrderStatusSelect({
   trackingUrl: string | null;
 }) {
   const router = useRouter();
+  const initialCarrier =
+    shippingCarrier ?? getShippingCarrierForDeliveryMethod(deliveryMethod) ?? "";
   const [selectedStatus, setSelectedStatus] = useState(status);
-  const [carrier, setCarrier] = useState(shippingCarrier ?? "");
+  const [carrier, setCarrier] = useState(initialCarrier);
   const [tracking, setTracking] = useState(trackingNumber ?? "");
   const [trackingLink, setTrackingLink] = useState(trackingUrl ?? "");
   const [isSaving, setIsSaving] = useState(false);
@@ -41,7 +46,7 @@ export function AdminOrderStatusSelect({
 
   const hasChanges =
     selectedStatus !== status ||
-    normalizeShippingCarrier(carrier) !== (shippingCarrier ?? "") ||
+    normalizeShippingCarrier(carrier) !== initialCarrier ||
     normalizeTrackingNumber(tracking) !== (trackingNumber ?? "") ||
     effectiveTrackingLink !== (trackingUrl ?? "");
   const isShipment = selectedStatus === "shipped";

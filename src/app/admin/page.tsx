@@ -17,7 +17,7 @@ import {
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
 import { AdminRefundButton } from "@/components/admin/AdminRefundButton";
 import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
-import { deliveryOptions } from "@/lib/delivery";
+import { deliveryOptions, getShippingCarrierForDeliveryMethod } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import {
   isOrderStatus,
@@ -381,7 +381,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
                     <div className="text-sm text-[#6d675f] xl:text-right">
                       <p className="font-semibold text-[#1f1f1f]">
-                        {order.shipping_carrier ?? getAdminDeliveryName(order.delivery_method)}
+                        {order.shipping_carrier ??
+                          getShippingCarrierForDeliveryMethod(order.delivery_method) ??
+                          getAdminDeliveryName(order.delivery_method)}
                       </p>
                       {order.tracking_number ? (
                         <p className="mt-1">
@@ -418,6 +420,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       </summary>
                       <div className="border-t border-[#eee7db] p-4">
                         <AdminOrderStatusSelect
+                          deliveryMethod={order.delivery_method}
                           orderId={order.id}
                           status={order.status}
                           shippingCarrier={order.shipping_carrier}
