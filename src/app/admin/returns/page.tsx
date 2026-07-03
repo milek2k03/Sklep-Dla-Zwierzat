@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, RotateCcw, Search } from "lucide-react";
+import { ArrowLeft, Banknote, PackageX, RotateCcw, Search, Sigma } from "lucide-react";
 import {
   closeReturnCaseAction,
   createReturnCaseAction,
@@ -152,6 +152,7 @@ export default async function AdminReturnsPage({
   );
   const existingReturnItems = (existingReturnItemsResult.data ??
     []) as ExistingReturnItem[];
+  const lossSummary = getReturnLossSummary(returnCases);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
@@ -195,6 +196,8 @@ export default async function AdminReturnsPage({
           {error}
         </div>
       ) : null}
+
+      <ReturnLossSummaryCards summary={lossSummary} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[420px_minmax(0,1fr)] lg:items-start">
         <aside className="rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-24">
@@ -282,6 +285,66 @@ export default async function AdminReturnsPage({
         </div>
       </div>
     </section>
+  );
+}
+
+function ReturnLossSummaryCards({
+  summary,
+}: {
+  summary: ReturnType<typeof getReturnLossSummary>;
+}) {
+  const cards = [
+    {
+      icon: Banknote,
+      label: "Zwroty klientom",
+      value: summary.customerRefundLoss,
+      hint:
+        summary.pendingCustomerRefund > 0
+          ? `Potencjalnie do decyzji: ${formatPrice(summary.pendingCustomerRefund)}`
+          : "Zatwierdzone kwoty zwrotow",
+    },
+    {
+      icon: PackageX,
+      label: "Towar poza sprzedaza",
+      value: summary.inventoryLoss,
+      hint: "Produkty oznaczone jako niewracajace na magazyn",
+    },
+    {
+      icon: Sigma,
+      label: "Razem potwierdzone straty",
+      value: summary.totalConfirmedLoss,
+      hint: `${summary.lossCaseCount} spraw ze strata`,
+    },
+  ];
+
+  return (
+    <div className="mt-6 grid gap-3 lg:grid-cols-3">
+      {cards.map((card) => {
+        const Icon = card.icon;
+
+        return (
+          <div
+            className="rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm"
+            key={card.label}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-[#6d675f]">
+                  {card.label}
+                </p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-[#1f1f1f]">
+                  {formatPrice(card.value)}
+                </p>
+              </div>
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#f7f1e8] text-[#b65320]">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+            </div>
+            <p className="mt-3 text-xs leading-5 text-[#7a746d]">{card.hint}</p>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -404,6 +467,7 @@ function CreateReturnCaseForm({
 function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
   const isClosed = returnCase.status === "closed";
   const returnItemsTotal = getReturnItemsTotal(returnCase.return_case_items);
+  const loss = getReturnCaseLoss(returnCase);
 
   return (
     <article className="overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm">
@@ -490,6 +554,28 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
         ))}
       </div>
 
+      <div className="m-5 grid gap-3 md:grid-cols-3">
+        <ReturnLossTile
+          label="Zwrot klientowi"
+          value={loss.customerRefundLoss}
+          hint={
+            loss.pendingCustomerRefund > 0
+              ? `Do decyzji: ${formatPrice(loss.pendingCustomerRefund)}`
+              : "Zatwierdzony refund"
+          }
+        />
+        <ReturnLossTile
+          label="Strata towarowa"
+          value={loss.inventoryLoss}
+          hint="Nie wraca do sprzedazy"
+        />
+        <ReturnLossTile
+          label="Razem"
+          value={loss.confirmedLoss}
+          hint="Refund + strata towaru"
+        />
+      </div>
+
       {isClosed ? (
         <div className="m-5 rounded-lg border border-[#cfe8d2] bg-[#ecf8ee] p-4 text-sm text-[#2f6b3f]">
           Sprawa zamknięta.{" "}
@@ -520,8 +606,84 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
   );
 }
 
+function ReturnLossTile({
+  hint,
+  label,
+  value,
+}: {
+  hint: string;
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="rounded-lg border border-[#eee7db] bg-[#fffdf8] p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#7a746d]">
+        {label}
+      </p>
+      <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">
+        {formatPrice(value)}
+      </p>
+      <p className="mt-1 text-xs leading-5 text-[#6d675f]">{hint}</p>
+    </div>
+  );
+}
+
+function getReturnLossSummary(returnCases: ReturnCaseListRow[]) {
+  const summary = returnCases.reduce(
+    (total, returnCase) => {
+      const loss = getReturnCaseLoss(returnCase);
+
+      return {
+        customerRefundLoss: money(
+          total.customerRefundLoss + loss.customerRefundLoss,
+        ),
+        inventoryLoss: money(total.inventoryLoss + loss.inventoryLoss),
+        lossCaseCount:
+          total.lossCaseCount + (loss.confirmedLoss > 0 ? 1 : 0),
+        pendingCustomerRefund: money(
+          total.pendingCustomerRefund + loss.pendingCustomerRefund,
+        ),
+      };
+    },
+    {
+      customerRefundLoss: 0,
+      inventoryLoss: 0,
+      lossCaseCount: 0,
+      pendingCustomerRefund: 0,
+    },
+  );
+
+  return {
+    ...summary,
+    totalConfirmedLoss: money(
+      summary.customerRefundLoss + summary.inventoryLoss,
+    ),
+  };
+}
+
+function getReturnCaseLoss(returnCase: ReturnCaseListRow) {
+  const customerRefundLoss = money(Number(returnCase.approved_refund_amount));
+  const requestedRefundAmount = money(Number(returnCase.requested_refund_amount));
+  const pendingCustomerRefund =
+    returnCase.status === "closed"
+      ? 0
+      : money(Math.max(0, requestedRefundAmount - customerRefundLoss));
+  const inventoryLoss = money(
+    returnCase.return_case_items
+      .filter((item) => getReturnCondition(item) === "unsellable")
+      .reduce((total, item) => total + getReturnItemTotal(item), 0),
+  );
+
+  return {
+    customerRefundLoss,
+    confirmedLoss: money(customerRefundLoss + inventoryLoss),
+    inventoryLoss,
+    pendingCustomerRefund,
+  };
+}
+
 function getReturnItemsTotal(items: ReturnCaseItemWithOrderItem[]) {
-  return items.reduce((total, item) => total + getReturnItemTotal(item), 0);
+  return money(items.reduce((total, item) => total + getReturnItemTotal(item), 0));
 }
 
 function getReturnItemUnitPrice(item: ReturnCaseItemWithOrderItem) {
@@ -537,7 +699,11 @@ function getReturnItemUnitPrice(item: ReturnCaseItemWithOrderItem) {
 }
 
 function getReturnItemTotal(item: ReturnCaseItemWithOrderItem) {
-  return getReturnItemUnitPrice(item) * item.quantity;
+  return money(getReturnItemUnitPrice(item) * item.quantity);
+}
+
+function money(value: number) {
+  return Math.round(Number(value) * 100) / 100;
 }
 
 function getFirstSearchParam(value: string | string[] | undefined) {
