@@ -7,7 +7,7 @@ export function Hero() {
     <section className="relative isolate min-h-[calc(100svh-9rem)] overflow-hidden bg-[#efe7dc]">
       <Image
         src="/images/pawly-hero.jpg"
-        alt="Akcesoria Pawly dla psów ułożone w jasnej sesji produktowej"
+        alt="Akcesoria Pawly dla psów i kotów ułożone w jasnej sesji produktowej"
         fill
         priority
         sizes="100vw"
@@ -20,15 +20,15 @@ export function Hero() {
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#e6dac9] bg-white/72 px-4 py-2 text-sm font-semibold text-[#4d4943] shadow-sm backdrop-blur">
             <BadgeCheck className="h-4 w-4 text-[#b65320]" aria-hidden="true" />
-            Praktyczne akcesoria dla psów
+            Praktyczne akcesoria dla psów i kotów
           </div>
 
           <h1 className="mt-7 max-w-3xl text-5xl font-semibold leading-[1.04] tracking-tight text-[#171615] sm:text-6xl lg:text-7xl">
-            Akcesoria dla szczęśliwych psów
+            Akcesoria dla szczęśliwych pupili
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-8 text-[#4f4942] sm:text-xl">
-            Starannie wybrane produkty na spacer, do auta i do domu. Prosto,
-            wygodnie i bez bałaganu.
+            Starannie wybrane produkty dla psów i kotów: na spacer, podróż i
+            codzienną rutynę w domu.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">

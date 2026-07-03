@@ -16,14 +16,14 @@ export const products: Product[] = [
     category: "Zestawy",
     rating: 4.9,
     reviewCount: 128,
-    description: "Kompletny zestaw na codzienne spacery z psem.",
+    description: "Kompletny zestaw na codzienne wyjścia z pupilem.",
     tag: "Bestseller",
     stockQuantity: 12,
     features: [
       "saszetka na smaczki",
       "składana miska",
       "etui na woreczki",
-      "wygoda na każdy spacer",
+      "wygoda na każdy spacer lub wyjazd",
     ],
   },
   {
@@ -34,7 +34,7 @@ export const products: Product[] = [
     category: "Auto",
     rating: 4.8,
     reviewCount: 96,
-    description: "Zestaw dla osób, które podróżują z psem samochodem.",
+    description: "Zestaw dla osób, które podróżują z pupilem samochodem.",
     stockQuantity: 8,
     features: [
       "pokrowiec do auta",
@@ -98,7 +98,7 @@ export const products: Product[] = [
     category: "Dom",
     rating: 4.8,
     reviewCount: 64,
-    description: "Pomaga utrzymać porządek przy miskach psa.",
+    description: "Pomaga utrzymać porządek przy miskach pupila.",
     stockQuantity: 15,
     features: [
       "chroni podloge",
@@ -125,12 +125,12 @@ export const products: Product[] = [
   {
     id: "PWL-ACC-DOG-BANDANA",
     slug: "bandana-dla-psa",
-    name: "Bandana dla psa",
+    name: "Bandana dla pupila",
     price: 24.99,
     category: "Spacer",
     rating: 4.7,
     reviewCount: 46,
-    description: "Prosty dodatek dla psa, dobry do zdjęć i spacerów.",
+    description: "Prosty dodatek dla psa lub kota, dobry do zdjęć i spacerów.",
     stockQuantity: 18,
     features: [
       "lekki materiał",

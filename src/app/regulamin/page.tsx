@@ -20,7 +20,7 @@ const sections = [
   {
     title: "1. Dane sprzedawcy i kontakt",
     content: [
-      "Sklep internetowy Pawly działa pod adresem tej strony i prowadzi sprzedaż akcesoriów dla psów.",
+      "Sklep internetowy Pawly działa pod adresem tej strony i prowadzi sprzedaż akcesoriów dla psów i kotów.",
       `Sprzedawca i właściciel sklepu: ${sellerName}.`,
       "Sprzedaż jest prowadzona w ramach działalności nierejestrowanej, o której mowa w art. 5 ustawy Prawo przedsiębiorców, o ile spełnione są warunki ustawowe dla tej formy działalności.",
       `Adres do korespondencji, zwrotów i reklamacji: ${sellerAddressLines.join(", ")}.`,

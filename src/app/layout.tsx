@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pawly - akcesoria dla psów",
+  title: "Pawly - akcesoria dla psów i kotów",
   description:
-    "Sklep z praktycznymi akcesoriami dla psów na spacer, do auta i do domu.",
+    "Sklep z praktycznymi akcesoriami dla psów i kotów na spacer, podróż i do domu.",
 };
 
 export default function RootLayout({

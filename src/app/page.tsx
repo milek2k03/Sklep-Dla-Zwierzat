@@ -35,7 +35,7 @@ export default async function Home() {
           </div>
           <p className="max-w-xl text-sm leading-6 text-[#6d675f]">
             Produkty, które pomagają uporządkować codzienne spacery, podróże i
-            domową rutynę z psem.
+            domową rutynę z psem albo kotem.
           </p>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -62,7 +62,7 @@ export default async function Home() {
             {
               icon: Check,
               title: "Praktyczne produkty",
-              text: "Wybieramy akcesoria, które realnie ułatwiają codzienność.",
+              text: "Wybieramy akcesoria, które realnie ułatwiają codzienność z pupilem.",
             },
             {
               icon: PackageCheck,
@@ -117,7 +117,7 @@ export default async function Home() {
             {[
               {
                 quote:
-                  "Zestaw spacerowy ma wszystko, czego potrzebujemy na szybkie wyjście.",
+                  "Zestaw spacerowy ma wszystko, czego potrzebujemy na szybkie wyjście z pupilem.",
                 author: "Kasia i Bruno",
               },
               {
