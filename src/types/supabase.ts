@@ -250,8 +250,10 @@ export type Database = {
           product_slug: string;
           product_name: string;
           unit_price: number;
+          unit_purchase_price: number;
           quantity: number;
           line_total: number;
+          purchase_total: number;
           created_at: string;
         };
         Insert: {
@@ -260,8 +262,10 @@ export type Database = {
           product_slug: string;
           product_name: string;
           unit_price: number;
+          unit_purchase_price?: number;
           quantity: number;
           line_total: number;
+          purchase_total?: number;
           created_at?: string;
         };
         Update: never;
@@ -353,6 +357,7 @@ export type Database = {
           slug: string;
           name: string;
           price: number;
+          purchase_price: number;
           compare_at_price: number | null;
           category: string;
           rating: number;
@@ -373,6 +378,7 @@ export type Database = {
           slug: string;
           name: string;
           price: number;
+          purchase_price?: number;
           compare_at_price?: number | null;
           category: string;
           rating?: number;
@@ -393,6 +399,7 @@ export type Database = {
           slug?: string;
           name?: string;
           price?: number;
+          purchase_price?: number;
           compare_at_price?: number | null;
           category?: string;
           rating?: number;

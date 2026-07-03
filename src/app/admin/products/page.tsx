@@ -185,6 +185,7 @@ export default async function AdminProductsPage({
           <div className="divide-y divide-[#eee7db]">
             {products.map((product) => {
               const isEdited = editedProduct?.id === product.id;
+              const purchasePrice = product.purchasePrice ?? 0;
 
               return (
                 <article
@@ -226,6 +227,12 @@ export default async function AdminProductsPage({
                   <div className="text-sm">
                     <p className="font-semibold text-[#1f1f1f]">
                       {formatPrice(product.price)}
+                    </p>
+                    <p className="mt-1 text-xs text-[#6d675f]">
+                      Zakup: {formatPrice(purchasePrice)}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-[#2f6b3f]">
+                      Zysk: {formatPrice(product.price - purchasePrice)}
                     </p>
                     {product.compareAtPrice ? (
                       <p className="mt-1 text-xs text-[#8a8177] line-through">
@@ -309,8 +316,10 @@ export default async function AdminProductsPage({
             </h2>
           </div>
           <p className="mt-2 text-sm leading-6 text-[#6d675f]">
-            Wyeksportuj arkusz z Excela jako CSV UTF-8. Kolumny: name/nazwa, price/cena, category/kategoria, stock/stan,
-            opcjonalnie sku, slug, image_url, description/opis, features/cechy.
+            Wyeksportuj arkusz z Excela jako CSV UTF-8. Kolumny: name/nazwa,
+            price/cena, purchase_price/cena_zakupu, category/kategoria,
+            stock/stan, opcjonalnie sku, slug, image_url, description/opis,
+            features/cechy.
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <input
@@ -426,13 +435,22 @@ function ProductForm({
         </span>
       </Field>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Cena">
           <SanitizedNumberInput
             name="price"
             numberMode="float"
             className="field-input"
             defaultValue={product?.price ?? ""}
+            required
+          />
+        </Field>
+        <Field label="Cena zakupu">
+          <SanitizedNumberInput
+            name="purchasePrice"
+            numberMode="float"
+            className="field-input"
+            defaultValue={product?.purchasePrice ?? ""}
             required
           />
         </Field>

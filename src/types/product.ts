@@ -5,6 +5,7 @@ export type Product = {
   slug: string;
   name: string;
   price: number;
+  purchasePrice?: number;
   compareAtPrice?: number;
   category: ProductCategory;
   rating: number;

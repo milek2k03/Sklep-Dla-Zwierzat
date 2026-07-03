@@ -192,6 +192,7 @@ async function parseProductForm(formData: FormData): Promise<ProductInsert> {
     slug,
     name,
     price: getRequiredNumber(formData, "price"),
+    purchase_price: getRequiredNumber(formData, "purchasePrice"),
     compare_at_price: getOptionalNumber(formData, "compareAtPrice"),
     category,
     rating: getOptionalNumber(formData, "rating") ?? 0,
@@ -299,6 +300,15 @@ function parseImportedProduct(row: Record<string, unknown>) {
     "compareAtPrice",
     "cena_przekreslona",
   ]);
+  const purchasePrice =
+    getImportedNumber(row, [
+      "purchase_price",
+      "purchasePrice",
+      "cena_zakupu",
+      "koszt_zakupu",
+      "koszt",
+      "cost",
+    ]) ?? 0;
 
   const imageUrl = getImportedString(row, ["image_url", "zdjecie", "image"]) || null;
 
@@ -307,6 +317,7 @@ function parseImportedProduct(row: Record<string, unknown>) {
     slug,
     name,
     price,
+    purchase_price: purchasePrice,
     compare_at_price: compareAtPrice,
     category,
     rating: getImportedNumber(row, ["rating", "ocena"]) ?? 0,

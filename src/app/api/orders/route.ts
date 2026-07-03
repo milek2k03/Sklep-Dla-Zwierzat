@@ -86,7 +86,10 @@ export async function POST(request: NextRequest) {
   const supabase = createSupabaseServiceClient();
 
   try {
-    const productCatalog = await getPublishedProducts({ fallback: false });
+    const productCatalog = await getPublishedProducts({
+      fallback: false,
+      includePurchasePrice: true,
+    });
     const discountCode = normalizeDiscountCode(parsedPayload.data.discountCode);
     const { data: discount, error: discountError } = discountCode
       ? await supabase
@@ -174,13 +177,19 @@ export async function POST(request: NextRequest) {
         payment_method: "stripe",
         status: "new",
       },
-      p_items: order.items.map((item) => ({
-        product_slug: item.product.slug,
-        product_name: item.product.name,
-        unit_price: item.product.price,
-        quantity: item.quantity,
-        line_total: Math.round(item.product.price * item.quantity * 100) / 100,
-      })),
+      p_items: order.items.map((item) => {
+        const unitPurchasePrice = item.product.purchasePrice ?? 0;
+
+        return {
+          product_slug: item.product.slug,
+          product_name: item.product.name,
+          unit_price: item.product.price,
+          unit_purchase_price: unitPurchasePrice,
+          quantity: item.quantity,
+          line_total: Math.round(item.product.price * item.quantity * 100) / 100,
+          purchase_total: Math.round(unitPurchasePrice * item.quantity * 100) / 100,
+        };
+      }),
     })
     .single();
 
@@ -285,9 +294,17 @@ export async function POST(request: NextRequest) {
     console.error("Failed to store Stripe session ID", stripeUpdateError);
   }
 
+  const publicOrder = {
+    ...order,
+    items: order.items.map((item) => ({
+      ...item,
+      product: withoutPurchasePrice(item.product),
+    })),
+  };
+
   return NextResponse.json({
     order: {
-      ...order,
+      ...publicOrder,
       id: insertedOrder.order_number,
       createdAt: insertedOrder.created_at,
     },
@@ -319,6 +336,14 @@ function parseStockErrorDetails(details: string | null | undefined) {
 
 function toStripeAmount(value: number) {
   return Math.round(value * 100);
+}
+
+function withoutPurchasePrice<T extends { purchasePrice?: number }>(product: T) {
+  const publicProduct = { ...product };
+
+  delete publicProduct.purchasePrice;
+
+  return publicProduct;
 }
 
 async function createCheckoutDiscountCoupon(name: string, discountTotal: number) {

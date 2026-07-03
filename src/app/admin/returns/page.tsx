@@ -39,7 +39,10 @@ type ReturnCaseRow = Database["public"]["Tables"]["return_cases"]["Row"];
 type ReturnCaseItemRow =
   Database["public"]["Tables"]["return_case_items"]["Row"];
 type ReturnCaseItemWithOrderItem = ReturnCaseItemRow & {
-  order_items: Pick<OrderItemRow, "unit_price" | "line_total" | "quantity"> | null;
+  order_items: Pick<
+    OrderItemRow,
+    "unit_price" | "line_total" | "quantity" | "unit_purchase_price" | "purchase_total"
+  > | null;
 };
 type ReturnCaseListRow = ReturnCaseRow & {
   orders: Pick<
@@ -108,7 +111,7 @@ export default async function AdminReturnsPage({
     await Promise.all([
       supabase
         .from("return_cases")
-        .select("*, orders(id, order_number, customer_full_name, customer_email, status, total, payment_method, stripe_payment_intent_id), return_case_items(*, order_items(unit_price, line_total, quantity))")
+        .select("*, orders(id, order_number, customer_full_name, customer_email, status, total, payment_method, stripe_payment_intent_id), return_case_items(*, order_items(unit_price, line_total, quantity, unit_purchase_price, purchase_total))")
         .order("created_at", { ascending: false })
         .limit(50),
       selectedOrderId
@@ -307,7 +310,7 @@ function ReturnLossSummaryCards({
       icon: PackageX,
       label: "Towar poza sprzedaza",
       value: summary.inventoryLoss,
-      hint: "Produkty oznaczone jako niewracajace na magazyn",
+      hint: "Cena zakupu produktów niewracających do sprzedaży",
     },
     {
       icon: Sigma,
@@ -534,6 +537,9 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
                 Cena szt.: {formatPrice(getReturnItemUnitPrice(item))} • Wartość:{" "}
                 {formatPrice(getReturnItemTotal(item))}
               </span>
+              <span className="mt-1 block text-xs font-normal text-[#7a746d]">
+                Koszt zakupu: {formatPrice(getReturnItemPurchaseCost(item))}
+              </span>
             </span>
             <span className="text-[#6d675f]">Ilość: {item.quantity}</span>
             <span className="sm:text-right">
@@ -567,7 +573,7 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
         <ReturnLossTile
           label="Strata towarowa"
           value={loss.inventoryLoss}
-          hint="Nie wraca do sprzedazy"
+          hint="Koszt zakupu, gdy nie wraca do sprzedaży"
         />
         <ReturnLossTile
           label="Razem"
@@ -671,7 +677,7 @@ function getReturnCaseLoss(returnCase: ReturnCaseListRow) {
   const inventoryLoss = money(
     returnCase.return_case_items
       .filter((item) => getReturnCondition(item) === "unsellable")
-      .reduce((total, item) => total + getReturnItemTotal(item), 0),
+      .reduce((total, item) => total + getReturnItemPurchaseCost(item), 0),
   );
 
   return {
@@ -700,6 +706,26 @@ function getReturnItemUnitPrice(item: ReturnCaseItemWithOrderItem) {
 
 function getReturnItemTotal(item: ReturnCaseItemWithOrderItem) {
   return money(getReturnItemUnitPrice(item) * item.quantity);
+}
+
+function getReturnItemPurchaseCost(item: ReturnCaseItemWithOrderItem) {
+  return money(getReturnItemUnitPurchasePrice(item) * item.quantity);
+}
+
+function getReturnItemUnitPurchasePrice(item: ReturnCaseItemWithOrderItem) {
+  if (item.order_items?.unit_purchase_price !== undefined) {
+    const unitPurchasePrice = Number(item.order_items.unit_purchase_price);
+
+    if (Number.isFinite(unitPurchasePrice) && unitPurchasePrice > 0) {
+      return unitPurchasePrice;
+    }
+  }
+
+  if (item.order_items?.purchase_total && item.order_items.quantity) {
+    return Number(item.order_items.purchase_total) / item.order_items.quantity;
+  }
+
+  return 0;
 }
 
 function money(value: number) {

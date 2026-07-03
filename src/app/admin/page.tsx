@@ -7,10 +7,12 @@ import {
   Clock3,
   FileSpreadsheet,
   PackageCheck,
+  PackageX,
   ReceiptText,
   RotateCcw,
   Search,
   ShieldCheck,
+  TrendingUp,
   Truck,
   X,
 } from "lucide-react";
@@ -40,9 +42,37 @@ type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
   order_items: Database["public"]["Tables"]["order_items"]["Row"][];
   order_events: Database["public"]["Tables"]["order_events"]["Row"][];
 };
+type OrderItemRow = Database["public"]["Tables"]["order_items"]["Row"];
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 type OrderEventRow = Database["public"]["Tables"]["order_events"]["Row"] & {
   orders: Pick<Database["public"]["Tables"]["orders"]["Row"], "order_number"> | null;
+};
+type ReturnCaseRow = Database["public"]["Tables"]["return_cases"]["Row"];
+type ReturnCaseItemRow = Database["public"]["Tables"]["return_case_items"]["Row"];
+type FinancialOrderItemRow = Pick<
+  OrderItemRow,
+  "line_total" | "purchase_total" | "quantity" | "unit_purchase_price"
+>;
+type FinancialOrderRow = Pick<
+  Database["public"]["Tables"]["orders"]["Row"],
+  "id" | "status"
+> & {
+  order_items: FinancialOrderItemRow[];
+};
+type FinancialReturnCaseItemRow = Pick<
+  ReturnCaseItemRow,
+  "quantity" | "return_condition"
+> & {
+  order_items: Pick<
+    OrderItemRow,
+    "purchase_total" | "quantity" | "unit_purchase_price"
+  > | null;
+};
+type FinancialReturnCaseRow = Pick<
+  ReturnCaseRow,
+  "approved_refund_amount"
+> & {
+  return_case_items: FinancialReturnCaseItemRow[];
 };
 
 type AdminPageProps = {
@@ -472,6 +502,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                                   <span className="mt-1 block text-xs">
                                     ID: {getOrderItemProductId(item.product_slug)}
                                   </span>
+                                  <span className="mt-1 block text-xs text-[#7a746d]">
+                                    Zakup: {formatPrice(getOrderItemPurchaseTotal(item))}{" "}
+                                    • Zysk: {formatPrice(getOrderItemProfit(item))}
+                                  </span>
                                 </span>
                                 <span className="font-semibold text-[#1f1f1f]">
                                   {formatPrice(Number(item.line_total))}
@@ -645,7 +679,63 @@ function AdminDashboard({
   ];
 
   return (
-    <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_380px]">
+    <div className="mt-6 space-y-6">
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className="rounded-lg border border-[#1f1f1f] bg-[#1f1f1f] p-5 text-white shadow-sm">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-white/70">
+                Czysty zysk z transakcji
+              </p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight">
+                {formatPrice(dashboard.financials.netProfit)}
+              </p>
+            </div>
+            <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e8f4ea] text-[#2f6b3f]">
+              <TrendingUp className="h-6 w-6" aria-hidden="true" />
+            </span>
+          </div>
+          <div className="mt-4 grid gap-2 text-sm text-white/72 sm:grid-cols-3">
+            <span>Sprzedaż: {formatPrice(dashboard.financials.salesTotal)}</span>
+            <span>Koszt zakupu: {formatPrice(dashboard.financials.purchaseCostTotal)}</span>
+            <span>Transakcje: {dashboard.financials.transactionCount}</span>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-white/58">
+            Liczone jako suma cen sprzedaży produktów minus suma cen zakupu dla
+            zamówień opłaconych i wysłanych.
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-[#f0d5c6] bg-[#fff8f4] p-5 shadow-sm">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-[#8a4b2b]">
+                Straty łącznie
+              </p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f]">
+                {formatPrice(dashboard.financials.totalLoss)}
+              </p>
+            </div>
+            <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#ffe5d6] text-[#a64022]">
+              <PackageX className="h-6 w-6" aria-hidden="true" />
+            </span>
+          </div>
+          <div className="mt-4 grid gap-2 text-sm text-[#6d675f] sm:grid-cols-2">
+            <span>
+              Zwroty klientom: {formatPrice(dashboard.financials.customerRefundLoss)}
+            </span>
+            <span>
+              Towar poza sprzedażą: {formatPrice(dashboard.financials.inventoryLoss)}
+            </span>
+          </div>
+          <p className="mt-3 text-xs leading-5 text-[#8a8177]">
+            Towar nienadający się do sprzedaży jest liczony po cenie zakupu,
+            osobno od pieniędzy zwracanych klientom.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {cards.map((card) => {
           const Icon = card.icon;
@@ -757,6 +847,7 @@ function AdminDashboard({
         )}
       </div>
     </div>
+    </div>
   );
 }
 
@@ -836,7 +927,13 @@ async function getStatusCounts(orderSearch: string) {
 
 async function getAdminDashboardData() {
   const supabase = await createSupabaseServerClient();
-  const [openReturnCasesResult, lowStockResult, recentEventsResult] =
+  const [
+    openReturnCasesResult,
+    lowStockResult,
+    recentEventsResult,
+    financialOrdersResult,
+    returnLossResult,
+  ] =
     await Promise.all([
       supabase
         .from("return_cases")
@@ -855,15 +952,82 @@ async function getAdminDashboardData() {
         .select("*, orders(order_number)")
         .order("created_at", { ascending: false })
         .limit(10),
+      supabase
+        .from("orders")
+        .select("id, status, order_items(line_total, purchase_total, quantity, unit_purchase_price)")
+        .in("status", ["paid", "shipped"]),
+      supabase
+        .from("return_cases")
+        .select("approved_refund_amount, return_case_items(quantity, return_condition, order_items(purchase_total, quantity, unit_purchase_price))"),
     ]);
+  const financialOrders = (financialOrdersResult.data ?? []) as FinancialOrderRow[];
+  const returnCases = (returnLossResult.data ?? []) as FinancialReturnCaseRow[];
 
   return {
+    financials: getFinancialDashboardSummary(financialOrders, returnCases),
     openReturnCasesCount: openReturnCasesResult.count ?? 0,
     lowStockProducts: (lowStockResult.data ?? []) as Pick<
       ProductRow,
       "sku" | "name" | "stock_quantity"
     >[],
     recentEvents: (recentEventsResult.data ?? []) as OrderEventRow[],
+  };
+}
+
+function getFinancialDashboardSummary(
+  orders: FinancialOrderRow[],
+  returnCases: FinancialReturnCaseRow[],
+) {
+  const salesTotal = money(
+    orders.reduce((total, order) => {
+      return (
+        total +
+        order.order_items.reduce(
+          (itemsTotal, item) => itemsTotal + Number(item.line_total),
+          0,
+        )
+      );
+    }, 0),
+  );
+  const purchaseCostTotal = money(
+    orders.reduce((total, order) => {
+      return (
+        total +
+        order.order_items.reduce(
+          (itemsTotal, item) => itemsTotal + getOrderItemPurchaseTotal(item),
+          0,
+        )
+      );
+    }, 0),
+  );
+  const customerRefundLoss = money(
+    returnCases.reduce(
+      (total, returnCase) => total + Number(returnCase.approved_refund_amount),
+      0,
+    ),
+  );
+  const inventoryLoss = money(
+    returnCases.reduce((total, returnCase) => {
+      return (
+        total +
+        returnCase.return_case_items
+          .filter((item) => item.return_condition === "unsellable")
+          .reduce(
+            (itemsTotal, item) => itemsTotal + getReturnItemPurchaseLoss(item),
+            0,
+          )
+      );
+    }, 0),
+  );
+
+  return {
+    customerRefundLoss,
+    inventoryLoss,
+    netProfit: money(salesTotal - purchaseCostTotal),
+    purchaseCostTotal,
+    salesTotal,
+    totalLoss: money(customerRefundLoss + inventoryLoss),
+    transactionCount: orders.length,
   };
 }
 
@@ -922,6 +1086,67 @@ function getStatusDotClassName(status: OrderStatus) {
 
 function getOrderItemProductId(slug: string) {
   return getProductBySlug(slug)?.id ?? slug;
+}
+
+function getOrderItemProfit(
+  item: Pick<
+    OrderItemRow,
+    "line_total" | "purchase_total" | "quantity" | "unit_purchase_price"
+  >,
+) {
+  return money(Number(item.line_total) - getOrderItemPurchaseTotal(item));
+}
+
+function getOrderItemPurchaseTotal(
+  item: Pick<
+    OrderItemRow,
+    "purchase_total" | "quantity" | "unit_purchase_price"
+  >,
+) {
+  const purchaseTotal = Number(item.purchase_total);
+
+  if (Number.isFinite(purchaseTotal) && purchaseTotal > 0) {
+    return money(purchaseTotal);
+  }
+
+  return money(getOrderItemUnitPurchasePrice(item) * item.quantity);
+}
+
+function getReturnItemPurchaseLoss(item: FinancialReturnCaseItemRow) {
+  if (!item.order_items) {
+    return 0;
+  }
+
+  return money(getOrderItemUnitPurchasePrice(item.order_items) * item.quantity);
+}
+
+function getOrderItemUnitPurchasePrice(
+  item: Pick<
+    OrderItemRow,
+    "purchase_total" | "quantity" | "unit_purchase_price"
+  >,
+) {
+  const unitPurchasePrice = Number(item.unit_purchase_price);
+
+  if (Number.isFinite(unitPurchasePrice) && unitPurchasePrice > 0) {
+    return unitPurchasePrice;
+  }
+
+  const purchaseTotal = Number(item.purchase_total);
+
+  if (
+    Number.isFinite(purchaseTotal) &&
+    purchaseTotal > 0 &&
+    item.quantity > 0
+  ) {
+    return purchaseTotal / item.quantity;
+  }
+
+  return 0;
+}
+
+function money(value: number) {
+  return Math.round(Number(value) * 100) / 100;
 }
 
 function getAdminDeliveryName(deliveryMethod: string) {
