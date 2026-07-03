@@ -12,6 +12,8 @@ import type { Database } from "@/types/supabase";
 
 type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
 type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
+const MAX_PRODUCT_IMAGES = 5;
+const MAX_PRODUCT_IMAGE_SIZE = 2 * 1024 * 1024;
 
 export async function createProductAction(formData: FormData) {
   await requireAdmin();
@@ -204,7 +206,7 @@ async function uploadProductImages(values: FormDataEntryValue[]) {
     return [];
   }
 
-  if (files.length > 5) {
+  if (files.length > MAX_PRODUCT_IMAGES) {
     throw new Error("Możesz wgrać maksymalnie 5 zdjęć produktu.");
   }
 
@@ -217,6 +219,10 @@ async function uploadProductImages(values: FormDataEntryValue[]) {
 
     if (!isWebp) {
       throw new Error("Zdjęcia produktu muszą być w formacie WebP.");
+    }
+
+    if (file.size > MAX_PRODUCT_IMAGE_SIZE) {
+      throw new Error("Jedno zdjęcie produktu może mieć maksymalnie 2 MB.");
     }
 
     const path = `${new Date().getFullYear()}/${globalThis.crypto.randomUUID()}.webp`;

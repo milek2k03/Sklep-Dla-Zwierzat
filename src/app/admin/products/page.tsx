@@ -11,6 +11,7 @@ import {
   updateProductAction,
 } from "@/app/admin/products/actions";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
+import { ProductImageInput } from "@/components/admin/ProductImageInput";
 import { SanitizedNumberInput } from "@/components/admin/SanitizedNumberInput";
 import { formatPrice } from "@/lib/format";
 import { getAdminProducts, getProductCategories } from "@/lib/products";
@@ -415,16 +416,13 @@ function ProductForm({
             ))}
           </div>
         ) : null}
-        <input
+        <ProductImageInput
           name="images"
-          type="file"
-          accept="image/webp,.webp"
-          multiple
           className="field-input"
         />
         <span className="mt-2 block text-xs leading-5 text-[#6d675f]">
-          Wgranie nowych plików zastąpi obecną galerię. Bez wyboru plików
-          obecne zdjęcia zostają.
+          Wgranie nowych plików zastąpi obecną galerię. Maks. 5 plików WebP,
+          do 2 MB każdy. Bez wyboru plików obecne zdjęcia zostają.
         </span>
       </Field>
 
