@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { useSyncExternalStore } from "react";
-import type { CartItem } from "@/types/cart";
+import type { CartItem, DeliveryMethod } from "@/types/cart";
 import type { Product } from "@/types/product";
 import { clampQuantityToStock, getAvailableStock } from "@/lib/inventory";
 
@@ -16,8 +16,10 @@ type AddItemResult = {
 
 type CartState = {
   items: CartItem[];
+  deliveryMethod: DeliveryMethod;
   addItem: (product: Product, quantity?: number) => AddItemResult;
   removeItem: (slug: string) => void;
+  setDeliveryMethod: (method: DeliveryMethod) => void;
   updateQuantity: (slug: string, quantity: number) => void;
   clearCart: () => void;
   getTotal: () => number;
@@ -36,6 +38,7 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      deliveryMethod: "inpost-paczkomat",
       addItem: (product, quantity = 1) => {
         const requestedQuantity = normalizeQuantity(quantity);
         const stock = getAvailableStock(product);
@@ -91,6 +94,9 @@ export const useCartStore = create<CartState>()(
           items: state.items.filter((item) => item.product.slug !== slug),
         }));
       },
+      setDeliveryMethod: (method) => {
+        set({ deliveryMethod: method });
+      },
       updateQuantity: (slug, quantity) => {
         const nextQuantity = Math.floor(quantity);
 
@@ -132,7 +138,10 @@ export const useCartStore = create<CartState>()(
     {
       name: "pawly-cart",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ items: state.items }),
+      partialize: (state) => ({
+        deliveryMethod: state.deliveryMethod,
+        items: state.items,
+      }),
     },
   ),
 );

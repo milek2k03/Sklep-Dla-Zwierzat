@@ -7,10 +7,11 @@ import {
   Check,
   HandCoins,
   PackageCheck,
+  Pencil,
   ShoppingBag,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -24,7 +25,6 @@ import {
   normalizePolishPostalCode,
 } from "@/lib/address";
 import {
-  deliveryOptions,
   deliveryMethodValues,
   getDeliveryCost,
   getDeliveryOption,
@@ -36,7 +36,6 @@ import {
 } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import { getAvailableStock, getStockLabel } from "@/lib/inventory";
-import { cn } from "@/lib/utils";
 import { useCartHydrated, useCartStore } from "@/lib/cart-store";
 import type { DeliveryMethod } from "@/types/cart";
 import type { LocalOrder } from "@/types/order";
@@ -151,6 +150,7 @@ function createOrderTimestamp() {
 
 export function OrderForm() {
   const items = useCartStore((state) => state.items);
+  const selectedDeliveryMethod = useCartStore((state) => state.deliveryMethod);
   const clearCart = useCartStore((state) => state.clearCart);
   const isHydrated = useCartHydrated();
   const [submittedOrder, setSubmittedOrder] = useState<LocalOrder | null>(null);
@@ -160,6 +160,7 @@ export function OrderForm() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -187,6 +188,12 @@ export function OrderForm() {
   const hasUnavailableItems = items.some(
     (item) => item.quantity > getAvailableStock(item.product),
   );
+
+  useEffect(() => {
+    if (isHydrated) {
+      setValue("deliveryMethod", selectedDeliveryMethod);
+    }
+  }, [isHydrated, selectedDeliveryMethod, setValue]);
 
   const onSubmit = async (values: OrderFormValues) => {
     if (items.length === 0) {
@@ -492,53 +499,39 @@ export function OrderForm() {
 
             <FormSection
               title="Dostawa"
-              description="Wybierz sposób dostawy i uzupełnij dane adresowe."
+              description="Metoda dostawy została wybrana w koszyku. Tutaj uzupełnij tylko dane adresowe."
             >
               <div className="rounded-lg bg-[#f7f1e8] px-4 py-3 text-sm leading-6 text-[#6d675f]">
                 Wysyłka jest realizowana wyłącznie na terenie Polski.
               </div>
 
-              <div>
-                <span className="text-sm font-semibold text-[#1f1f1f]">
-                  Metoda dostawy
-                </span>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {deliveryOptions.map((option) => {
-                    const finalCost = getDeliveryCost(option.id, subtotal);
-                    const isSelected = deliveryMethod === option.id;
+              <input type="hidden" {...register("deliveryMethod")} />
 
-                    return (
-                      <label
-                        key={option.id}
-                        className={cn(
-                          "cursor-pointer rounded-lg border p-4 transition",
-                          isSelected
-                            ? "border-[#1f1f1f] bg-[#fffdf8] shadow-sm"
-                            : "border-[#eee7db] hover:border-[#d8ccbd]",
-                        )}
-                      >
-                        <div className="flex items-start gap-3">
-                          <input
-                            {...register("deliveryMethod")}
-                            type="radio"
-                            value={option.id}
-                            className="mt-1 accent-[#1f1f1f]"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <span className="block text-sm font-semibold text-[#1f1f1f]">
-                              {option.name}
-                            </span>
-                            <span className="mt-1 block text-xs leading-5 text-[#7a746d]">
-                              {option.description}
-                            </span>
-                          </div>
-                          <span className="shrink-0 text-sm font-semibold text-[#1f1f1f]">
-                            {formatPrice(finalCost)}
-                          </span>
-                        </div>
-                      </label>
-                    );
-                  })}
+              <div className="rounded-lg border border-[#d7cab9] bg-[#fffdf8] p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#8a8177]">
+                      Wybrana metoda dostawy
+                    </p>
+                    <p className="mt-1 text-base font-semibold text-[#1f1f1f]">
+                      {getDeliveryOption(deliveryMethod).name}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-[#6d675f]">
+                      {getDeliveryOption(deliveryMethod).description}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 sm:flex-col sm:items-end">
+                    <span className="text-base font-semibold text-[#1f1f1f]">
+                      {formatPrice(deliveryCost)}
+                    </span>
+                    <Link
+                      href="/koszyk"
+                      className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full border border-[#d7cab9] bg-white px-4 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
+                    >
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                      Zmień
+                    </Link>
+                  </div>
                 </div>
               </div>
 

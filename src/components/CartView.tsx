@@ -7,7 +7,7 @@ import {
   PackageCheck,
   ShoppingBag,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { CartItem } from "@/components/CartItem";
 import { CheckoutSteps } from "@/components/CheckoutSteps";
 import { CheckoutTrust } from "@/components/CheckoutTrust";
@@ -19,13 +19,12 @@ import {
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useCartHydrated, useCartStore } from "@/lib/cart-store";
-import type { DeliveryMethod } from "@/types/cart";
 
 export function CartView() {
   const items = useCartStore((state) => state.items);
   const itemCount = useCartStore((state) => state.getItemsCount());
-  const [deliveryMethod, setDeliveryMethod] =
-    useState<DeliveryMethod>("inpost-paczkomat");
+  const deliveryMethod = useCartStore((state) => state.deliveryMethod);
+  const setDeliveryMethod = useCartStore((state) => state.setDeliveryMethod);
   const isHydrated = useCartHydrated();
 
   const subtotal = useMemo(
