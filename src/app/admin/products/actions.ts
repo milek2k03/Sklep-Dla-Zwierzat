@@ -12,23 +12,41 @@ import type { Database } from "@/types/supabase";
 
 type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
 type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
+type SupabaseServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 const MAX_PRODUCT_IMAGES = 5;
 const MAX_PRODUCT_IMAGE_SIZE = 2 * 1024 * 1024;
+const PRODUCT_SKU_LENGTH = 10;
+const PRODUCT_SKU_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const PRODUCT_SKU_MAX_GENERATION_ATTEMPTS = 12;
 
 export async function createProductAction(formData: FormData) {
   await requireAdmin();
 
   const product = await parseProductFormOrRedirect(formData);
-  product.sku = product.sku || createProductSku(product.slug);
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("products").insert(product);
+  let lastErrorMessage = "";
 
-  if (error) {
-    redirect(`/admin/products?error=${encodeURIComponent(error.message)}`);
+  for (let attempt = 0; attempt < PRODUCT_SKU_MAX_GENERATION_ATTEMPTS; attempt += 1) {
+    product.sku = await createUniqueProductSku(supabase);
+    const { error } = await supabase.from("products").insert(product);
+
+    if (!error) {
+      revalidateProductPaths(product.slug);
+      redirect("/admin/products?saved=1");
+    }
+
+    lastErrorMessage = error.message;
+
+    if (!isProductSkuCollision(error)) {
+      redirect(`/admin/products?error=${encodeURIComponent(error.message)}`);
+    }
   }
 
-  revalidateProductPaths(product.slug);
-  redirect("/admin/products?saved=1");
+  redirect(
+    `/admin/products?error=${encodeURIComponent(
+      lastErrorMessage || "Nie udało się wygenerować unikalnego ID produktu.",
+    )}`,
+  );
 }
 
 export async function updateProductAction(formData: FormData) {
@@ -36,6 +54,7 @@ export async function updateProductAction(formData: FormData) {
 
   const originalSku = getRequiredString(formData, "originalSku").toUpperCase();
   const product = await parseProductFormOrRedirect(formData);
+  product.sku = originalSku;
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("products")
@@ -126,9 +145,15 @@ export async function importProductsAction(formData: FormData) {
   }
 
   if (productsWithoutSku.length > 0) {
-    productsWithoutSku.forEach((product) => {
-      product.sku = createProductSku(product.slug);
-    });
+    const reservedSkus = new Set(
+      productsWithSku
+        .map((product) => product.sku)
+        .filter((sku): sku is string => Boolean(sku)),
+    );
+
+    for (const product of productsWithoutSku) {
+      product.sku = await createUniqueProductSku(supabase, reservedSkus);
+    }
 
     const { error } = await supabase.from("products").insert(productsWithoutSku);
 
@@ -380,19 +405,50 @@ function normalizeSlug(value: string) {
     .slice(0, 120);
 }
 
-function createProductSku(slug: string) {
-  const slugPart = slug
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 24);
-  const randomPart = globalThis.crypto
-    .randomUUID()
-    .replaceAll("-", "")
-    .slice(0, 8)
-    .toUpperCase();
+async function createUniqueProductSku(
+  supabase: SupabaseServerClient,
+  reservedSkus = new Set<string>(),
+) {
+  for (let attempt = 0; attempt < PRODUCT_SKU_MAX_GENERATION_ATTEMPTS; attempt += 1) {
+    const sku = createRandomProductSku();
 
-  return `PWL-${slugPart || "PROD"}-${randomPart}`;
+    if (reservedSkus.has(sku)) {
+      continue;
+    }
+
+    const { data, error } = await supabase
+      .from("products")
+      .select("sku")
+      .eq("sku", sku)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Nie udało się sprawdzić ID produktu: ${error.message}`);
+    }
+
+    if (!data) {
+      reservedSkus.add(sku);
+      return sku;
+    }
+  }
+
+  throw new Error("Nie udało się wygenerować unikalnego ID produktu.");
+}
+
+function createRandomProductSku() {
+  const bytes = new Uint8Array(PRODUCT_SKU_LENGTH);
+  globalThis.crypto.getRandomValues(bytes);
+
+  return Array.from(bytes, (byte) => {
+    return PRODUCT_SKU_ALPHABET[byte % PRODUCT_SKU_ALPHABET.length];
+  }).join("");
+}
+
+function isProductSkuCollision(error: { code?: string; message?: string }) {
+  return (
+    error.code === "23505" &&
+    Boolean(error.message?.toLowerCase().includes("products"))
+  );
 }
 
 function getImportedString(row: Record<string, unknown>, keys: string[]) {
