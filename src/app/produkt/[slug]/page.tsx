@@ -51,7 +51,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const stockLabel = getStockLabel(product);
-  const galleryImages = product.imageUrls?.slice(0, 5) ?? [];
+  const galleryImages =
+    product.imageUrls?.slice(0, 5) ?? (product.imageUrl ? [product.imageUrl] : []);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -66,12 +67,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="mt-8 grid gap-10 lg:grid-cols-[0.95fr_1fr] lg:items-start">
         <div className="lg:sticky lg:top-24">
           <ProductImagePlaceholder product={product} />
-          {galleryImages.length > 1 ? (
-            <div className="mt-3 grid grid-cols-5 gap-2">
+          {galleryImages.length > 0 ? (
+            <div
+              className="mt-3 grid grid-cols-5 gap-2"
+              aria-label="Galeria zdjęć produktu"
+            >
               {galleryImages.map((imageUrl, index) => (
                 <div
-                  key={imageUrl}
-                  className="relative aspect-square overflow-hidden rounded-lg border border-[#eee7db] bg-[#f7f1e8]"
+                  key={`${imageUrl}-${index}`}
+                  className="relative aspect-square overflow-hidden rounded-lg border border-[#eee7db] bg-[#f7f1e8] first:border-[#1f1f1f] first:shadow-sm"
                 >
                   <Image
                     src={imageUrl}
@@ -84,6 +88,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
               ))}
             </div>
           ) : null}
+
+          <div className="mt-5 rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm">
+            <h2 className="text-base font-semibold text-[#1f1f1f]">Opis</h2>
+            <p className="mt-2 text-sm leading-7 text-[#5f5a52]">
+              {product.description}
+            </p>
+          </div>
         </div>
 
         <div>
@@ -115,10 +126,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </span>
             <span>({product.reviewCount} opinii)</span>
           </div>
-
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-[#5f5a52]">
-            {product.description}
-          </p>
 
           <div className="mt-7 flex items-baseline gap-3">
             <span className="text-4xl font-semibold text-[#1f1f1f]">
