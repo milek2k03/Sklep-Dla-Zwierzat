@@ -121,7 +121,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               RLS i serwerowej weryfikacji roli.
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:w-[460px]">
+          <div className="hidden">
             <Link
               href="/admin/discounts"
               className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#d7cab9] px-5 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"

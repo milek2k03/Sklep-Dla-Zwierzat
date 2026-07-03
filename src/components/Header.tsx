@@ -18,6 +18,10 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const isHydrated = useCartHydrated();
 
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
+
   const visibleCount = isHydrated ? itemCount : 0;
 
   return (
