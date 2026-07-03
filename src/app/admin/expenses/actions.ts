@@ -12,7 +12,18 @@ type ExpenseInsert = Database["public"]["Tables"]["expense_entries"]["Insert"];
 export async function createExpenseAction(formData: FormData) {
   await requireAdmin();
 
-  const expense = parseExpenseForm(formData);
+  let expense: ExpenseInsert;
+
+  try {
+    expense = parseExpenseForm(formData);
+  } catch (error) {
+    redirect(
+      `/admin/expenses?error=${encodeURIComponent(
+        error instanceof Error ? error.message : "Niepoprawne dane kosztu.",
+      )}`,
+    );
+  }
+
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("expense_entries").insert(expense);
 
@@ -80,8 +91,8 @@ function getRequiredAmount(formData: FormData, key: string) {
   const rawValue = getRequiredString(formData, key).replace(",", ".");
   const value = Number(rawValue);
 
-  if (!Number.isFinite(value) || value < 0) {
-    throw new Error(`Pole ${key} musi być kwotą większą lub równą 0.`);
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`Pole ${key} musi być kwotą większą od 0.`);
   }
 
   return Math.round(value * 100) / 100;

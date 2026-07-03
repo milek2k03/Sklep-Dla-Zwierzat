@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { expenseCategoryLabels } from "@/lib/expenses";
+import {
+  expenseCategoryLabels,
+  getExpenseDirection,
+  getSignedExpenseAmount,
+} from "@/lib/expenses";
 import { getAdminSession } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
@@ -77,8 +81,10 @@ function buildExpensesCsv(expenses: ExpenseRow[]) {
     "Lp.",
     "Data kosztu",
     "Kategoria",
+    "Typ",
     "Opis",
     "Kwota brutto",
+    "Wartość rzeczywista",
     "Sprzedawca",
     "Numer dokumentu",
     "Link dokumentu",
@@ -87,14 +93,17 @@ function buildExpensesCsv(expenses: ExpenseRow[]) {
   ];
   let runningTotal = 0;
   const rows = expenses.map((expense, index) => {
-    runningTotal = money(runningTotal + Number(expense.amount));
+    const signedAmount = getSignedExpenseAmount(expense);
+    runningTotal = money(runningTotal + signedAmount);
 
     return [
       String(index + 1),
       formatDate(expense.expense_date),
       expenseCategoryLabels[expense.category],
+      getExpenseDirection(expense.category),
       expense.description,
       formatMoney(Number(expense.amount)),
+      formatMoney(signedAmount),
       expense.vendor ?? "",
       expense.document_number ?? "",
       expense.document_url ?? "",
@@ -124,7 +133,7 @@ function formatDate(value: string) {
 }
 
 function formatMoney(value: number) {
-  return money(value).toFixed(2).replace(".", ",");
+  return money(value).toFixed(2);
 }
 
 function money(value: number) {

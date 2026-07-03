@@ -7,7 +7,6 @@ import {
   sendReturnCaseCreatedEmail,
   sendReturnCaseStatusEmail,
 } from "@/lib/email/order-emails";
-import { recordRefundExpense } from "@/lib/refund-expenses";
 import { getStripeClient } from "@/lib/stripe/server";
 import { getAdminSession } from "@/lib/supabase/admin";
 import {
@@ -340,13 +339,6 @@ export async function closeReturnCaseAction(formData: FormData) {
         amount: approvedRefundAmount,
         order,
         returnCase,
-      });
-      await recordRefundExpense({
-        amount: approvedRefundAmount,
-        orderNumber: order.order_number,
-        refundId,
-        reason: `Zwrot/reklamacja ${returnCase.case_number}`,
-        returnCaseNumber: returnCase.case_number,
       });
     } catch (error) {
       redirect(

@@ -1,4 +1,4 @@
--- Refunds as automatic expense entries.
+-- Supplier refunds/cost corrections as expense entries.
 -- Run after 019_random_product_sku.sql.
 
 alter table public.expense_entries
