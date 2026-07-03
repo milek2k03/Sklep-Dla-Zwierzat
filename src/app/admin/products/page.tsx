@@ -532,6 +532,12 @@ function ProductForm({
         <Save className="h-4 w-4" aria-hidden="true" />
         {submitLabel}
       </button>
+      <button
+        type="reset"
+        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d7cab9] px-5 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
+      >
+        Reset
+      </button>
     </form>
   );
 }

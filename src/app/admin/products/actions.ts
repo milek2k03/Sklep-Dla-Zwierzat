@@ -155,7 +155,7 @@ async function parseProductForm(formData: FormData): Promise<ProductInsert> {
   const imageUrls =
     uploadedImageUrls.length > 0 ? uploadedImageUrls : existingImageUrls;
 
-  return {
+  const product: ProductInsert = {
     ...(sku ? { sku } : {}),
     slug,
     name,
@@ -167,12 +167,17 @@ async function parseProductForm(formData: FormData): Promise<ProductInsert> {
     description: getRequiredString(formData, "description"),
     tag: getOptionalString(formData, "tag"),
     features: getFeatures(formData),
-    image_url: imageUrls[0] ?? null,
-    image_urls: imageUrls,
     is_active: formData.get("isActive") === "on",
     is_bundle: formData.get("isBundle") === "on",
     stock_quantity: getRequiredInteger(formData, "stockQuantity"),
   };
+
+  if (imageUrls.length > 0) {
+    product.image_url = imageUrls[0];
+    product.image_urls = imageUrls;
+  }
+
+  return product;
 }
 
 async function parseProductFormOrRedirect(formData: FormData) {
