@@ -778,46 +778,22 @@ function AdminDashboard({
         </div>
       </div>
 
-      <form
-        action="/api/admin/financial-report/export"
-        className="rounded-lg border border-[#26313c] bg-[#111820] p-4 shadow-sm"
-      >
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_150px_150px_auto] lg:items-end">
-          <div>
-            <p className="flex items-center gap-2 text-sm font-semibold text-white">
-              <FileSpreadsheet className="h-4 w-4 text-[#7ff0a6]" aria-hidden="true" />
-              Raport zysków i strat do Excela
-            </p>
-            <p className="mt-1 text-xs leading-5 text-[#9fb1bd]">
-              Eksport zawiera podsumowanie, wszystkie pozycje zamówień, koszty
-              zakupu, marże, refundy oraz straty magazynowe.
-            </p>
-          </div>
-          <label className="block text-xs font-semibold uppercase tracking-wide text-[#9fb1bd]">
-            Od
-            <input
-              className="mt-2 min-h-10 w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-white outline-none [color-scheme:dark] focus:border-[#7ff0a6]"
-              name="from"
-              type="date"
-            />
-          </label>
-          <label className="block text-xs font-semibold uppercase tracking-wide text-[#9fb1bd]">
-            Do
-            <input
-              className="mt-2 min-h-10 w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-white outline-none [color-scheme:dark] focus:border-[#7ff0a6]"
-              name="to"
-              type="date"
-            />
-          </label>
-          <button
-            type="submit"
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#7ff0a6] px-4 text-sm font-semibold text-[#07110b] transition hover:bg-[#9bf5ba]"
-          >
-            <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
-            Pobierz CSV
-          </button>
-        </div>
-      </form>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <FinancialReportExportForm
+          action="/api/admin/financial-report/export"
+          buttonLabel="Pobierz szczegółowy CSV"
+          description="Pełny eksport: podsumowanie, pozycje zamówień, koszty zakupu, marże, refundy oraz straty magazynowe."
+          title="Raport szczegółowy do Excela"
+          variant="detail"
+        />
+        <FinancialReportExportForm
+          action="/api/admin/financial-report/pit/export"
+          buttonLabel="Pobierz PIT CSV"
+          description="Prostszy raport pod PIT-36: przychód, koszty, dochód/strata, korekty oraz kontrola limitu działalności nierejestrowanej."
+          title="Raport PIT-36 działalność nierejestrowana"
+          variant="pit"
+        />
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -932,6 +908,69 @@ function AdminDashboard({
       </div>
     </div>
     </div>
+  );
+}
+
+function FinancialReportExportForm({
+  action,
+  buttonLabel,
+  description,
+  title,
+  variant,
+}: {
+  action: string;
+  buttonLabel: string;
+  description: string;
+  title: string;
+  variant: "detail" | "pit";
+}) {
+  const isPit = variant === "pit";
+  const iconClassName = isPit ? "text-[#ffb09b]" : "text-[#7ff0a6]";
+  const focusClassName = isPit ? "focus:border-[#ffb09b]" : "focus:border-[#7ff0a6]";
+  const buttonClassName = isPit
+    ? "bg-[#ffb09b] text-[#1a0d0a] hover:bg-[#ffc4b4]"
+    : "bg-[#7ff0a6] text-[#07110b] hover:bg-[#9bf5ba]";
+
+  return (
+    <form
+      action={action}
+      className="rounded-lg border border-[#26313c] bg-[#111820] p-4 shadow-sm"
+    >
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_150px_150px]">
+        <div className="lg:col-span-3">
+          <p className="flex items-center gap-2 text-sm font-semibold text-white">
+            <FileSpreadsheet className={`h-4 w-4 ${iconClassName}`} aria-hidden="true" />
+            {title}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-[#9fb1bd]">
+            {description}
+          </p>
+        </div>
+        <label className="block text-xs font-semibold uppercase tracking-wide text-[#9fb1bd]">
+          Od
+          <input
+            className={`mt-2 min-h-10 w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-white outline-none [color-scheme:dark] ${focusClassName}`}
+            name="from"
+            type="date"
+          />
+        </label>
+        <label className="block text-xs font-semibold uppercase tracking-wide text-[#9fb1bd]">
+          Do
+          <input
+            className={`mt-2 min-h-10 w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-white outline-none [color-scheme:dark] ${focusClassName}`}
+            name="to"
+            type="date"
+          />
+        </label>
+        <button
+          type="submit"
+          className={`inline-flex min-h-10 items-center justify-center gap-2 self-end rounded-lg px-4 text-sm font-semibold transition ${buttonClassName}`}
+        >
+          <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+          {buttonLabel}
+        </button>
+      </div>
+    </form>
   );
 }
 
