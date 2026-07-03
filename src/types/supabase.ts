@@ -358,6 +358,7 @@ export type Database = {
           tag: string | null;
           features: string[];
           image_url: string | null;
+          image_urls: string[];
           is_active: boolean;
           is_bundle: boolean;
           stock_quantity: number;
@@ -377,6 +378,7 @@ export type Database = {
           tag?: string | null;
           features?: string[];
           image_url?: string | null;
+          image_urls?: string[];
           is_active?: boolean;
           is_bundle?: boolean;
           stock_quantity?: number;
@@ -396,6 +398,7 @@ export type Database = {
           tag?: string | null;
           features?: string[];
           image_url?: string | null;
+          image_urls?: string[];
           is_active?: boolean;
           is_bundle?: boolean;
           stock_quantity?: number;

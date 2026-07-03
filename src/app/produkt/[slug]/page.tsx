@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check, RotateCcw, Star, Truck } from "lucide-react";
@@ -50,6 +51,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const stockLabel = getStockLabel(product);
+  const galleryImages = product.imageUrls?.slice(0, 5) ?? [];
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -62,7 +64,27 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </Link>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[0.95fr_1fr] lg:items-start">
-        <ProductImagePlaceholder product={product} className="lg:sticky lg:top-24" />
+        <div className="lg:sticky lg:top-24">
+          <ProductImagePlaceholder product={product} />
+          {galleryImages.length > 1 ? (
+            <div className="mt-3 grid grid-cols-5 gap-2">
+              {galleryImages.map((imageUrl, index) => (
+                <div
+                  key={imageUrl}
+                  className="relative aspect-square overflow-hidden rounded-lg border border-[#eee7db] bg-[#f7f1e8]"
+                >
+                  <Image
+                    src={imageUrl}
+                    alt={`${product.name} - zdjęcie ${index + 1}`}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         <div>
           <div className="flex flex-wrap items-center gap-3">

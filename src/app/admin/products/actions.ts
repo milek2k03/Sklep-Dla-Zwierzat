@@ -16,7 +16,7 @@ type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
 export async function createProductAction(formData: FormData) {
   await requireAdmin();
 
-  const product = await parseProductForm(formData);
+  const product = await parseProductFormOrRedirect(formData);
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("products").insert(product);
 
@@ -32,7 +32,7 @@ export async function updateProductAction(formData: FormData) {
   await requireAdmin();
 
   const originalSku = getRequiredString(formData, "originalSku").toUpperCase();
-  const product = await parseProductForm(formData);
+  const product = await parseProductFormOrRedirect(formData);
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("products")
@@ -122,7 +122,13 @@ async function parseProductForm(formData: FormData): Promise<ProductInsert> {
   const slug = normalizeSlug(getOptionalString(formData, "slug") || name);
   const category = getRequiredString(formData, "category") as ProductCategory;
   const sku = getOptionalString(formData, "sku").toUpperCase();
-  const imageUrl = await uploadProductImage(formData.get("image"));
+  const existingImageUrls = getExistingImageUrls(formData);
+  const uploadedImageUrls = await uploadProductImages([
+    ...formData.getAll("images"),
+    ...formData.getAll("image"),
+  ]);
+  const imageUrls =
+    uploadedImageUrls.length > 0 ? uploadedImageUrls : existingImageUrls;
 
   return {
     ...(sku ? { sku } : {}),
@@ -136,11 +142,20 @@ async function parseProductForm(formData: FormData): Promise<ProductInsert> {
     description: getRequiredString(formData, "description"),
     tag: getOptionalString(formData, "tag"),
     features: getFeatures(formData),
-    ...(imageUrl ? { image_url: imageUrl } : {}),
+    image_url: imageUrls[0] ?? null,
+    image_urls: imageUrls,
     is_active: formData.get("isActive") === "on",
     is_bundle: formData.get("isBundle") === "on",
     stock_quantity: getRequiredInteger(formData, "stockQuantity"),
   };
+}
+
+async function parseProductFormOrRedirect(formData: FormData) {
+  try {
+    return await parseProductForm(formData);
+  } catch (error) {
+    redirect(`/admin/products?error=${encodeURIComponent(getErrorMessage(error))}`);
+  }
 }
 
 function revalidateProductPaths(slug: string) {
@@ -150,32 +165,56 @@ function revalidateProductPaths(slug: string) {
   revalidatePath("/admin/products");
 }
 
-async function uploadProductImage(value: FormDataEntryValue | null) {
-  if (!(value instanceof File) || value.size === 0) {
-    return null;
+async function uploadProductImages(values: FormDataEntryValue[]) {
+  const files = values.filter((value): value is File => {
+    return value instanceof File && value.size > 0;
+  });
+
+  if (files.length === 0) {
+    return [];
   }
 
-  if (!value.type.startsWith("image/")) {
-    throw new Error("Plik produktu musi być obrazem.");
+  if (files.length > 5) {
+    throw new Error("Możesz wgrać maksymalnie 5 zdjęć produktu.");
   }
 
-  const extension = value.name.split(".").pop()?.toLowerCase() || "jpg";
-  const path = `${new Date().getFullYear()}/${globalThis.crypto.randomUUID()}.${extension}`;
   const supabase = createSupabaseServiceClient();
-  const { error } = await supabase.storage
-    .from("product-images")
-    .upload(path, value, {
-      contentType: value.type,
-      upsert: false,
-    });
+  const imageUrls: string[] = [];
 
-  if (error) {
-    throw new Error(`Nie udało się wgrać zdjęcia: ${error.message}`);
+  for (const file of files) {
+    const isWebp =
+      file.type === "image/webp" || file.name.toLowerCase().endsWith(".webp");
+
+    if (!isWebp) {
+      throw new Error("Zdjęcia produktu muszą być w formacie WebP.");
+    }
+
+    const path = `${new Date().getFullYear()}/${globalThis.crypto.randomUUID()}.webp`;
+    const { error } = await supabase.storage
+      .from("product-images")
+      .upload(path, file, {
+        contentType: "image/webp",
+        upsert: false,
+      });
+
+    if (error) {
+      throw new Error(`Nie udało się wgrać zdjęcia: ${error.message}`);
+    }
+
+    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+    imageUrls.push(data.publicUrl);
   }
 
-  const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+  return imageUrls;
+}
 
-  return data.publicUrl;
+function getExistingImageUrls(formData: FormData) {
+  return formData
+    .getAll("existingImageUrls")
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .slice(0, 5);
 }
 
 function parseImportedProduct(row: Record<string, unknown>) {
@@ -195,6 +234,8 @@ function parseImportedProduct(row: Record<string, unknown>) {
     "cena_przekreslona",
   ]);
 
+  const imageUrl = getImportedString(row, ["image_url", "zdjecie", "image"]) || null;
+
   return {
     ...(sku ? { sku: sku.toUpperCase() } : {}),
     slug,
@@ -207,11 +248,16 @@ function parseImportedProduct(row: Record<string, unknown>) {
     description: getImportedString(row, ["description", "opis"]) || name,
     tag: getImportedString(row, ["tag", "etykieta"]) || null,
     features: splitFeatures(getImportedString(row, ["features", "cechy"])),
-    image_url: getImportedString(row, ["image_url", "zdjecie", "image"]) || null,
+    image_url: imageUrl,
+    image_urls: imageUrl ? [imageUrl] : [],
     is_active: getImportedBoolean(row, ["is_active", "aktywny"], true),
     is_bundle: getImportedBoolean(row, ["is_bundle", "zestaw"], false),
     stock_quantity: getImportedInteger(row, ["stock", "stan", "stock_quantity"]) ?? 0,
   } satisfies ProductInsert;
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Nieznany błąd.";
 }
 
 function getRequiredString(formData: FormData, key: string) {

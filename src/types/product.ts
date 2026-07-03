@@ -16,4 +16,5 @@ export type Product = {
   isBundle?: boolean;
   stockQuantity?: number;
   imageUrl?: string;
+  imageUrls?: string[];
 };

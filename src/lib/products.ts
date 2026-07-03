@@ -152,6 +152,14 @@ export function getProductBySlug(slug: string) {
 type ProductRow = Database["public"]["Tables"]["products"]["Row"];
 
 function mapProductRow(row: ProductRow): Product {
+  const rowImageUrls = Array.isArray(row.image_urls) ? row.image_urls : [];
+  const imageUrls =
+    rowImageUrls.length > 0
+      ? rowImageUrls
+      : row.image_url
+        ? [row.image_url]
+        : [];
+
   return {
     id: row.sku,
     slug: row.slug,
@@ -168,7 +176,8 @@ function mapProductRow(row: ProductRow): Product {
     isActive: row.is_active,
     isBundle: row.is_bundle,
     stockQuantity: row.stock_quantity,
-    imageUrl: row.image_url ?? undefined,
+    imageUrl: imageUrls[0],
+    imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
   };
 }
 
