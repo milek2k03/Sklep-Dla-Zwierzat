@@ -778,6 +778,47 @@ function AdminDashboard({
         </div>
       </div>
 
+      <form
+        action="/api/admin/financial-report/export"
+        className="rounded-lg border border-[#26313c] bg-[#111820] p-4 shadow-sm"
+      >
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_150px_150px_auto] lg:items-end">
+          <div>
+            <p className="flex items-center gap-2 text-sm font-semibold text-white">
+              <FileSpreadsheet className="h-4 w-4 text-[#7ff0a6]" aria-hidden="true" />
+              Raport zysków i strat do Excela
+            </p>
+            <p className="mt-1 text-xs leading-5 text-[#9fb1bd]">
+              Eksport zawiera podsumowanie, wszystkie pozycje zamówień, koszty
+              zakupu, marże, refundy oraz straty magazynowe.
+            </p>
+          </div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-[#9fb1bd]">
+            Od
+            <input
+              className="mt-2 min-h-10 w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-white outline-none [color-scheme:dark] focus:border-[#7ff0a6]"
+              name="from"
+              type="date"
+            />
+          </label>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-[#9fb1bd]">
+            Do
+            <input
+              className="mt-2 min-h-10 w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold text-white outline-none [color-scheme:dark] focus:border-[#7ff0a6]"
+              name="to"
+              type="date"
+            />
+          </label>
+          <button
+            type="submit"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#7ff0a6] px-4 text-sm font-semibold text-[#07110b] transition hover:bg-[#9bf5ba]"
+          >
+            <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+            Pobierz CSV
+          </button>
+        </div>
+      </form>
+
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {cards.map((card) => {
