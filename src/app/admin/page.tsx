@@ -82,10 +82,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const statusFilter = normalizeOrderStatus(resolvedSearchParams.status);
   const hasFilters = Boolean(orderSearch || statusFilter);
   const supabase = await createSupabaseServerClient();
-  const [statusCounts, dashboard] = await Promise.all([
-    getStatusCounts(orderSearch),
-    getAdminDashboardData(),
-  ]);
   let ordersQuery = supabase
     .from("orders")
     .select("*, order_items(*), order_events(*)")
@@ -100,7 +96,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     ordersQuery = ordersQuery.eq("status", statusFilter);
   }
 
-  const { data, error } = await ordersQuery;
+  const [statusCounts, dashboard, ordersResult] = await Promise.all([
+    getStatusCounts(orderSearch),
+    getAdminDashboardData(),
+    ordersQuery,
+  ]);
+  const { data, error } = ordersResult;
   const orders = (data ?? []) as OrderRow[];
 
   return (
@@ -804,37 +805,30 @@ function buildAdminHref({
 
 async function getStatusCounts(orderSearch: string) {
   const supabase = await createSupabaseServerClient();
+  let query = supabase.from("orders").select("status");
 
-  async function countStatus(status?: OrderStatus) {
-    let query = supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true });
-
-    if (orderSearch) {
-      query = query.ilike("order_number", `%${orderSearch}%`);
-    }
-
-    if (status) {
-      query = query.eq("status", status);
-    }
-
-    const { count } = await query;
-
-    return count ?? 0;
+  if (orderSearch) {
+    query = query.ilike("order_number", `%${orderSearch}%`);
   }
 
-  const [all, ...statusValues] = await Promise.all([
-    countStatus(),
-    ...orderStatuses.map((status) => countStatus(status)),
-  ]);
-
-  return orderStatuses.reduce(
-    (acc, status, index) => ({
+  const { data } = await query;
+  const rows = (data ?? []) as Pick<
+    Database["public"]["Tables"]["orders"]["Row"],
+    "status"
+  >[];
+  const counts = orderStatuses.reduce(
+    (acc, status) => ({
       ...acc,
-      [status]: statusValues[index] ?? 0,
+      [status]: 0,
     }),
-    { all } as Record<OrderStatus, number> & { all: number },
+    { all: rows.length } as Record<OrderStatus, number> & { all: number },
   );
+
+  rows.forEach((row) => {
+    counts[row.status] += 1;
+  });
+
+  return counts;
 }
 
 async function getAdminDashboardData() {
