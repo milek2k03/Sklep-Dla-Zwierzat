@@ -124,11 +124,12 @@ export function buildVerifiedOrder(
   productCatalog: Product[] = products,
   discount: DiscountCodeRow | null = null,
 ): LocalOrder {
+  const canUseStaticFallback = productCatalog === products;
   const missingSlugs = new Set<string>();
   const items = input.items.reduce<CartItem[]>((acc, requestedItem) => {
     const product =
       productCatalog.find((catalogProduct) => catalogProduct.slug === requestedItem.slug) ??
-      getProductBySlug(requestedItem.slug);
+      (canUseStaticFallback ? getProductBySlug(requestedItem.slug) : undefined);
 
     if (!product) {
       missingSlugs.add(requestedItem.slug);

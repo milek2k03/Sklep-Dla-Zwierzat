@@ -6,9 +6,12 @@ import { ArrowLeft, Boxes, FileSpreadsheet, PackagePlus, Pencil, Save, Search } 
 import {
   createCategoryAction,
   createProductAction,
+  deleteProductAction,
   importProductsAction,
   updateProductAction,
 } from "@/app/admin/products/actions";
+import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
+import { SanitizedNumberInput } from "@/components/admin/SanitizedNumberInput";
 import { formatPrice } from "@/lib/format";
 import { getAdminProducts, getProductCategories } from "@/lib/products";
 import { getAdminSession } from "@/lib/supabase/admin";
@@ -239,7 +242,7 @@ export default async function AdminProductsPage({
                     </p>
                   </div>
 
-                  <div className="flex gap-2 sm:justify-end">
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
                     <Link
                       href={`/admin/products?edit=${encodeURIComponent(product.id)}`}
                       scroll={false}
@@ -258,6 +261,10 @@ export default async function AdminProductsPage({
                     >
                       Podgląd
                     </Link>
+                    <form action={deleteProductAction}>
+                      <input type="hidden" name="sku" value={product.id} />
+                      <DeleteProductButton productName={product.name} />
+                    </form>
                   </div>
                 </article>
               );
@@ -423,20 +430,20 @@ function ProductForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Cena">
-          <input
+          <SanitizedNumberInput
             name="price"
+            numberMode="float"
             className="field-input"
             defaultValue={product?.price ?? ""}
-            inputMode="decimal"
             required
           />
         </Field>
         <Field label="Stan magazynowy">
-          <input
+          <SanitizedNumberInput
             name="stockQuantity"
+            numberMode="int"
             className="field-input"
             defaultValue={product?.stockQuantity ?? 0}
-            inputMode="numeric"
             required
           />
         </Field>
@@ -444,11 +451,11 @@ function ProductForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Cena przekreślona">
-          <input
+          <SanitizedNumberInput
             name="compareAtPrice"
+            numberMode="float"
             className="field-input"
             defaultValue={product?.compareAtPrice ?? ""}
-            inputMode="decimal"
           />
         </Field>
         <Field label="Tag">
@@ -463,19 +470,19 @@ function ProductForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Ocena">
-          <input
+          <SanitizedNumberInput
             name="rating"
+            numberMode="float"
             className="field-input"
             defaultValue={product?.rating ?? 0}
-            inputMode="decimal"
           />
         </Field>
         <Field label="Liczba opinii">
-          <input
+          <SanitizedNumberInput
             name="reviewCount"
+            numberMode="int"
             className="field-input"
             defaultValue={product?.reviewCount ?? 0}
-            inputMode="numeric"
           />
         </Field>
       </div>

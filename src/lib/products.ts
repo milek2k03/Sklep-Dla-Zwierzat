@@ -203,9 +203,11 @@ export async function getProductCategories() {
   }
 }
 
-export async function getPublishedProducts() {
+export async function getPublishedProducts(options?: { fallback?: boolean }) {
+  const useFallback = options?.fallback ?? true;
+
   if (!hasSupabaseBrowserEnv()) {
-    return products;
+    return useFallback ? products : [];
   }
 
   try {
@@ -217,12 +219,12 @@ export async function getPublishedProducts() {
       .order("created_at", { ascending: true });
 
     if (error) {
-      return products;
+      return useFallback ? products : [];
     }
 
     return data.map(mapProductRow);
   } catch {
-    return products;
+    return useFallback ? products : [];
   }
 }
 

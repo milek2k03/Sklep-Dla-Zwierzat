@@ -47,6 +47,31 @@ export async function updateProductAction(formData: FormData) {
   redirect("/admin/products?saved=1");
 }
 
+export async function deleteProductAction(formData: FormData) {
+  await requireAdmin();
+
+  const sku = getRequiredString(formData, "sku").toUpperCase();
+  const supabase = await createSupabaseServerClient();
+  const { data: product, error: readError } = await supabase
+    .from("products")
+    .select("slug")
+    .eq("sku", sku)
+    .maybeSingle();
+
+  if (readError) {
+    redirect(`/admin/products?error=${encodeURIComponent(readError.message)}`);
+  }
+
+  const { error } = await supabase.from("products").delete().eq("sku", sku);
+
+  if (error) {
+    redirect(`/admin/products?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidateProductPaths(product?.slug ?? "");
+  redirect("/admin/products?saved=1");
+}
+
 export async function createCategoryAction(formData: FormData) {
   await requireAdmin();
 

@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
   const supabase = createSupabaseServiceClient();
 
   try {
-    const productCatalog = await getPublishedProducts();
+    const productCatalog = await getPublishedProducts({ fallback: false });
     const discountCode = normalizeDiscountCode(parsedPayload.data.discountCode);
     const { data: discount, error: discountError } = discountCode
       ? await supabase
