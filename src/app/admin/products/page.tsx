@@ -375,7 +375,7 @@ function ProductForm({
           <select
             name="category"
             className="field-input"
-            defaultValue={product?.category ?? "Spacer"}
+            defaultValue={product?.category ?? "Dla psa"}
           >
             {categories
               .filter((category) => category !== "Wszystkie")

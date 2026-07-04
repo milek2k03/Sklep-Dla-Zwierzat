@@ -4,7 +4,8 @@ import { getProductCategories, getPublishedProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: "Produkty | Pawly",
-  description: "Praktyczne akcesoria dla psów i kotów na spacer, podróż i do domu.",
+  description:
+    "Praktyczne akcesoria dla psów i kotów do domu, spaceru, auta i podróży.",
 };
 
 export const dynamic = "force-dynamic";

@@ -7,7 +7,9 @@ create table if not exists public.products (
   name text not null,
   price numeric(10, 2) not null check (price >= 0),
   compare_at_price numeric(10, 2) check (compare_at_price is null or compare_at_price >= 0),
-  category text not null check (category in ('Spacer', 'Auto', 'Dom', 'Zestawy')),
+  category text not null check (
+    category in ('Dla psa', 'Dla kota', 'Spacer i podróż', 'Dom', 'Auto', 'Zestawy')
+  ),
   rating numeric(2, 1) not null default 0 check (rating >= 0 and rating <= 5),
   review_count integer not null default 0 check (review_count >= 0),
   description text not null,
@@ -176,14 +178,14 @@ insert into public.products (
   is_bundle,
   stock_quantity
 ) values
-  ('PWL-BND-SPACER-PREMIUM', 'zestaw-spacer-premium', 'Zestaw Spacer Premium', 129.99, 169.99, 'Zestawy', 4.9, 128, 'Kompletny zestaw na codzienne spacery z psem.', 'Bestseller', array['saszetka na smaczki', 'składana miska', 'etui na woreczki', 'wygoda na każdy spacer'], true, true, 12),
-  ('PWL-BND-AUTO-CLEAN', 'zestaw-czyste-auto', 'Zestaw Czyste Auto', 149.99, null, 'Auto', 4.8, 96, 'Zestaw dla osób, które podróżują z psem samochodem.', null, array['pokrowiec do auta', 'mniej sierści na siedzeniach', 'łatwiejsze sprzątanie'], true, true, 8),
-  ('PWL-ACC-TREAT-POUCH', 'saszetka-na-smaczki', 'Saszetka na smaczki', 49.99, null, 'Spacer', 4.8, 112, 'Praktyczna saszetka na przysmaki podczas spaceru i treningu.', null, array['lekka i wygodna', 'szybki dostęp do nagród', 'sprawdza się na treningu'], true, false, 4),
-  ('PWL-ACC-BAG-HOLDER', 'etui-na-woreczki', 'Etui na woreczki', 29.99, null, 'Spacer', 4.7, 89, 'Małe etui, które przypniesz do smyczy lub torby.', null, array['kompaktowy format', 'łatwe przypięcie', 'woreczki zawsze pod ręką'], true, false, 24),
-  ('PWL-ACC-FOLD-BOWL', 'skladana-miska-silikonowa', 'Składana miska silikonowa', 39.99, null, 'Spacer', 4.9, 74, 'Lekka miska na wodę lub karmę w podróży.', null, array['składana konstrukcja', 'łatwa do opłukania', 'dobra na dłuższe spacery'], true, false, 1),
-  ('PWL-HOME-BOWL-MAT', 'mata-pod-miski', 'Mata pod miski', 59.99, null, 'Dom', 4.8, 64, 'Pomaga utrzymać porządek przy miskach psa.', null, array['chroni podloge', 'łatwe czyszczenie', 'minimalistyczny wygląd'], true, false, 15),
-  ('PWL-HOME-MICRO-TOWEL', 'recznik-z-mikrofibry', 'Ręcznik z mikrofibry', 39.99, null, 'Dom', 4.6, 57, 'Przydatny po spacerze, deszczu lub kąpieli.', null, array['szybko chlonie wilgoc', 'miękki dla sierści', 'zajmuje mało miejsca'], true, false, 7),
-  ('PWL-ACC-DOG-BANDANA', 'bandana-dla-psa', 'Bandana dla psa', 24.99, null, 'Spacer', 4.7, 46, 'Prosty dodatek dla psa, dobry do zdjęć i spacerów.', null, array['lekki materiał', 'prosty sposób zapięcia', 'subtelny spacerowy dodatek'], true, false, 18)
+  ('PWL-BND-SPACER-DOG', 'zestaw-spacer-premium-dla-psa', 'Zestaw Spacer Premium dla psa', 129.99, 169.99, 'Zestawy', 4.9, 128, 'Kompletny zestaw na codzienne spacery i krótkie wyjazdy z psem.', 'Bestseller', array['saszetka na smaczki', 'składana miska silikonowa', 'etui na woreczki', 'wygoda na spacer i podróż'], true, true, 12),
+  ('PWL-BND-AUTO-DOG', 'zestaw-czyste-auto-dla-psa', 'Zestaw Czyste Auto dla psa', 149.99, null, 'Auto', 4.8, 96, 'Zestaw dla osób, które podróżują samochodem z psem i chcą utrzymać porządek.', null, array['pokrowiec do auta', 'mniej sierści i piasku na siedzeniach', 'łatwiejsze sprzątanie po podróży'], true, true, 8),
+  ('PWL-HOME-BOWL-MAT', 'mata-pod-miski-dla-psa-lub-kota', 'Mata pod miski dla psa lub kota', 59.99, null, 'Dom', 4.8, 64, 'Pomaga utrzymać porządek przy miskach psa lub kota.', null, array['chroni podłogę', 'łatwe czyszczenie', 'minimalistyczny wygląd'], true, false, 15),
+  ('PWL-TRAVEL-FOLD-BOWL', 'skladana-miska-silikonowa', 'Składana miska silikonowa', 39.99, null, 'Spacer i podróż', 4.9, 74, 'Lekka miska na wodę lub karmę dla psa albo kota w podróży.', null, array['składana konstrukcja', 'łatwa do opłukania', 'dobra na spacer, auto i wyjazd'], true, false, 1),
+  ('PWL-HOME-MICRO-TOWEL', 'recznik-z-mikrofibry-dla-pupila', 'Ręcznik z mikrofibry dla pupila', 39.99, null, 'Dom', 4.6, 57, 'Przydatny po spacerze, deszczu, kąpieli albo podróży z pupilem.', null, array['szybko chłonie wilgoć', 'miękki dla sierści', 'zajmuje mało miejsca'], true, false, 7),
+  ('PWL-TRAVEL-PET-ORGANIZER', 'organizer-na-akcesoria-pupila', 'Organizer na akcesoria pupila', 69.99, null, 'Spacer i podróż', 4.7, 81, 'Poręczny organizer na smycz, woreczki, przysmaki i drobiazgi dla pupila.', null, array['miejsce na spacerowe akcesoria', 'łatwy dostęp w domu i aucie', 'pomaga utrzymać porządek'], true, false, 10),
+  ('PWL-ACC-PET-BANDANA', 'bandana-dla-psa-lub-kota', 'Bandana dla psa lub kota', 24.99, null, 'Dla psa', 4.7, 46, 'Prosty dodatek dla psa lub kota, dobry do zdjęć i spacerów.', null, array['lekki materiał', 'prosty sposób zapięcia', 'subtelny spacerowy dodatek'], true, false, 18),
+  ('PWL-BND-CAT-HOME', 'zestaw-domowy-dla-kota', 'Zestaw Domowy dla kota', 119.99, null, 'Dla kota', 4.8, 69, 'Zestaw prostych akcesoriów do wygodnej domowej rutyny kota.', 'Nowość', array['mata pod miski', 'ręcznik z mikrofibry', 'organizer na drobiazgi', 'spójny zestaw do domu'], true, true, 9)
 on conflict (sku) do update set
   slug = excluded.slug,
   name = excluded.name,
@@ -200,8 +202,10 @@ on conflict (sku) do update set
   stock_quantity = excluded.stock_quantity;
 
 insert into public.product_bundle_items (bundle_sku, component_sku, quantity) values
-  ('PWL-BND-SPACER-PREMIUM', 'PWL-ACC-TREAT-POUCH', 1),
-  ('PWL-BND-SPACER-PREMIUM', 'PWL-ACC-FOLD-BOWL', 1),
-  ('PWL-BND-SPACER-PREMIUM', 'PWL-ACC-BAG-HOLDER', 1)
+  ('PWL-BND-SPACER-DOG', 'PWL-TRAVEL-FOLD-BOWL', 1),
+  ('PWL-BND-SPACER-DOG', 'PWL-TRAVEL-PET-ORGANIZER', 1),
+  ('PWL-BND-CAT-HOME', 'PWL-HOME-BOWL-MAT', 1),
+  ('PWL-BND-CAT-HOME', 'PWL-HOME-MICRO-TOWEL', 1),
+  ('PWL-BND-CAT-HOME', 'PWL-TRAVEL-PET-ORGANIZER', 1)
 on conflict (bundle_sku, component_sku) do update set
   quantity = excluded.quantity;

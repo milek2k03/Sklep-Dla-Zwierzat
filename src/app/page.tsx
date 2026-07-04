@@ -34,8 +34,8 @@ export default async function Home() {
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-6 text-[#6d675f]">
-            Produkty, które pomagają uporządkować codzienne spacery, podróże i
-            domową rutynę z psem albo kotem.
+            Produkty, które pomagają uporządkować spacer, dom, auto i podróż
+            z psem albo kotem.
           </p>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -117,8 +117,8 @@ export default async function Home() {
             {[
               {
                 quote:
-                  "Zestaw spacerowy ma wszystko, czego potrzebujemy na szybkie wyjście z pupilem.",
-                author: "Kasia i Bruno",
+                  "Zestaw spacerowy ma wszystko, czego potrzebujemy na szybkie wyjście z psem.",
+                author: "Kasia",
               },
               {
                 quote:
@@ -127,7 +127,7 @@ export default async function Home() {
               },
               {
                 quote:
-                  "Mata pod miski wygląda schludnie, a kuchnia jest dużo łatwiejsza do ogarnięcia.",
+                  "Mata pod miski wygląda schludnie, a kuchnia po karmieniu psa i kota jest łatwiejsza do ogarnięcia.",
                 author: "Ania",
               },
             ].map((opinion) => (

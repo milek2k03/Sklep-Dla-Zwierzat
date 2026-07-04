@@ -16,7 +16,7 @@ export function FeaturedProduct({ product }: FeaturedProductProps) {
         <div className="relative min-h-[340px] overflow-hidden rounded-lg border border-white/10 bg-[#2a2927] shadow-2xl shadow-black/20">
           <Image
             src="/images/pawly-hero.jpg"
-            alt="Zestaw Spacer Premium Pawly dla pupila"
+            alt={`${product.name} Pawly dla pupila`}
             fill
             sizes="(min-width: 1024px) 44vw, 100vw"
             className="object-cover object-[68%_50%]"
@@ -33,11 +33,11 @@ export function FeaturedProduct({ product }: FeaturedProductProps) {
             Główny zestaw
           </div>
           <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Zestaw Spacer Premium
+            {product.name}
           </h2>
           <p className="mt-4 max-w-2xl text-base leading-7 text-white/72">
-            Kompletny zestaw na codzienne wyjścia: praktyczne akcesoria w jednym
-            prostym pakiecie.
+            Praktyczny pakiet akcesoriów dla pupila, dobrany do spaceru, domu,
+            auta albo podróży.
           </p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">

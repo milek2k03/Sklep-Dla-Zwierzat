@@ -7,9 +7,11 @@ create table if not exists public.product_categories (
 );
 
 insert into public.product_categories (name) values
-  ('Spacer'),
-  ('Auto'),
+  ('Dla psa'),
+  ('Dla kota'),
+  ('Spacer i podróż'),
   ('Dom'),
+  ('Auto'),
   ('Zestawy')
 on conflict (name) do nothing;
 

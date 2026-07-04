@@ -8,134 +8,117 @@ export { productCategories };
 
 export const products: Product[] = [
   {
-    id: "PWL-BND-SPACER-PREMIUM",
-    slug: "zestaw-spacer-premium",
-    name: "Zestaw Spacer Premium",
+    id: "PWL-BND-SPACER-DOG",
+    slug: "zestaw-spacer-premium-dla-psa",
+    name: "Zestaw Spacer Premium dla psa",
     price: 129.99,
     purchasePrice: 74.99,
     compareAtPrice: 169.99,
     category: "Zestawy",
     rating: 4.9,
     reviewCount: 128,
-    description: "Kompletny zestaw na codzienne wyjścia z pupilem.",
+    description: "Kompletny zestaw na codzienne spacery i krótkie wyjazdy z psem.",
     tag: "Bestseller",
     stockQuantity: 12,
     features: [
       "saszetka na smaczki",
-      "składana miska",
+      "składana miska silikonowa",
       "etui na woreczki",
-      "wygoda na każdy spacer lub wyjazd",
+      "wygoda na spacer i podróż",
     ],
   },
   {
-    id: "PWL-BND-AUTO-CLEAN",
-    slug: "zestaw-czyste-auto",
-    name: "Zestaw Czyste Auto",
+    id: "PWL-BND-AUTO-DOG",
+    slug: "zestaw-czyste-auto-dla-psa",
+    name: "Zestaw Czyste Auto dla psa",
     price: 149.99,
     purchasePrice: 84.99,
     category: "Auto",
     rating: 4.8,
     reviewCount: 96,
-    description: "Zestaw dla osób, które podróżują z pupilem samochodem.",
+    description: "Zestaw dla osób, które podróżują samochodem z psem i chcą utrzymać porządek.",
     stockQuantity: 8,
     features: [
       "pokrowiec do auta",
-      "mniej sierści na siedzeniach",
-      "łatwiejsze sprzątanie",
-    ],
-  },
-  {
-    id: "PWL-ACC-TREAT-POUCH",
-    slug: "saszetka-na-smaczki",
-    name: "Saszetka na smaczki",
-    price: 49.99,
-    purchasePrice: 24.99,
-    category: "Spacer",
-    rating: 4.8,
-    reviewCount: 112,
-    description: "Praktyczna saszetka na przysmaki podczas spaceru i treningu.",
-    stockQuantity: 4,
-    features: [
-      "lekka i wygodna",
-      "szybki dostęp do nagród",
-      "sprawdza się na treningu",
-    ],
-  },
-  {
-    id: "PWL-ACC-BAG-HOLDER",
-    slug: "etui-na-woreczki",
-    name: "Etui na woreczki",
-    price: 29.99,
-    purchasePrice: 9.99,
-    category: "Spacer",
-    rating: 4.7,
-    reviewCount: 89,
-    description: "Małe etui, które przypniesz do smyczy lub torby.",
-    stockQuantity: 24,
-    features: [
-      "kompaktowy format",
-      "łatwe przypięcie",
-      "woreczki zawsze pod ręką",
-    ],
-  },
-  {
-    id: "PWL-ACC-FOLD-BOWL",
-    slug: "skladana-miska-silikonowa",
-    name: "Składana miska silikonowa",
-    price: 39.99,
-    purchasePrice: 16.99,
-    category: "Spacer",
-    rating: 4.9,
-    reviewCount: 74,
-    description: "Lekka miska na wodę lub karmę w podróży.",
-    stockQuantity: 1,
-    features: [
-      "składana konstrukcja",
-      "łatwa do opłukania",
-      "dobra na dłuższe spacery",
+      "mniej sierści i piasku na siedzeniach",
+      "łatwiejsze sprzątanie po podróży",
     ],
   },
   {
     id: "PWL-HOME-BOWL-MAT",
-    slug: "mata-pod-miski",
-    name: "Mata pod miski",
+    slug: "mata-pod-miski-dla-psa-lub-kota",
+    name: "Mata pod miski dla psa lub kota",
     price: 59.99,
     purchasePrice: 21.99,
     category: "Dom",
     rating: 4.8,
     reviewCount: 64,
-    description: "Pomaga utrzymać porządek przy miskach pupila.",
+    description: "Pomaga utrzymać porządek przy miskach psa lub kota.",
     stockQuantity: 15,
     features: [
-      "chroni podloge",
+      "chroni podłogę",
       "łatwe czyszczenie",
       "minimalistyczny wygląd",
     ],
   },
   {
+    id: "PWL-TRAVEL-FOLD-BOWL",
+    slug: "skladana-miska-silikonowa",
+    name: "Składana miska silikonowa",
+    price: 39.99,
+    purchasePrice: 16.99,
+    category: "Spacer i podróż",
+    rating: 4.9,
+    reviewCount: 74,
+    description: "Lekka miska na wodę lub karmę dla psa albo kota w podróży.",
+    stockQuantity: 1,
+    features: [
+      "składana konstrukcja",
+      "łatwa do opłukania",
+      "dobra na spacer, auto i wyjazd",
+    ],
+  },
+  {
     id: "PWL-HOME-MICRO-TOWEL",
-    slug: "recznik-z-mikrofibry",
-    name: "Ręcznik z mikrofibry",
+    slug: "recznik-z-mikrofibry-dla-pupila",
+    name: "Ręcznik z mikrofibry dla pupila",
     price: 39.99,
     purchasePrice: 15.99,
     category: "Dom",
     rating: 4.6,
     reviewCount: 57,
-    description: "Przydatny po spacerze, deszczu lub kąpieli.",
+    description: "Przydatny po spacerze, deszczu, kąpieli albo podróży z pupilem.",
     stockQuantity: 7,
     features: [
-      "szybko chlonie wilgoc",
+      "szybko chłonie wilgoć",
       "miękki dla sierści",
       "zajmuje mało miejsca",
     ],
   },
   {
-    id: "PWL-ACC-DOG-BANDANA",
-    slug: "bandana-dla-psa",
-    name: "Bandana dla pupila",
+    id: "PWL-TRAVEL-PET-ORGANIZER",
+    slug: "organizer-na-akcesoria-pupila",
+    name: "Organizer na akcesoria pupila",
+    price: 69.99,
+    purchasePrice: 29.99,
+    category: "Spacer i podróż",
+    rating: 4.7,
+    reviewCount: 81,
+    description: "Poręczny organizer na smycz, woreczki, przysmaki i drobiazgi dla pupila.",
+    stockQuantity: 10,
+    features: [
+      "miejsce na spacerowe akcesoria",
+      "łatwy dostęp w domu i aucie",
+      "pomaga utrzymać porządek",
+    ],
+  },
+  {
+    id: "PWL-ACC-PET-BANDANA",
+    slug: "bandana-dla-psa-lub-kota",
+    name: "Bandana dla psa lub kota",
     price: 24.99,
     purchasePrice: 7.99,
-    category: "Spacer",
+    category: "Dla psa",
     rating: 4.7,
     reviewCount: 46,
     description: "Prosty dodatek dla psa lub kota, dobry do zdjęć i spacerów.",
@@ -146,12 +129,32 @@ export const products: Product[] = [
       "subtelny spacerowy dodatek",
     ],
   },
+  {
+    id: "PWL-BND-CAT-HOME",
+    slug: "zestaw-domowy-dla-kota",
+    name: "Zestaw Domowy dla kota",
+    price: 119.99,
+    purchasePrice: 62.99,
+    category: "Dla kota",
+    rating: 4.8,
+    reviewCount: 69,
+    description: "Zestaw prostych akcesoriów do wygodnej domowej rutyny kota.",
+    tag: "Nowość",
+    stockQuantity: 9,
+    features: [
+      "mata pod miski",
+      "ręcznik z mikrofibry",
+      "organizer na drobiazgi",
+      "spójny zestaw do domu",
+    ],
+  },
 ];
 
 export const bestsellerProducts = products.slice(0, 6);
 
 export const featuredProduct =
-  products.find((product) => product.slug === "zestaw-spacer-premium") ?? products[0];
+  products.find((product) => product.slug === "zestaw-spacer-premium-dla-psa") ??
+  products[0];
 
 export function getProductBySlug(slug: string) {
   return products.find((product) => product.slug === slug);
@@ -226,7 +229,16 @@ export async function getProductCategories() {
       return productCategories;
     }
 
-    return ["Wszystkie", ...data.map((category) => category.name)];
+    const databaseCategories = data.map((category) => category.name);
+    const orderedCategories = productCategories.filter(
+      (category) =>
+        category === "Wszystkie" || databaseCategories.includes(category),
+    );
+    const customCategories = databaseCategories.filter(
+      (category) => !orderedCategories.includes(category),
+    );
+
+    return [...orderedCategories, ...customCategories];
   } catch {
     return productCategories;
   }
@@ -299,7 +311,8 @@ export async function getFeaturedProduct() {
   const catalog = await getPublishedProducts();
 
   return (
-    catalog.find((product) => product.slug === "zestaw-spacer-premium") ??
-    catalog[0]
+    catalog.find(
+      (product) => product.slug === "zestaw-spacer-premium-dla-psa",
+    ) ?? catalog[0]
   );
 }

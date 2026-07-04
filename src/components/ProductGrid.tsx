@@ -35,8 +35,8 @@ export function ProductGrid({ products, categories }: ProductGridProps) {
               Akcesoria Pawly
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-[#6d675f]">
-              Przejrzysty wybór produktów dla psów i kotów: na spacer, podróż i
-              do domu.
+              Przejrzysty wybór produktów dla psów i kotów: do domu, na spacer,
+              do auta i w podróż.
             </p>
           </div>
           <div className="rounded-lg bg-[#1f1f1f] p-5 text-white">

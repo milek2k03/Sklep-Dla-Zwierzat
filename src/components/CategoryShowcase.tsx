@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Car, Home, Package, PawPrint } from "lucide-react";
+import { ArrowRight, Car, Cat, Dog, Home, Luggage, Package, PawPrint } from "lucide-react";
 import { categoryAssets, defaultCategoryAsset } from "@/lib/category-assets";
 import type { ProductCategory } from "@/types/product";
 
@@ -11,10 +11,22 @@ const categories: Array<{
   icon: typeof PawPrint;
 }> = [
   {
-    title: "Spacer",
-    description: "Saszetki, miski i dodatki, które są zawsze pod ręką.",
+    title: "Dla psa",
+    description: "Praktyczne rzeczy na spacer, auto i codzienną rutynę psa.",
     href: "/produkty",
-    icon: PawPrint,
+    icon: Dog,
+  },
+  {
+    title: "Dla kota",
+    description: "Proste akcesoria do spokojnego domu i wygody kota.",
+    href: "/produkty",
+    icon: Cat,
+  },
+  {
+    title: "Spacer i podróż",
+    description: "Miski, organizery i dodatki, które są zawsze pod ręką.",
+    href: "/produkty",
+    icon: Luggage,
   },
   {
     title: "Auto",
@@ -30,7 +42,7 @@ const categories: Array<{
   },
   {
     title: "Zestawy",
-    description: "Gotowe pakiety dla osób, które chcą kupić raz a dobrze.",
+    description: "Gotowe pakiety dla psa, kota albo całej domowej rutyny.",
     href: "/produkty",
     icon: Package,
   },
@@ -45,7 +57,7 @@ export function CategoryShowcase() {
             Kupuj po potrzebie
           </p>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f]">
-            Wszystko dla wygodnej codzienności
+            Spacer, dom, auto i podróż
           </h2>
         </div>
         <Link
@@ -57,7 +69,7 @@ export function CategoryShowcase() {
         </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map((category) => {
           const Icon = category.icon;
           const asset = categoryAssets[category.title] ?? defaultCategoryAsset;

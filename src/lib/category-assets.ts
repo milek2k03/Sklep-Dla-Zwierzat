@@ -10,9 +10,21 @@ export const defaultCategoryAsset = {
 export const categoryAssets: Partial<
   Record<ProductCategory, { src: string; alt: string; objectPosition: string; accent: string }>
 > = {
-  Spacer: {
+  "Dla psa": {
     src: "/images/categories/spacer.jpg",
-    alt: "Akcesoria spacerowe dla psa lub kota w jasnej sesji produktowej",
+    alt: "Akcesoria dla psa w jasnej sesji produktowej",
+    objectPosition: "50% 50%",
+    accent: "text-[#8a4c1e]",
+  },
+  "Dla kota": {
+    src: "/images/categories/dom.jpg",
+    alt: "Domowe akcesoria dla kota w jasnej sesji produktowej",
+    objectPosition: "50% 50%",
+    accent: "text-[#5a6347]",
+  },
+  "Spacer i podróż": {
+    src: "/images/categories/spacer.jpg",
+    alt: "Akcesoria dla psa lub kota na spacer i w podróż",
     objectPosition: "50% 50%",
     accent: "text-[#8a4c1e]",
   },
@@ -30,7 +42,7 @@ export const categoryAssets: Partial<
   },
   Zestawy: {
     src: "/images/categories/zestawy.jpg",
-    alt: "Zestaw akcesoriów dla pupila ułożony w jasnej sesji produktowej",
+    alt: "Zestaw akcesoriów dla pupili ułożony w jasnej sesji produktowej",
     objectPosition: "50% 50%",
     accent: "text-[#7b3f32]",
   },
