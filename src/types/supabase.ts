@@ -84,6 +84,7 @@ export type Database = {
             | "other";
           description: string;
           amount: number;
+          payment_method: "blik" | "transfer" | "cash" | "cod" | "other";
           vendor: string | null;
           document_number: string | null;
           document_url: string | null;
@@ -106,6 +107,7 @@ export type Database = {
             | "other";
           description: string;
           amount: number;
+          payment_method?: "blik" | "transfer" | "cash" | "cod" | "other";
           vendor?: string | null;
           document_number?: string | null;
           document_url?: string | null;
@@ -127,6 +129,7 @@ export type Database = {
             | "other";
           description?: string;
           amount?: number;
+          payment_method?: "blik" | "transfer" | "cash" | "cod" | "other";
           vendor?: string | null;
           document_number?: string | null;
           document_url?: string | null;

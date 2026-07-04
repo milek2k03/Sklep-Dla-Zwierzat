@@ -38,6 +38,9 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+const unregisteredActivityQuarterlyLimit2026 = 10813.5;
+const limitWarningRatio = 0.8;
+
 type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
   order_items: Database["public"]["Tables"]["order_items"]["Row"][];
   order_events: Database["public"]["Tables"]["order_events"]["Row"][];
@@ -55,7 +58,16 @@ type FinancialOrderItemRow = Pick<
 >;
 type FinancialOrderRow = Pick<
   Database["public"]["Tables"]["orders"]["Row"],
-  "id" | "status"
+  | "created_at"
+  | "discount_total"
+  | "id"
+  | "paid_at"
+  | "refunded_at"
+  | "status"
+  | "stripe_refund_id"
+  | "subtotal"
+  | "total"
+  | "updated_at"
 > & {
   order_items: FinancialOrderItemRow[];
 };
@@ -70,9 +82,14 @@ type FinancialReturnCaseItemRow = Pick<
 };
 type FinancialReturnCaseRow = Pick<
   ReturnCaseRow,
-  "approved_refund_amount"
+  "approved_refund_amount" | "created_at" | "order_id" | "refunded_at" | "updated_at"
 > & {
   return_case_items: FinancialReturnCaseItemRow[];
+};
+type DashboardCustomerReturn = {
+  amount: number;
+  date: string;
+  orderId: string;
 };
 
 type AdminPageProps = {
@@ -217,9 +234,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               Eksport CSV
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6d675f]">
-              Pobierz arkusz z opłaconymi zamówieniami, produktami, kosztami
-              dostawy, zwrotami i sumą narastającą. Plik otworzysz w Excelu albo
-              Google Sheets.
+              Pobierz prostą ewidencję przychodu: każde zamówienie, produkty,
+              dostawa pobrana od klienta, status, forma płatności i kwota
+              narastająco. Plik otworzysz w Excelu albo Google Sheets.
             </p>
           </div>
           <form
@@ -680,7 +697,7 @@ function AdminDashboard({
 
   return (
     <div className="mt-6 space-y-6">
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <div className="overflow-hidden rounded-lg border border-[#244a34] bg-[#111817] p-5 text-white shadow-sm ring-1 ring-[#62e89c]/10">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -776,6 +793,57 @@ function AdminDashboard({
             Refundy są liczone oddzielnie od straty magazynowej.
           </p>
         </div>
+
+        <div className="overflow-hidden rounded-lg border border-[#594b2b] bg-[#181610] p-5 text-white shadow-sm ring-1 ring-[#f0c36a]/10">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#f0c36a]">
+                Limit działalności nierejestrowanej
+              </p>
+              <h2 className="mt-2 text-base font-semibold text-white">
+                Bieżący kwartał
+              </h2>
+              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
+                {formatPrice(dashboard.unregisteredActivity.quarterRevenue)}
+              </p>
+              <p className="mt-2 text-sm font-medium text-[#d8c69a]">
+                Limit: {formatPrice(dashboard.unregisteredActivity.quarterLimit)}
+              </p>
+            </div>
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#80662f] bg-[#332817] text-[#f0c36a]">
+              <AlertTriangle className="h-6 w-6" aria-hidden="true" />
+            </span>
+          </div>
+          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#c8b987]">
+                Ten miesiąc
+              </p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {formatPrice(dashboard.unregisteredActivity.monthRevenue)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#c8b987]">
+                Wykorzystanie
+              </p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {dashboard.unregisteredActivity.usagePercent}
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#c8b987]">
+                Zostało
+              </p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {formatPrice(dashboard.unregisteredActivity.remaining)}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 rounded-lg border border-[#594b2b] bg-[#11100c] p-3 text-xs leading-5 text-[#e3d3a7]">
+            {dashboard.unregisteredActivity.warning}
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -788,9 +856,9 @@ function AdminDashboard({
         />
         <FinancialReportExportForm
           action="/api/admin/financial-report/pit/export"
-          buttonLabel="Pobierz PIT CSV"
-          description="Prostszy raport pod PIT-36: przychód, koszty, dochód/strata, korekty oraz kontrola limitu działalności nierejestrowanej."
-          title="Raport PIT-36 działalność nierejestrowana"
+          buttonLabel="Pobierz ewidencję CSV"
+          description="Ewidencja działalności nierejestrowanej: sprzedaż, zwroty klientów, koszty, korekty kosztów, limit i finalne liczby do PIT-36."
+          title="Ewidencja działalności nierejestrowanej"
           variant="pit"
         />
       </div>
@@ -1077,17 +1145,20 @@ async function getAdminDashboardData() {
         .limit(10),
       supabase
         .from("orders")
-        .select("id, status, order_items(line_total, purchase_total, quantity, unit_purchase_price)")
-        .in("status", ["paid", "shipped"]),
+        .select("id, status, created_at, paid_at, subtotal, discount_total, total, stripe_refund_id, refunded_at, updated_at, order_items(line_total, purchase_total, quantity, unit_purchase_price)"),
       supabase
         .from("return_cases")
-        .select("approved_refund_amount, return_case_items(quantity, return_condition, order_items(purchase_total, quantity, unit_purchase_price))"),
+        .select("order_id, approved_refund_amount, created_at, updated_at, refunded_at, return_case_items(quantity, return_condition, order_items(purchase_total, quantity, unit_purchase_price))"),
     ]);
   const financialOrders = (financialOrdersResult.data ?? []) as FinancialOrderRow[];
   const returnCases = (returnLossResult.data ?? []) as FinancialReturnCaseRow[];
 
   return {
     financials: getFinancialDashboardSummary(financialOrders, returnCases),
+    unregisteredActivity: getUnregisteredActivityDashboardSummary(
+      financialOrders,
+      returnCases,
+    ),
     openReturnCasesCount: openReturnCasesResult.count ?? 0,
     lowStockProducts: (lowStockResult.data ?? []) as Pick<
       ProductRow,
@@ -1101,8 +1172,11 @@ function getFinancialDashboardSummary(
   orders: FinancialOrderRow[],
   returnCases: FinancialReturnCaseRow[],
 ) {
+  const profitOrders = orders.filter((order) =>
+    ["paid", "shipped"].includes(order.status),
+  );
   const salesTotal = money(
-    orders.reduce((total, order) => {
+    profitOrders.reduce((total, order) => {
       return (
         total +
         order.order_items.reduce(
@@ -1113,7 +1187,7 @@ function getFinancialDashboardSummary(
     }, 0),
   );
   const purchaseCostTotal = money(
-    orders.reduce((total, order) => {
+    profitOrders.reduce((total, order) => {
       return (
         total +
         order.order_items.reduce(
@@ -1150,8 +1224,144 @@ function getFinancialDashboardSummary(
     purchaseCostTotal,
     salesTotal,
     totalLoss: money(customerRefundLoss + inventoryLoss),
-    transactionCount: orders.length,
+    transactionCount: profitOrders.length,
   };
+}
+
+function getUnregisteredActivityDashboardSummary(
+  orders: FinancialOrderRow[],
+  returnCases: FinancialReturnCaseRow[],
+) {
+  const customerReturns = getDashboardCustomerReturns(orders, returnCases);
+  const today = getWarsawDateKey(new Date());
+  const currentMonth = today.slice(0, 7);
+  const currentQuarter = getDatePeriod(`${today}T00:00:00.000Z`, "quarter");
+  const monthRevenue =
+    getDashboardPeriodNetRevenueBuckets(orders, customerReturns, "month").get(
+      currentMonth,
+    ) ?? 0;
+  const quarterRevenue =
+    getDashboardPeriodNetRevenueBuckets(orders, customerReturns, "quarter").get(
+      currentQuarter,
+    ) ?? 0;
+  const [year] = currentQuarter.split("-Q");
+  const quarterLimit =
+    year === "2026" ? unregisteredActivityQuarterlyLimit2026 : 0;
+  const usageRatio = quarterLimit > 0 ? quarterRevenue / quarterLimit : 0;
+  const remaining = Math.max(0, quarterLimit - quarterRevenue);
+
+  return {
+    monthRevenue,
+    quarterLimit,
+    quarterRevenue,
+    remaining,
+    usagePercent: `${Math.round(usageRatio * 1000) / 10}%`,
+    warning:
+      quarterLimit === 0
+        ? "Sprawdź i ustaw aktualny limit dla tego roku."
+        : quarterRevenue > quarterLimit
+          ? "Limit kwartalny został przekroczony. Sprawdź obowiązek rejestracji działalności."
+          : usageRatio >= limitWarningRatio
+            ? "Zbliżasz się do limitu kwartalnego działalności nierejestrowanej."
+            : "Limit kwartalny jest pod kontrolą.",
+  };
+}
+
+function getDashboardCustomerReturns(
+  orders: FinancialOrderRow[],
+  returnCases: FinancialReturnCaseRow[],
+) {
+  const returnCaseOrderIds = new Set(
+    returnCases.map((returnCase) => returnCase.order_id),
+  );
+  const returnCaseRecords = returnCases.map((returnCase) => ({
+    amount: money(Number(returnCase.approved_refund_amount)),
+    date: getDashboardReturnDate(returnCase),
+    orderId: returnCase.order_id,
+  }));
+  const directOrderRefunds = orders
+    .filter(
+      (order) => order.stripe_refund_id && !returnCaseOrderIds.has(order.id),
+    )
+    .map((order) => ({
+      amount: getDashboardOrderRefundAmount(order),
+      date: order.refunded_at ?? order.updated_at,
+      orderId: order.id,
+    }));
+
+  return [...returnCaseRecords, ...directOrderRefunds];
+}
+
+function getDashboardPeriodNetRevenueBuckets(
+  orders: FinancialOrderRow[],
+  customerReturns: DashboardCustomerReturn[],
+  periodType: "month" | "quarter",
+) {
+  const salesBuckets = getDashboardOrderRevenueBuckets(orders, periodType);
+  const returnBuckets = getDashboardReturnBuckets(customerReturns, periodType);
+  const periods = [
+    ...new Set([...salesBuckets.keys(), ...returnBuckets.keys()]),
+  ].sort();
+  const buckets = new Map<string, number>();
+
+  periods.forEach((period) => {
+    buckets.set(
+      period,
+      money(
+        Math.max(
+          0,
+          (salesBuckets.get(period) ?? 0) - (returnBuckets.get(period) ?? 0),
+        ),
+      ),
+    );
+  });
+
+  return buckets;
+}
+
+function getDashboardOrderRevenueBuckets(
+  orders: FinancialOrderRow[],
+  periodType: "month" | "quarter",
+) {
+  return orders.filter(isDashboardRevenueOrder).reduce((buckets, order) => {
+    const period = getDatePeriod(order.paid_at ?? order.created_at, periodType);
+    buckets.set(period, money((buckets.get(period) ?? 0) + Number(order.total)));
+
+    return buckets;
+  }, new Map<string, number>());
+}
+
+function getDashboardReturnBuckets(
+  customerReturns: DashboardCustomerReturn[],
+  periodType: "month" | "quarter",
+) {
+  return customerReturns.reduce((buckets, record) => {
+    const period = getDatePeriod(record.date, periodType);
+    buckets.set(period, money((buckets.get(period) ?? 0) + record.amount));
+
+    return buckets;
+  }, new Map<string, number>());
+}
+
+function isDashboardRevenueOrder(
+  order: Pick<FinancialOrderRow, "paid_at" | "status">,
+) {
+  return Boolean(order.paid_at) || ["paid", "shipped"].includes(order.status);
+}
+
+function getDashboardOrderRefundAmount(order: FinancialOrderRow) {
+  return money(
+    Math.max(0, Number(order.subtotal) - Number(order.discount_total)),
+  );
+}
+
+function getDashboardReturnDate(
+  returnCase: Pick<
+    FinancialReturnCaseRow,
+    "created_at" | "refunded_at" | "updated_at"
+  >,
+) {
+  return returnCase.refunded_at ?? returnCase.updated_at ?? returnCase.created_at;
 }
 
 function StatusFilterLink({
@@ -1270,6 +1480,24 @@ function getOrderItemUnitPurchasePrice(
 
 function money(value: number) {
   return Math.round(Number(value) * 100) / 100;
+}
+
+function getDatePeriod(value: string, periodType: "month" | "quarter") {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+
+  if (periodType === "month") {
+    return `${year}-${String(month).padStart(2, "0")}`;
+  }
+
+  return `${year}-Q${Math.ceil(month / 3)}`;
+}
+
+function getWarsawDateKey(date: Date) {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Warsaw",
+  }).format(date);
 }
 
 function getAdminDeliveryName(deliveryMethod: string) {

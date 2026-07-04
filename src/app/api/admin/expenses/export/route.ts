@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
   expenseCategoryLabels,
+  expensePaymentMethodLabels,
   getExpenseDirection,
   getSignedExpenseAmount,
 } from "@/lib/expenses";
@@ -87,6 +88,7 @@ function buildExpensesCsv(expenses: ExpenseRow[]) {
     "Wartość rzeczywista",
     "Sprzedawca",
     "Numer dokumentu",
+    "Metoda płatności",
     "Link dokumentu",
     "Uwagi",
     "Suma narastająco",
@@ -106,13 +108,14 @@ function buildExpensesCsv(expenses: ExpenseRow[]) {
       formatMoney(signedAmount),
       expense.vendor ?? "",
       expense.document_number ?? "",
+      expensePaymentMethodLabels[expense.payment_method],
       expense.document_url ?? "",
       expense.notes ?? "",
       formatMoney(runningTotal),
     ];
   });
 
-  return `\uFEFF${[headers, ...rows].map(formatCsvRow).join("\n")}\n`;
+  return `\uFEFFsep=;\n${[headers, ...rows].map(formatCsvRow).join("\n")}\n`;
 }
 
 function formatCsvRow(values: string[]) {
@@ -133,7 +136,7 @@ function formatDate(value: string) {
 }
 
 function formatMoney(value: number) {
-  return money(value).toFixed(2);
+  return money(value).toFixed(2).replace(".", ",");
 }
 
 function money(value: number) {

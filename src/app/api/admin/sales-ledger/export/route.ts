@@ -12,14 +12,15 @@ type LedgerOrder = OrderRow & {
   return_cases: ReturnCaseRow[];
 };
 
-const exportableStatuses = ["paid", "shipped", "cancelled"] as const;
-
 export async function GET(request: NextRequest) {
   const adminSession = await getAdminSession();
 
   if (adminSession.status === "unconfigured") {
     return NextResponse.json(
-      { error: "SUPABASE_NOT_CONFIGURED", message: "Supabase nie jest skonfigurowany." },
+      {
+        error: "SUPABASE_NOT_CONFIGURED",
+        message: "Supabase nie jest skonfigurowany.",
+      },
       { status: 503 },
     );
   }
@@ -45,7 +46,6 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from("orders")
     .select("*, order_items(*), return_cases(*)")
-    .in("status", [...exportableStatuses])
     .order("created_at", { ascending: true });
 
   if (from) {
@@ -83,58 +83,54 @@ function buildSalesLedgerCsv(orders: LedgerOrder[]) {
     "Lp.",
     "Data sprzedaży",
     "Numer zamówienia",
-    "Status",
     "Klient",
-    "E-mail",
-    "Produkty",
+    "Opis / produkt",
     "Kwota produktów brutto",
-    "Koszt dostawy",
-    "Rabat",
-    "Kwota zapłacona",
-    "Zwrot/refund",
-    "Przychód po zwrotach",
-    "Metoda płatności",
-    "Stripe Payment Intent",
-    "Stripe Refund ID",
-    "Sprawy zwrotów",
+    "Dostawa pobrana od klienta",
+    "Razem brutto",
+    "Forma płatności",
+    "Status zamówienia",
+    "Kwota narastająco",
     "Uwagi",
-    "Suma narastająco",
   ];
   let runningTotal = 0;
   const rows = orders.map((order, index) => {
-    const productRefundAmount = calculateProductRefundAmount(order);
-    const revenueAfterRefunds = Math.max(0, money(order.total) - productRefundAmount);
-    runningTotal = money(runningTotal + revenueAfterRefunds);
+    runningTotal = money(runningTotal + getRecognizedOrderRevenue(order));
 
     return [
       String(index + 1),
       formatDateTime(order.paid_at ?? order.created_at),
       order.order_number,
-      order.status,
       order.customer_full_name,
-      order.customer_email,
       formatOrderItems(order.order_items),
-      formatMoney(order.subtotal),
+      formatMoney(getOrderProductsGross(order)),
       formatMoney(order.delivery_cost),
-      formatMoney(order.discount_total),
       formatMoney(order.total),
-      formatMoney(productRefundAmount),
-      formatMoney(revenueAfterRefunds),
-      order.payment_method,
-      order.stripe_payment_intent_id ?? "",
-      getStripeRefundIds(order),
-      getReturnCaseNumbers(order.return_cases),
-      getLedgerNotes(order, productRefundAmount),
+      getPaymentMethodLabel(order.payment_method),
+      getLedgerOrderStatus(order),
       formatMoney(runningTotal),
+      getLedgerNotes(order),
     ];
   });
 
-  return `\uFEFF${[headers, ...rows].map(formatCsvRow).join("\n")}\n`;
+  return `\uFEFFsep=;\n${[headers, ...rows].map(formatCsvRow).join("\n")}\n`;
 }
 
-function calculateProductRefundAmount(order: LedgerOrder) {
+function getRecognizedOrderRevenue(order: LedgerOrder) {
+  return isRevenueOrder(order) ? Number(order.total) : 0;
+}
+
+function getOrderProductsGross(
+  order: Pick<OrderRow, "discount_total" | "subtotal">,
+) {
+  return money(
+    Math.max(0, Number(order.subtotal) - Number(order.discount_total)),
+  );
+}
+
+function getProductRefundAmount(order: LedgerOrder) {
   if (order.stripe_refund_id) {
-    return money(Math.max(0, money(order.subtotal) - money(order.discount_total)));
+    return getOrderProductsGross(order);
   }
 
   return money(
@@ -150,16 +146,12 @@ function calculateProductRefundAmount(order: LedgerOrder) {
 
 function formatOrderItems(items: OrderItemRow[]) {
   return items
-    .map((item) => `${item.product_name} x${item.quantity} (${formatMoney(item.line_total)} zł)`)
-    .join(" | ");
-}
-
-function getStripeRefundIds(order: LedgerOrder) {
-  return [
-    order.stripe_refund_id,
-    ...order.return_cases.map((returnCase) => returnCase.stripe_refund_id),
-  ]
-    .filter(Boolean)
+    .map(
+      (item) =>
+        `${item.product_name} x${item.quantity} (${formatMoney(
+          item.line_total,
+        )} zł)`,
+    )
     .join(" | ");
 }
 
@@ -169,7 +161,47 @@ function getReturnCaseNumbers(returnCases: ReturnCaseRow[]) {
     .join(" | ");
 }
 
-function getLedgerNotes(order: LedgerOrder, productRefundAmount: number) {
+function getLedgerOrderStatus(order: LedgerOrder) {
+  const productRefundAmount = getProductRefundAmount(order);
+  const productsGross = getOrderProductsGross(order);
+
+  if (order.status === "cancelled") {
+    return productRefundAmount > 0 ? "zwrócone" : "anulowane";
+  }
+
+  if (productRefundAmount > 0 && productRefundAmount >= productsGross) {
+    return "zwrócone";
+  }
+
+  if (productRefundAmount > 0) {
+    return "częściowo zwrócone";
+  }
+
+  if (order.status === "paid") {
+    return "opłacone";
+  }
+
+  if (order.status === "shipped") {
+    return "wysłane";
+  }
+
+  return "nowe";
+}
+
+function getPaymentMethodLabel(paymentMethod: OrderRow["payment_method"]) {
+  if (paymentMethod === "manual") {
+    return "przelew";
+  }
+
+  return "inne";
+}
+
+function isRevenueOrder(order: Pick<OrderRow, "paid_at" | "status">) {
+  return Boolean(order.paid_at) || ["paid", "shipped"].includes(order.status);
+}
+
+function getLedgerNotes(order: LedgerOrder) {
+  const productRefundAmount = getProductRefundAmount(order);
   const notes = [];
 
   if (order.status === "cancelled") {
@@ -177,7 +209,11 @@ function getLedgerNotes(order: LedgerOrder, productRefundAmount: number) {
   }
 
   if (productRefundAmount > 0) {
-    notes.push("zwrot produktów bez kosztu dostawy");
+    notes.push(`zwrot klientowi: ${formatMoney(productRefundAmount)} zł`);
+  }
+
+  if (order.return_cases.length > 0) {
+    notes.push(`sprawy zwrotów: ${getReturnCaseNumbers(order.return_cases)}`);
   }
 
   if (order.discount_code) {

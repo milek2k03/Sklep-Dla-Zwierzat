@@ -11,6 +11,7 @@ import { deleteExpenseAction } from "@/app/admin/expenses/actions";
 import { ExpenseForm } from "@/components/admin/ExpenseForm";
 import {
   expenseCategoryLabels,
+  expensePaymentMethodLabels,
   getExpenseDirection,
   getSignedExpenseAmount,
   isExpenseCorrection,
@@ -190,6 +191,9 @@ function ExpenseListItem({ expense }: { expense: ExpenseRow }) {
           {[expense.vendor, expense.document_number]
             .filter(Boolean)
             .join(" • ") || "Brak sprzedawcy / numeru dokumentu"}
+        </p>
+        <p className="mt-1 text-xs text-[#8a8177]">
+          Metoda płatności: {expensePaymentMethodLabels[expense.payment_method]}
         </p>
         {expense.notes ? (
           <p className="mt-1 line-clamp-2 text-sm text-[#7a746d]">

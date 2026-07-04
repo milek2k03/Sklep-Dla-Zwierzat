@@ -2,6 +2,8 @@ import type { Database } from "@/types/supabase";
 
 export type ExpenseCategory =
   Database["public"]["Tables"]["expense_entries"]["Row"]["category"];
+export type ExpensePaymentMethod =
+  Database["public"]["Tables"]["expense_entries"]["Row"]["payment_method"];
 
 export const expenseCategoryLabels: Record<ExpenseCategory, string> = {
   goods: "Towar do sprzedaży",
@@ -18,6 +20,18 @@ export const expenseCategoryLabels: Record<ExpenseCategory, string> = {
 export const expenseCategories = Object.keys(
   expenseCategoryLabels,
 ) as ExpenseCategory[];
+
+export const expensePaymentMethodLabels: Record<ExpensePaymentMethod, string> = {
+  blik: "BLIK",
+  transfer: "przelew",
+  cash: "gotówka",
+  cod: "pobranie",
+  other: "inne",
+};
+
+export const expensePaymentMethods = Object.keys(
+  expensePaymentMethodLabels,
+) as ExpensePaymentMethod[];
 
 type ExpenseAmountInput = {
   amount: number | string;

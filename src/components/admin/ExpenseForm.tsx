@@ -6,6 +6,8 @@ import { createExpenseAction } from "@/app/admin/expenses/actions";
 import {
   expenseCategories,
   expenseCategoryLabels,
+  expensePaymentMethodLabels,
+  expensePaymentMethods,
   isExpenseCorrection,
   type ExpenseCategory,
 } from "@/lib/expenses";
@@ -105,6 +107,24 @@ export function ExpenseForm({ today }: ExpenseFormProps) {
             placeholder="np. OVH, hurtownia"
           />
         </label>
+        <label className="block text-sm font-semibold text-[#1f1f1f]">
+          Metoda płatności
+          <select
+            className="field-input mt-2 min-h-10 py-2"
+            name="paymentMethod"
+            defaultValue="other"
+            required
+          >
+            {expensePaymentMethods.map((method) => (
+              <option key={method} value={method}>
+                {expensePaymentMethodLabels[method]}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm font-semibold text-[#1f1f1f]">
           Nr dokumentu
           <input

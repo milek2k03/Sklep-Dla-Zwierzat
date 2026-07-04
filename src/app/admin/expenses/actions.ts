@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { expenseCategories, type ExpenseCategory } from "@/lib/expenses";
+import {
+  expenseCategories,
+  expensePaymentMethods,
+  type ExpenseCategory,
+  type ExpensePaymentMethod,
+} from "@/lib/expenses";
 import { getAdminSession } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
@@ -60,9 +65,17 @@ async function requireAdmin() {
 
 function parseExpenseForm(formData: FormData): ExpenseInsert {
   const category = getRequiredString(formData, "category") as ExpenseCategory;
+  const paymentMethod = getRequiredString(
+    formData,
+    "paymentMethod",
+  ) as ExpensePaymentMethod;
 
   if (!expenseCategories.includes(category)) {
     throw new Error("Niepoprawna kategoria kosztu.");
+  }
+
+  if (!expensePaymentMethods.includes(paymentMethod)) {
+    throw new Error("Niepoprawna metoda płatności.");
   }
 
   return {
@@ -70,6 +83,7 @@ function parseExpenseForm(formData: FormData): ExpenseInsert {
     category,
     description: getRequiredString(formData, "description"),
     amount: getRequiredAmount(formData, "amount"),
+    payment_method: paymentMethod,
     vendor: getOptionalString(formData, "vendor") || null,
     document_number: getOptionalString(formData, "documentNumber") || null,
     document_url: getOptionalString(formData, "documentUrl") || null,
