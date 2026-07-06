@@ -108,8 +108,11 @@ export function getPickupPointCodeError(
     return "Punkt odbioru jest wymagany.";
   }
 
-  if (method === "inpost-paczkomat" && !/^[A-Z]{3}[0-9]{2}[A-Z0-9]?$/.test(normalizedValue)) {
-    return "Kod Paczkomatu InPost powinien wyglądać np. TOR01A.";
+  if (
+    method === "inpost-paczkomat" &&
+    !/^[A-Z0-9][A-Z0-9-]{2,39}$/.test(normalizedValue)
+  ) {
+    return "Wybierz poprawny Paczkomat lub PaczkoPunkt InPost.";
   }
 
   if (method === "dpd-paczkomat" && !/^[A-Z]{3}[0-9]{2,3}$/.test(normalizedValue)) {

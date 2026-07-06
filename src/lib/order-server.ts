@@ -18,6 +18,7 @@ import {
   type DiscountCodeRow,
 } from "@/lib/discounts";
 import { getAvailableStock } from "@/lib/inventory";
+import type { InpostPoint } from "@/lib/inpost/points";
 import { getProductBySlug, products } from "@/lib/products";
 import type { CartItem, DeliveryMethod } from "@/types/cart";
 import type { LocalOrder } from "@/types/order";
@@ -123,6 +124,7 @@ export function buildVerifiedOrder(
   orderNumber: string,
   productCatalog: Product[] = products,
   discount: DiscountCodeRow | null = null,
+  verifiedInpostPoint: InpostPoint | null = null,
 ): LocalOrder {
   const canUseStaticFallback = productCatalog === products;
   const missingSlugs = new Set<string>();
@@ -214,6 +216,9 @@ export function buildVerifiedOrder(
       postalCode,
       country: DELIVERY_COUNTRY,
       pickupPoint,
+      pickupPointName: verifiedInpostPoint?.displayName,
+      pickupPointAddressLine1: verifiedInpostPoint?.addressLine1,
+      pickupPointAddressLine2: verifiedInpostPoint?.addressLine2,
       notes: input.notes?.trim() || undefined,
     },
     deliveryMethod: input.deliveryMethod as DeliveryMethod,

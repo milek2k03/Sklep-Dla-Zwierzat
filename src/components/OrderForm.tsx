@@ -18,6 +18,10 @@ import { CheckoutSteps } from "@/components/CheckoutSteps";
 import { CheckoutTrust } from "@/components/CheckoutTrust";
 import { FreeDeliveryMeter } from "@/components/FreeDeliveryMeter";
 import {
+  InpostPointSelector,
+  type SelectedInpostPoint,
+} from "@/components/InpostPointSelector";
+import {
   DELIVERY_COUNTRY,
   formatDeliveryAddress,
   isPolishPostalCode,
@@ -156,6 +160,8 @@ export function OrderForm() {
   const clearCart = useCartStore((state) => state.clearCart);
   const isHydrated = useCartHydrated();
   const [submittedOrder, setSubmittedOrder] = useState<LocalOrder | null>(null);
+  const [selectedInpostPoint, setSelectedInpostPoint] =
+    useState<SelectedInpostPoint | null>(null);
 
   const {
     control,
@@ -241,6 +247,7 @@ export function OrderForm() {
       saveOrder(result.order);
       clearCart();
       reset(defaultValues);
+      setSelectedInpostPoint(null);
       toast.success("Przekierowanie do płatności");
 
       if (result.checkoutUrl) {
@@ -259,6 +266,7 @@ export function OrderForm() {
       setSubmittedOrder(localOrder);
       clearCart();
       reset(defaultValues);
+      setSelectedInpostPoint(null);
       toast.warning("Tryb testowy", {
         description:
           "Supabase nie jest skonfigurowany, więc zamówienie zapisano lokalnie.",
@@ -535,6 +543,11 @@ export function OrderForm() {
                             shouldValidate: true,
                           });
                           setDeliveryMethod(option.id);
+                          setValue("pickupPoint", "", {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+                          setSelectedInpostPoint(null);
                         }}
                         className="mt-1 accent-[#1f1f1f]"
                       />
@@ -592,13 +605,37 @@ export function OrderForm() {
                 </Field>
               </div>
 
-              {isPickupDelivery ? (
+              {deliveryMethod === "inpost-paczkomat" &&
+              process.env.NEXT_PUBLIC_INPOST_GEOWIDGET_TOKEN ? (
+                <Field
+                  label="Paczkomat lub PaczkoPunkt InPost"
+                  error={errors.pickupPoint?.message}
+                >
+                  <input type="hidden" {...register("pickupPoint")} />
+                  <InpostPointSelector
+                    selectedPoint={selectedInpostPoint}
+                    onSelect={(point) => {
+                      setSelectedInpostPoint(point);
+                      setValue("pickupPoint", point.name, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                    }}
+                  />
+                </Field>
+              ) : isPickupDelivery ? (
                 <Field label={pickupPointLabel} error={errors.pickupPoint?.message}>
                   <input
                     {...register("pickupPoint")}
                     className="field-input"
                     placeholder={pickupPointPlaceholder}
                   />
+                  {deliveryMethod === "inpost-paczkomat" ? (
+                    <p className="mt-2 text-xs leading-5 text-[#7a746d]">
+                      Mapa będzie dostępna po ustawieniu publicznego tokenu
+                      Geowidget. Wpisany kod zostanie zweryfikowany przez InPost.
+                    </p>
+                  ) : null}
                 </Field>
               ) : null}
             </FormSection>

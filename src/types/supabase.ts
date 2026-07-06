@@ -154,6 +154,9 @@ export type Database = {
           delivery_postal_code: string | null;
           delivery_country: string;
           pickup_point: string | null;
+          pickup_point_name: string | null;
+          pickup_point_address_line1: string | null;
+          pickup_point_address_line2: string | null;
           notes: string | null;
           subtotal: number;
           discount_code: string | null;
@@ -176,6 +179,12 @@ export type Database = {
           tracking_url: string | null;
           shipped_at: string | null;
           shipping_email_sent_at: string | null;
+          inpost_shipment_id: string | null;
+          inpost_shipment_status: string | null;
+          inpost_service: string | null;
+          inpost_shipment_error: string | null;
+          inpost_shipment_started_at: string | null;
+          inpost_shipment_created_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -194,6 +203,9 @@ export type Database = {
           delivery_postal_code?: string | null;
           delivery_country?: string;
           pickup_point?: string | null;
+          pickup_point_name?: string | null;
+          pickup_point_address_line1?: string | null;
+          pickup_point_address_line2?: string | null;
           notes?: string | null;
           subtotal: number;
           discount_code?: string | null;
@@ -216,6 +228,12 @@ export type Database = {
           tracking_url?: string | null;
           shipped_at?: string | null;
           shipping_email_sent_at?: string | null;
+          inpost_shipment_id?: string | null;
+          inpost_shipment_status?: string | null;
+          inpost_service?: string | null;
+          inpost_shipment_error?: string | null;
+          inpost_shipment_started_at?: string | null;
+          inpost_shipment_created_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -242,6 +260,15 @@ export type Database = {
           tracking_url?: string | null;
           shipped_at?: string | null;
           shipping_email_sent_at?: string | null;
+          pickup_point_name?: string | null;
+          pickup_point_address_line1?: string | null;
+          pickup_point_address_line2?: string | null;
+          inpost_shipment_id?: string | null;
+          inpost_shipment_status?: string | null;
+          inpost_service?: string | null;
+          inpost_shipment_error?: string | null;
+          inpost_shipment_started_at?: string | null;
+          inpost_shipment_created_at?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -297,7 +324,9 @@ export type Database = {
             | "refund_created"
             | "return_case_created"
             | "return_case_updated"
-            | "return_case_closed";
+            | "return_case_closed"
+            | "shipment_created"
+            | "shipment_error";
           from_status: "new" | "confirmed" | "paid" | "shipped" | "cancelled" | null;
           to_status: "new" | "confirmed" | "paid" | "shipped" | "cancelled" | null;
           actor_type: "admin" | "stripe" | "system";
@@ -320,7 +349,9 @@ export type Database = {
             | "refund_created"
             | "return_case_created"
             | "return_case_updated"
-            | "return_case_closed";
+            | "return_case_closed"
+            | "shipment_created"
+            | "shipment_error";
           from_status?: "new" | "confirmed" | "paid" | "shipped" | "cancelled" | null;
           to_status?: "new" | "confirmed" | "paid" | "shipped" | "cancelled" | null;
           actor_type: "admin" | "stripe" | "system";
@@ -636,6 +667,12 @@ export type Database = {
           order_number: string;
           created_at: string;
         }>;
+      };
+      claim_inpost_shipment_creation: {
+        Args: {
+          p_order_id: string;
+        };
+        Returns: boolean;
       };
     };
     Enums: Record<string, never>;

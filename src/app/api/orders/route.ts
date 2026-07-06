@@ -8,6 +8,10 @@ import {
   UnknownOrderProductsError,
 } from "@/lib/order-server";
 import { normalizeDiscountCode } from "@/lib/discounts";
+import {
+  getVerifiedInpostPoint,
+  type InpostPoint,
+} from "@/lib/inpost/points";
 import { getPublishedProducts } from "@/lib/products";
 import { getStripeEnv, hasStripeCheckoutEnv } from "@/lib/stripe/env";
 import { getStripeClient } from "@/lib/stripe/server";
@@ -62,6 +66,7 @@ export async function POST(request: NextRequest) {
 
   const orderNumber = createOrderNumber();
   let order: ReturnType<typeof buildVerifiedOrder>;
+  let verifiedInpostPoint: InpostPoint | null = null;
 
   if (!hasSupabaseServiceEnv()) {
     return NextResponse.json(
@@ -84,6 +89,36 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createSupabaseServiceClient();
+
+  if (parsedPayload.data.deliveryMethod === "inpost-paczkomat") {
+    try {
+      verifiedInpostPoint = await getVerifiedInpostPoint(
+        parsedPayload.data.pickupPoint ?? "",
+      );
+    } catch (error) {
+      console.error("Failed to verify InPost point", error);
+
+      return NextResponse.json(
+        {
+          error: "INPOST_POINT_VERIFICATION_FAILED",
+          message:
+            "Nie udało się zweryfikować punktu InPost. Spróbuj ponownie za chwilę.",
+        },
+        { status: 503 },
+      );
+    }
+
+    if (!verifiedInpostPoint) {
+      return NextResponse.json(
+        {
+          error: "INVALID_INPOST_POINT",
+          message:
+            "Wybrany punkt InPost jest nieaktywny albo nie obsługuje odbioru paczek.",
+        },
+        { status: 422 },
+      );
+    }
+  }
 
   try {
     const productCatalog = await getPublishedProducts({
@@ -108,6 +143,7 @@ export async function POST(request: NextRequest) {
       orderNumber,
       productCatalog,
       discount,
+      verifiedInpostPoint,
     );
 
     if (discountCode && !order.discountCode) {
@@ -168,6 +204,11 @@ export async function POST(request: NextRequest) {
         delivery_postal_code: order.customer.postalCode ?? null,
         delivery_country: order.customer.country,
         pickup_point: order.customer.pickupPoint ?? null,
+        pickup_point_name: order.customer.pickupPointName ?? null,
+        pickup_point_address_line1:
+          order.customer.pickupPointAddressLine1 ?? null,
+        pickup_point_address_line2:
+          order.customer.pickupPointAddressLine2 ?? null,
         notes: order.customer.notes ?? null,
         subtotal: order.subtotal,
         discount_code: order.discountCode || null,
