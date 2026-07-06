@@ -217,7 +217,7 @@ function renderCustomerPaidOrderText(order: PaidOrder) {
     "",
     "Adres dostawy:",
     order.delivery_address,
-    ...getPickupPointTextLines(order),
+    order.pickup_point ? `Punkt odbioru: ${order.pickup_point}` : null,
   ]
     .filter(Boolean)
     .join("\n");
@@ -359,7 +359,7 @@ function renderAdminPaidOrderText(order: PaidOrder) {
     "",
     "Adres dostawy:",
     order.delivery_address,
-    ...getPickupPointTextLines(order),
+    order.pickup_point ? `Punkt odbioru: ${order.pickup_point}` : null,
     order.notes ? `Uwagi: ${order.notes}` : null,
   ]
     .filter(Boolean)
@@ -531,49 +531,11 @@ function renderOrderHtml({
       <p style="margin:0;color:#5f5a52;">
         <strong>Adres dostawy:</strong><br />
         ${escapeHtml(order.delivery_address).replaceAll("\n", "<br />")}
-        ${renderPickupPointHtml(order)}
+        ${order.pickup_point ? `<br />Punkt odbioru: ${escapeHtml(order.pickup_point)}` : ""}
       </p>
       ${order.notes ? `<p style="margin:20px 0 0;color:#5f5a52;"><strong>Uwagi:</strong> ${escapeHtml(order.notes)}</p>` : ""}
     </div>
   `;
-}
-
-function getPickupPointTextLines(order: PaidOrder) {
-  if (!order.pickup_point) {
-    return [];
-  }
-
-  return [
-    `Punkt odbioru: ${order.pickup_point_name ?? order.pickup_point}`,
-    order.pickup_point_name ? `Kod punktu: ${order.pickup_point}` : null,
-    order.pickup_point_address_line1
-      ? `Adres punktu: ${order.pickup_point_address_line1}${
-          order.pickup_point_address_line2
-            ? `, ${order.pickup_point_address_line2}`
-            : ""
-        }`
-      : null,
-  ].filter((line): line is string => Boolean(line));
-}
-
-function renderPickupPointHtml(order: PaidOrder) {
-  if (!order.pickup_point) {
-    return "";
-  }
-
-  const pointName = order.pickup_point_name ?? order.pickup_point;
-  const pointCode = order.pickup_point_name
-    ? `<br />Kod punktu: ${escapeHtml(order.pickup_point)}`
-    : "";
-  const pointAddress = order.pickup_point_address_line1
-    ? `<br />Adres punktu: ${escapeHtml(order.pickup_point_address_line1)}${
-        order.pickup_point_address_line2
-          ? `, ${escapeHtml(order.pickup_point_address_line2)}`
-          : ""
-      }`
-    : "";
-
-  return `<br />Punkt odbioru: ${escapeHtml(pointName)}${pointCode}${pointAddress}`;
 }
 
 function getDeliveryName(deliveryMethod: string) {

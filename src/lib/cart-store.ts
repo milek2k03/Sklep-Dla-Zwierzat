@@ -6,6 +6,7 @@ import { useSyncExternalStore } from "react";
 import type { CartItem, DeliveryMethod } from "@/types/cart";
 import type { Product } from "@/types/product";
 import { clampQuantityToStock, getAvailableStock } from "@/lib/inventory";
+import { DEFAULT_DELIVERY_METHOD, isDeliveryMethod } from "@/lib/delivery";
 
 type AddItemResult = {
   added: number;
@@ -38,7 +39,7 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      deliveryMethod: "inpost-paczkomat",
+      deliveryMethod: DEFAULT_DELIVERY_METHOD,
       addItem: (product, quantity = 1) => {
         const requestedQuantity = normalizeQuantity(quantity);
         const stock = getAvailableStock(product);
@@ -142,6 +143,17 @@ export const useCartStore = create<CartState>()(
         deliveryMethod: state.deliveryMethod,
         items: state.items,
       }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<CartState>;
+
+        return {
+          ...currentState,
+          ...persisted,
+          deliveryMethod: isDeliveryMethod(persisted.deliveryMethod)
+            ? persisted.deliveryMethod
+            : DEFAULT_DELIVERY_METHOD,
+        };
+      },
     },
   ),
 );

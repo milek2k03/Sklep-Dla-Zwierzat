@@ -11,9 +11,6 @@ export type OrderCustomer = {
   postalCode?: string;
   country: string;
   pickupPoint?: string;
-  pickupPointName?: string;
-  pickupPointAddressLine1?: string;
-  pickupPointAddressLine2?: string;
   notes?: string;
 };
 

@@ -5,11 +5,7 @@ export type CartItem = {
   quantity: number;
 };
 
-export type DeliveryMethod =
-  | "inpost-paczkomat"
-  | "inpost-kurier"
-  | "dpd-kurier"
-  | "dpd-paczkomat";
+export type DeliveryMethod = "inpost-kurier" | "dpd-kurier";
 
 export type DeliveryOption = {
   id: DeliveryMethod;

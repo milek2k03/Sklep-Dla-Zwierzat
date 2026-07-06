@@ -17,13 +17,10 @@ import {
   X,
 } from "lucide-react";
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
-import { AdminInpostShipmentPanel } from "@/components/admin/AdminInpostShipmentPanel";
 import { AdminRefundButton } from "@/components/admin/AdminRefundButton";
 import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
 import { deliveryOptions, getShippingCarrierForDeliveryMethod } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
-import { hasInpostShipXEnv } from "@/lib/inpost/env";
-import { isInpostLabelAvailable } from "@/lib/inpost/shipments";
 import {
   isOrderStatus,
   orderStatusLabels,
@@ -477,23 +474,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           trackingNumber={order.tracking_number}
                           trackingUrl={order.tracking_url}
                         />
-                        {(order.delivery_method === "inpost-paczkomat" ||
-                          order.delivery_method === "inpost-kurier") &&
-                        (order.status === "paid" ||
-                          order.status === "shipped") ? (
-                          <AdminInpostShipmentPanel
-                            configured={hasInpostShipXEnv()}
-                            error={order.inpost_shipment_error}
-                            labelAvailable={isInpostLabelAvailable(
-                              order.inpost_shipment_status,
-                            )}
-                            orderId={order.id}
-                            service={order.inpost_service}
-                            shipmentId={order.inpost_shipment_id}
-                            shipmentStatus={order.inpost_shipment_status}
-                            trackingNumber={order.tracking_number}
-                          />
-                        ) : null}
                         {order.status === "paid" &&
                         order.payment_method === "stripe" &&
                         order.stripe_payment_intent_id &&
@@ -560,19 +540,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           <p className="mt-1">{order.delivery_address}</p>
                           {order.pickup_point ? (
                             <p className="mt-1">Punkt: {order.pickup_point}</p>
-                          ) : null}
-                          {order.pickup_point_name ? (
-                            <p className="mt-1 font-semibold text-[#1f1f1f]">
-                              {order.pickup_point_name}
-                            </p>
-                          ) : null}
-                          {order.pickup_point_address_line1 ? (
-                            <p className="mt-1">
-                              {order.pickup_point_address_line1}
-                              {order.pickup_point_address_line2
-                                ? `, ${order.pickup_point_address_line2}`
-                                : ""}
-                            </p>
                           ) : null}
                           {order.shipping_carrier || order.tracking_number ? (
                             <div className="mt-3 border-t border-[#eee7db] pt-3">
@@ -1594,8 +1561,6 @@ function formatOrderEvent(
     return_case_created: "Utworzono sprawę",
     return_case_updated: "Zaktualizowano sprawę",
     return_case_closed: "Zamknięto sprawę",
-    shipment_created: "Utworzono przesyłkę InPost",
-    shipment_error: "Błąd przesyłki InPost",
   };
 
   return eventLabels[event.event_type];

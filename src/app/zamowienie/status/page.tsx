@@ -254,23 +254,9 @@ function OrderDetails({ order }: { order: PublicOrder }) {
               {formatAddress(order)}
             </p>
             {order.pickup_point ? (
-              <div className="mt-2 text-sm leading-6 text-[#6d675f]">
-                <p className="font-semibold text-[#1f1f1f]">
-                  Punkt odbioru:{" "}
-                  {order.pickup_point_name ?? order.pickup_point}
-                </p>
-                {order.pickup_point_name ? (
-                  <p>Kod punktu: {order.pickup_point}</p>
-                ) : null}
-                {order.pickup_point_address_line1 ? (
-                  <p>
-                    {order.pickup_point_address_line1}
-                    {order.pickup_point_address_line2
-                      ? `, ${order.pickup_point_address_line2}`
-                      : ""}
-                  </p>
-                ) : null}
-              </div>
+              <p className="mt-2 text-sm font-semibold text-[#1f1f1f]">
+                Punkt odbioru: {order.pickup_point}
+              </p>
             ) : null}
           </div>
           <div>

@@ -18,25 +18,18 @@ import { CheckoutSteps } from "@/components/CheckoutSteps";
 import { CheckoutTrust } from "@/components/CheckoutTrust";
 import { FreeDeliveryMeter } from "@/components/FreeDeliveryMeter";
 import {
-  InpostPointSelector,
-  type SelectedInpostPoint,
-} from "@/components/InpostPointSelector";
-import {
   DELIVERY_COUNTRY,
   formatDeliveryAddress,
   isPolishPostalCode,
   normalizePolishPostalCode,
 } from "@/lib/address";
 import {
+  DEFAULT_DELIVERY_METHOD,
   deliveryMethodValues,
   deliveryOptions,
   getDeliveryCost,
   getDeliveryOption,
-  getPickupPointCodeError,
-  getPickupPointLabel,
-  getPickupPointPlaceholder,
-  normalizePickupPointCode,
-  requiresPickupPoint,
+  isDeliveryMethod,
 } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import { getAvailableStock, getStockLabel } from "@/lib/inventory";
@@ -58,7 +51,6 @@ const orderSchema = z
     street: z.string().optional(),
     buildingNumber: z.string().optional(),
     postalCode: z.string().optional(),
-    pickupPoint: z.string().optional(),
     notes: z.string().optional(),
     discountCode: z.string().max(40).optional(),
     termsAccepted: z
@@ -66,18 +58,6 @@ const orderSchema = z
       .refine((value) => value, "Zaakceptuj regulamin sklepu."),
   })
   .superRefine((data, context) => {
-    const pickupPointError = requiresPickupPoint(data.deliveryMethod)
-      ? getPickupPointCodeError(data.deliveryMethod, data.pickupPoint)
-      : null;
-
-    if (pickupPointError) {
-      context.addIssue({
-        code: "custom",
-        path: ["pickupPoint"],
-        message: pickupPointError,
-      });
-    }
-
     const requiredAddressFields = [
       ["city", data.city, "Podaj miejscowość."],
       ["street", data.street, "Podaj ulicę."],
@@ -114,12 +94,11 @@ const defaultValues: OrderFormValues = {
   fullName: "",
   email: "",
   phone: "",
-  deliveryMethod: "inpost-paczkomat",
+  deliveryMethod: DEFAULT_DELIVERY_METHOD,
   city: "",
   street: "",
   buildingNumber: "",
   postalCode: "",
-  pickupPoint: "",
   notes: "",
   discountCode: "",
   termsAccepted: false,
@@ -160,8 +139,6 @@ export function OrderForm() {
   const clearCart = useCartStore((state) => state.clearCart);
   const isHydrated = useCartHydrated();
   const [submittedOrder, setSubmittedOrder] = useState<LocalOrder | null>(null);
-  const [selectedInpostPoint, setSelectedInpostPoint] =
-    useState<SelectedInpostPoint | null>(null);
 
   const {
     control,
@@ -178,7 +155,7 @@ export function OrderForm() {
   const deliveryMethod = (useWatch({
     control,
     name: "deliveryMethod",
-  }) ?? "inpost-paczkomat") as DeliveryMethod;
+  }) ?? DEFAULT_DELIVERY_METHOD) as DeliveryMethod;
 
   const subtotal = useMemo(
     () =>
@@ -190,18 +167,25 @@ export function OrderForm() {
   );
   const deliveryCost = getDeliveryCost(deliveryMethod, subtotal);
   const total = subtotal + deliveryCost;
-  const isPickupDelivery = requiresPickupPoint(deliveryMethod);
-  const pickupPointLabel = getPickupPointLabel(deliveryMethod);
-  const pickupPointPlaceholder = getPickupPointPlaceholder(deliveryMethod);
   const hasUnavailableItems = items.some(
     (item) => item.quantity > getAvailableStock(item.product),
   );
 
   useEffect(() => {
     if (isHydrated) {
-      setValue("deliveryMethod", selectedDeliveryMethod);
+      const nextDeliveryMethod = isDeliveryMethod(selectedDeliveryMethod)
+        ? selectedDeliveryMethod
+        : DEFAULT_DELIVERY_METHOD;
+
+      setDeliveryMethod(nextDeliveryMethod);
+      setValue("deliveryMethod", nextDeliveryMethod);
     }
-  }, [isHydrated, selectedDeliveryMethod, setValue]);
+  }, [
+    isHydrated,
+    selectedDeliveryMethod,
+    setDeliveryMethod,
+    setValue,
+  ]);
 
   const onSubmit = async (values: OrderFormValues) => {
     if (items.length === 0) {
@@ -247,7 +231,6 @@ export function OrderForm() {
       saveOrder(result.order);
       clearCart();
       reset(defaultValues);
-      setSelectedInpostPoint(null);
       toast.success("Przekierowanie do płatności");
 
       if (result.checkoutUrl) {
@@ -266,7 +249,6 @@ export function OrderForm() {
       setSubmittedOrder(localOrder);
       clearCart();
       reset(defaultValues);
-      setSelectedInpostPoint(null);
       toast.warning("Tryb testowy", {
         description:
           "Supabase nie jest skonfigurowany, więc zamówienie zapisano lokalnie.",
@@ -296,9 +278,6 @@ export function OrderForm() {
           ? normalizePolishPostalCode(values.postalCode)
           : undefined,
         country: DELIVERY_COUNTRY,
-        pickupPoint: requiresPickupPoint(values.deliveryMethod)
-          ? normalizePickupPointCode(values.pickupPoint ?? "")
-          : undefined,
         notes: values.notes?.trim() || undefined,
       },
       deliveryMethod: values.deliveryMethod,
@@ -543,11 +522,6 @@ export function OrderForm() {
                             shouldValidate: true,
                           });
                           setDeliveryMethod(option.id);
-                          setValue("pickupPoint", "", {
-                            shouldDirty: true,
-                            shouldValidate: true,
-                          });
-                          setSelectedInpostPoint(null);
                         }}
                         className="mt-1 accent-[#1f1f1f]"
                       />
@@ -605,39 +579,6 @@ export function OrderForm() {
                 </Field>
               </div>
 
-              {deliveryMethod === "inpost-paczkomat" &&
-              process.env.NEXT_PUBLIC_INPOST_GEOWIDGET_TOKEN ? (
-                <Field
-                  label="Paczkomat lub PaczkoPunkt InPost"
-                  error={errors.pickupPoint?.message}
-                >
-                  <input type="hidden" {...register("pickupPoint")} />
-                  <InpostPointSelector
-                    selectedPoint={selectedInpostPoint}
-                    onSelect={(point) => {
-                      setSelectedInpostPoint(point);
-                      setValue("pickupPoint", point.name, {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      });
-                    }}
-                  />
-                </Field>
-              ) : isPickupDelivery ? (
-                <Field label={pickupPointLabel} error={errors.pickupPoint?.message}>
-                  <input
-                    {...register("pickupPoint")}
-                    className="field-input"
-                    placeholder={pickupPointPlaceholder}
-                  />
-                  {deliveryMethod === "inpost-paczkomat" ? (
-                    <p className="mt-2 text-xs leading-5 text-[#7a746d]">
-                      Mapa będzie dostępna po ustawieniu publicznego tokenu
-                      Geowidget. Wpisany kod zostanie zweryfikowany przez InPost.
-                    </p>
-                  ) : null}
-                </Field>
-              ) : null}
             </FormSection>
 
             <FormSection

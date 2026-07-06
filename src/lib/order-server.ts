@@ -8,9 +8,6 @@ import {
 import {
   deliveryMethodValues,
   getDeliveryCost,
-  getPickupPointCodeError,
-  normalizePickupPointCode,
-  requiresPickupPoint,
 } from "@/lib/delivery";
 import {
   applyDiscountToItems,
@@ -18,7 +15,6 @@ import {
   type DiscountCodeRow,
 } from "@/lib/discounts";
 import { getAvailableStock } from "@/lib/inventory";
-import type { InpostPoint } from "@/lib/inpost/points";
 import { getProductBySlug, products } from "@/lib/products";
 import type { CartItem, DeliveryMethod } from "@/types/cart";
 import type { LocalOrder } from "@/types/order";
@@ -34,7 +30,6 @@ export const orderRequestSchema = z
     street: z.string().max(140).optional(),
     buildingNumber: z.string().max(40).optional(),
     postalCode: z.string().max(12).optional(),
-    pickupPoint: z.string().max(120).optional(),
     notes: z.string().max(1000).optional(),
     discountCode: z.string().max(40).optional(),
     termsAccepted: z.literal(true),
@@ -49,18 +44,6 @@ export const orderRequestSchema = z
       .max(50),
   })
   .superRefine((data, context) => {
-    const pickupPointError = requiresPickupPoint(data.deliveryMethod)
-      ? getPickupPointCodeError(data.deliveryMethod, data.pickupPoint)
-      : null;
-
-    if (pickupPointError) {
-      context.addIssue({
-        code: "custom",
-        path: ["pickupPoint"],
-        message: pickupPointError,
-      });
-    }
-
     const requiredAddressFields = [
       ["city", data.city, "Miejscowość jest wymagana."],
       ["street", data.street, "Ulica jest wymagana."],
@@ -124,7 +107,6 @@ export function buildVerifiedOrder(
   orderNumber: string,
   productCatalog: Product[] = products,
   discount: DiscountCodeRow | null = null,
-  verifiedInpostPoint: InpostPoint | null = null,
 ): LocalOrder {
   const canUseStaticFallback = productCatalog === products;
   const missingSlugs = new Set<string>();
@@ -186,9 +168,6 @@ export function buildVerifiedOrder(
   const discountedSubtotal = roundMoney(Math.max(0, subtotal - discountTotal));
   const deliveryCost = getDeliveryCost(input.deliveryMethod, discountedSubtotal);
   const total = roundMoney(discountedSubtotal + deliveryCost);
-  const pickupPoint = requiresPickupPoint(input.deliveryMethod)
-    ? normalizePickupPointCode(input.pickupPoint ?? "")
-    : undefined;
   const city = input.city?.trim();
   const street = input.street?.trim();
   const buildingNumber = input.buildingNumber?.trim();
@@ -215,10 +194,6 @@ export function buildVerifiedOrder(
       buildingNumber,
       postalCode,
       country: DELIVERY_COUNTRY,
-      pickupPoint,
-      pickupPointName: verifiedInpostPoint?.displayName,
-      pickupPointAddressLine1: verifiedInpostPoint?.addressLine1,
-      pickupPointAddressLine2: verifiedInpostPoint?.addressLine2,
       notes: input.notes?.trim() || undefined,
     },
     deliveryMethod: input.deliveryMethod as DeliveryMethod,

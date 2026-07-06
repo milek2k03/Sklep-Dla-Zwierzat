@@ -1,8 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { sendPaidOrderEmails } from "@/lib/email/order-emails";
-import { hasInpostShipXEnv } from "@/lib/inpost/env";
-import { ensureInpostShipmentForOrder } from "@/lib/inpost/shipments";
 import { getStripeWebhookSecret } from "@/lib/stripe/env";
 import { getStripeClient } from "@/lib/stripe/server";
 import { hasSupabaseServiceEnv } from "@/lib/supabase/env";
@@ -105,10 +103,6 @@ async function markOrderAsPaid(session: Stripe.Checkout.Session) {
 
   if (error) {
     if (error.code === "PGRST116") {
-      await retryInpostShipmentForPaidOrder({
-        orderId,
-        checkoutSessionId: session.id,
-      });
       return;
     }
 
@@ -132,63 +126,7 @@ async function markOrderAsPaid(session: Stripe.Checkout.Session) {
     },
   });
 
-  if (
-    hasInpostShipXEnv() &&
-    (updatedOrder.delivery_method === "inpost-paczkomat" ||
-      updatedOrder.delivery_method === "inpost-kurier")
-  ) {
-    try {
-      await ensureInpostShipmentForOrder(updatedOrder.id);
-    } catch (shipmentError) {
-      console.error(
-        "Failed to create InPost shipment after payment",
-        shipmentError,
-      );
-    }
-  }
-
   await sendPaidOrderEmailsAndMark(updatedOrder as PaidOrderRow);
-}
-
-async function retryInpostShipmentForPaidOrder({
-  orderId,
-  checkoutSessionId,
-}: {
-  orderId?: string;
-  checkoutSessionId: string;
-}) {
-  if (!hasInpostShipXEnv()) {
-    return;
-  }
-
-  const supabase = createSupabaseServiceClient();
-  let query = supabase
-    .from("orders")
-    .select("id, status, delivery_method")
-    .eq("status", "paid");
-
-  query = orderId
-    ? query.eq("id", orderId)
-    : query.eq("stripe_checkout_session_id", checkoutSessionId);
-
-  const { data: order } = await query.maybeSingle();
-
-  if (
-    !order ||
-    (order.delivery_method !== "inpost-paczkomat" &&
-      order.delivery_method !== "inpost-kurier")
-  ) {
-    return;
-  }
-
-  try {
-    await ensureInpostShipmentForOrder(order.id);
-  } catch (shipmentError) {
-    console.error(
-      "Failed to retry InPost shipment after duplicate payment event",
-      shipmentError,
-    );
-  }
 }
 
 async function sendPaidOrderEmailsAndMark(order: PaidOrderRow) {
