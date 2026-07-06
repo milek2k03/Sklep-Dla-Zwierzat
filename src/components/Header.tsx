@@ -161,7 +161,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#eee7db] bg-[#fffdf8]/95 backdrop-blur">
-      <div className="mx-auto grid min-h-16 w-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-6 md:grid-cols-[auto_minmax(220px,1fr)_auto_auto] md:gap-x-5 md:py-0 lg:px-8">
+      <div className="mx-auto grid min-h-16 w-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-2 sm:px-6 md:grid-cols-[auto_auto_minmax(220px,1fr)_auto] md:gap-x-5 md:py-0 lg:px-8">
         <Link
           href="/"
           className="flex items-center gap-2 text-lg font-semibold tracking-tight text-[#1f1f1f]"
@@ -173,8 +173,23 @@ export function Header() {
           Pawly
         </Link>
 
+        <nav className="hidden items-center gap-5 text-sm font-medium text-[#5f5a52] md:flex lg:gap-7">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "transition hover:text-[#1f1f1f]",
+                pathname === item.href && "text-[#1f1f1f]",
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
         <form
-          className="relative col-span-3 row-start-2 w-full md:col-span-1 md:col-start-2 md:row-start-1 md:max-w-xl md:justify-self-center"
+          className="relative col-span-3 row-start-2 w-full md:col-span-1 md:row-start-1 md:max-w-xl"
           onSubmit={handleSearchSubmit}
           onBlur={handleSearchBlur}
           role="search"
@@ -286,21 +301,6 @@ export function Header() {
             </div>
           ) : null}
         </form>
-
-        <nav className="hidden items-center gap-5 text-sm font-medium text-[#5f5a52] md:col-start-3 md:flex lg:gap-7">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "transition hover:text-[#1f1f1f]",
-                pathname === item.href && "text-[#1f1f1f]",
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
 
         <div className="col-start-3 row-start-1 flex items-center justify-end gap-2 md:col-start-4">
           <Link
