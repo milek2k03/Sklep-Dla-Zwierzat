@@ -16,10 +16,10 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/produkty", label: "Produkty" },
+  { href: "/produkty?q=bestseller", label: "Bestsellery" },
   { href: "/produkty?q=dla%20psa", label: "Dla psa" },
   { href: "/produkty?q=dla%20kota", label: "Dla kota" },
   { href: "/produkty?q=zestawy", label: "Zestawy" },
-  { href: "/produkty?q=bestseller", label: "Bestsellery" },
 ];
 
 type ProductSuggestion = {
