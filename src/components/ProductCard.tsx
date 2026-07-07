@@ -12,12 +12,19 @@ type ProductCardProps = {
 
 export function ProductCard({ product }: ProductCardProps) {
   const stockLabel = getStockLabel(product);
+  const productHref = `/produkt/${product.slug}`;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#d7cab9] hover:shadow-xl hover:shadow-[#4b3420]/[0.08]">
-      <Link href={`/produkt/${product.slug}`} className="block p-3 pb-0">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#d7cab9] hover:shadow-xl hover:shadow-[#4b3420]/[0.08]">
+      <Link
+        href={productHref}
+        aria-label={`Zobacz produkt: ${product.name}`}
+        className="absolute inset-0 z-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e86f2c] focus:ring-offset-2"
+      />
+
+      <div className="p-3 pb-0">
         <ProductImagePlaceholder product={product} />
-      </Link>
+      </div>
 
       <div className="flex flex-1 flex-col p-5 pt-4">
         <div className="flex items-center justify-between gap-3">
@@ -31,11 +38,9 @@ export function ProductCard({ product }: ProductCardProps) {
           ) : null}
         </div>
 
-        <Link href={`/produkt/${product.slug}`} className="mt-3 block">
-          <h2 className="text-lg font-semibold leading-tight text-[#1f1f1f] transition group-hover:text-[#b65320]">
-            {product.name}
-          </h2>
-        </Link>
+        <h2 className="mt-3 text-lg font-semibold leading-tight text-[#1f1f1f] transition group-hover:text-[#b65320]">
+          {product.name}
+        </h2>
         <p className="mt-2 line-clamp-2 min-h-11 text-sm leading-6 text-[#6d675f]">
           {product.description}
         </p>
@@ -65,7 +70,7 @@ export function ProductCard({ product }: ProductCardProps) {
           ) : null}
         </div>
 
-        <div className="mt-auto pt-5">
+        <div className="relative z-20 mt-auto pt-5">
           <AddToCartButton product={product} className="w-full" />
         </div>
       </div>
