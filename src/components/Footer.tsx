@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PawPrint } from "lucide-react";
+import { storeBrandName } from "@/lib/brand";
 
 export function Footer() {
   const pathname = usePathname();
@@ -19,7 +20,7 @@ export function Footer() {
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1f1f1f] text-white">
               <PawPrint className="h-4 w-4" aria-hidden="true" />
             </span>
-            Pawly
+            {storeBrandName}
           </div>
           <p className="mt-4 max-w-sm text-sm leading-6 text-[#6d675f]">
             Starannie wybrane produkty dla pupili — do domu, na spacer, do auta
@@ -64,7 +65,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-[#f1eadf] px-4 py-5 text-center text-xs text-[#7a746d]">
-        © 2026 Pawly. Sklep w wersji testowej.
+        © 2026 {storeBrandName}. Sklep w wersji testowej.
       </div>
     </footer>
   );

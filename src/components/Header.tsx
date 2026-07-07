@@ -10,6 +10,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { storeBrandSuffix, storeShortName } from "@/lib/brand";
 import { useCartHydrated, useCartStore } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -173,7 +174,12 @@ export function Header() {
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1f1f1f] text-white">
             <PawPrint className="h-4 w-4" aria-hidden="true" />
           </span>
-          Pawly
+          <span className="leading-none">
+            <span className="block">{storeShortName}</span>
+            <span className="block text-[10px] font-semibold uppercase leading-none tracking-wide text-[#7a746d]">
+              {storeBrandSuffix}
+            </span>
+          </span>
         </Link>
 
         <form

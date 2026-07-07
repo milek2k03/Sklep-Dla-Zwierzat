@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { storeBrandName } from "@/lib/brand";
 import { getReturnCondition } from "@/lib/return-conditions";
 import { getAdminSession } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -119,7 +120,7 @@ function buildFinancialReportCsv({
 }) {
   const summary = getFinancialSummary(orders, returnCases);
   const rows: string[][] = [
-    ["Raport zyskow i strat Pawly"],
+    [`Raport zyskow i strat ${storeBrandName}`],
     ["Zakres od", from ?? "poczatek"],
     ["Zakres do", to ?? "koniec"],
     ["Wygenerowano", formatDateTime(new Date().toISOString())],

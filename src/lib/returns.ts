@@ -7,7 +7,8 @@ export type ReturnAddress = {
 };
 
 export function getReturnAddress(): ReturnAddress | null {
-  const name = process.env.RETURN_ADDRESS_NAME?.trim() || "Pawly Zwroty";
+  const name =
+    process.env.RETURN_ADDRESS_NAME?.trim() || "Pawly Pet Shop Zwroty";
   const street = process.env.RETURN_ADDRESS_STREET?.trim();
   const postalCode = process.env.RETURN_ADDRESS_POSTAL_CODE?.trim();
   const city = process.env.RETURN_ADDRESS_CITY?.trim();

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Check, Sparkles } from "lucide-react";
 import { AddToCartButton } from "@/components/AddToCartButton";
+import { storeBrandName } from "@/lib/brand";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/types/product";
 
@@ -16,14 +17,14 @@ export function FeaturedProduct({ product }: FeaturedProductProps) {
         <div className="relative min-h-[340px] overflow-hidden rounded-lg border border-white/10 bg-[#2a2927] shadow-2xl shadow-black/20">
           <Image
             src="/images/pawly-hero.jpg"
-            alt={`${product.name} Pawly dla pupila`}
+            alt={`${product.name} ${storeBrandName} dla pupila`}
             fill
             sizes="(min-width: 1024px) 44vw, 100vw"
             className="object-cover object-[68%_50%]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/48 via-black/4 to-transparent" />
           <div className="absolute bottom-5 left-5 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-[#1f1f1f] backdrop-blur">
-            Bestseller Pawly
+            Bestseller {storeBrandName}
           </div>
         </div>
 

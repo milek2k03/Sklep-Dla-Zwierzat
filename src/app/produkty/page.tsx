@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { ProductGrid } from "@/components/ProductGrid";
+import { storeBrandName } from "@/lib/brand";
 import { getProductCategories, getPublishedProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
-  title: "Produkty | Pawly",
+  title: `Produkty | ${storeBrandName}`,
   description:
     "Praktyczne akcesoria dla psów i kotów do domu, spaceru, auta i podróży.",
 };

@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { CheckoutSteps } from "@/components/CheckoutSteps";
+import { storeBrandName } from "@/lib/brand";
 
 export const metadata: Metadata = {
-  title: "Płatność przyjęta | Pawly",
+  title: `Płatność przyjęta | ${storeBrandName}`,
 };
 
 type SuccessPageProps = {
@@ -27,7 +28,9 @@ export default async function OrderSuccessPage({
           <Check className="h-8 w-8" aria-hidden="true" />
         </div>
         <p className="mt-6 text-sm font-semibold uppercase tracking-wide text-[#2f6b3f]">
-          {orderNumber ? `Zamówienie ${orderNumber}` : "Zamówienie Pawly"}
+          {orderNumber
+            ? `Zamówienie ${orderNumber}`
+            : `Zamówienie ${storeBrandName}`}
         </p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f]">
           Płatność została przyjęta

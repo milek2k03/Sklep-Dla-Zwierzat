@@ -7,7 +7,7 @@ export function Hero() {
     <section className="relative isolate min-h-[calc(100svh-9rem)] overflow-hidden bg-[#efe7dc]">
       <Image
         src="/images/pawly-hero.jpg"
-        alt="Akcesoria Pawly dla psów i kotów do domu, spaceru, auta i podróży"
+        alt="Akcesoria Pawly Pet Shop dla psów i kotów do domu, spaceru, auta i podróży"
         fill
         priority
         sizes="100vw"

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Providers } from "@/components/Providers";
+import { storeBrandName } from "@/lib/brand";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pawly - akcesoria dla psów i kotów",
+  title: `${storeBrandName} - akcesoria dla psów i kotów`,
   description:
     "Sklep z praktycznymi akcesoriami dla psów i kotów do domu, spaceru, auta i podróży.",
 };

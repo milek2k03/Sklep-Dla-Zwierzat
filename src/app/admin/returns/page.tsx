@@ -8,6 +8,7 @@ import {
   updateReturnCaseStatusAction,
 } from "@/app/admin/returns/actions";
 import { ReturnCaseControls } from "@/components/admin/ReturnCaseControls";
+import { storeBrandName } from "@/lib/brand";
 import { formatPrice } from "@/lib/format";
 import {
   getReturnCondition,
@@ -19,7 +20,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 
 export const metadata: Metadata = {
-  title: "Zwroty i reklamacje | Pawly",
+  title: `Zwroty i reklamacje | ${storeBrandName}`,
 };
 
 export const dynamic = "force-dynamic";

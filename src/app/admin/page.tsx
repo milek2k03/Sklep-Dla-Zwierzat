@@ -19,6 +19,7 @@ import {
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
 import { AdminRefundButton } from "@/components/admin/AdminRefundButton";
 import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
+import { storeBrandName } from "@/lib/brand";
 import { deliveryOptions, getShippingCarrierForDeliveryMethod } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import {
@@ -33,7 +34,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 
 export const metadata: Metadata = {
-  title: "Panel admina | Pawly",
+  title: `Panel admina | ${storeBrandName}`,
 };
 
 export const dynamic = "force-dynamic";
@@ -161,7 +162,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               Dostęp chroniony
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f]">
-              Zamówienia Pawly
+              Zamówienia {storeBrandName}
             </h1>
             <p className="mt-3 text-sm leading-6 text-[#6d675f]">
               Zalogowano jako {adminSession.email ?? "admin"}. Widok korzysta z

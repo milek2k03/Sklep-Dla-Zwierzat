@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
+import { storeBrandName } from "@/lib/brand";
 import { getAdminSession } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
-  title: "Logowanie admina | Pawly",
+  title: `Logowanie admina | ${storeBrandName}`,
 };
 
 export const dynamic = "force-dynamic";

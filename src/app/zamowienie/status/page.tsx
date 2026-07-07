@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExternalLink, PackageCheck, Search, Truck } from "lucide-react";
+import { storeBrandName } from "@/lib/brand";
 import { deliveryOptions } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import { orderStatusLabels } from "@/lib/order-status";
@@ -16,7 +17,7 @@ import { createPublicReturnCaseAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Status zamówienia | Pawly",
+  title: `Status zamówienia | ${storeBrandName}`,
 };
 
 type SearchParams = {

@@ -17,6 +17,7 @@ import { z } from "zod";
 import { CheckoutSteps } from "@/components/CheckoutSteps";
 import { CheckoutTrust } from "@/components/CheckoutTrust";
 import { FreeDeliveryMeter } from "@/components/FreeDeliveryMeter";
+import { storeBrandName } from "@/lib/brand";
 import {
   DELIVERY_COUNTRY,
   formatDeliveryAddress,
@@ -616,7 +617,7 @@ export function OrderForm() {
                     >
                       regulamin
                     </Link>{" "}
-                    sklepu Pawly.
+                    sklepu {storeBrandName}.
                   </span>
                 </label>
                 {errors.termsAccepted?.message ? (

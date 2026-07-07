@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
+import { storeBrandName } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import type { Product, ProductCategory } from "@/types/product";
 
@@ -81,7 +82,7 @@ export function ProductGrid({
               Produkty
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f] sm:text-4xl">
-              Akcesoria Pawly
+              Akcesoria {storeBrandName}
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-[#6d675f]">
               Przejrzysty wybór produktów dla psów i kotów: do domu, na spacer,

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
+import { storeBrandName } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 const adminNavItems = [
@@ -77,7 +78,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </span>
               <span>
                 <span className="block text-base font-semibold leading-5">
-                  Pawly Admin
+                  {storeBrandName} Admin
                 </span>
                 <span className="mt-0.5 block text-xs text-[#98a2b3]">
                   Panel operacyjny
@@ -122,7 +123,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f4a261] text-[#121417]">
                   <Home className="h-4 w-4" aria-hidden="true" />
                 </span>
-                <span className="text-sm font-semibold">Pawly Admin</span>
+                <span className="text-sm font-semibold">
+                  {storeBrandName} Admin
+                </span>
               </Link>
               <Link
                 href="/"

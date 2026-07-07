@@ -13,13 +13,14 @@ import {
   weekdayLabels,
   type DiscountCodeRow,
 } from "@/lib/discounts";
+import { storeBrandName } from "@/lib/brand";
 import { getAdminProducts, getProductCategories } from "@/lib/products";
 import { getAdminSession } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Product } from "@/types/product";
 
 export const metadata: Metadata = {
-  title: "Rabaty admin | Pawly",
+  title: `Rabaty admin | ${storeBrandName}`,
 };
 
 export const dynamic = "force-dynamic";

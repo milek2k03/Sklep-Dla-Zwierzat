@@ -13,6 +13,7 @@ import {
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 import { ProductImageInput } from "@/components/admin/ProductImageInput";
 import { SanitizedNumberInput } from "@/components/admin/SanitizedNumberInput";
+import { storeBrandName } from "@/lib/brand";
 import { formatPrice } from "@/lib/format";
 import { getAdminProducts, getProductCategories } from "@/lib/products";
 import { getAdminSession } from "@/lib/supabase/admin";
@@ -20,7 +21,7 @@ import { cn } from "@/lib/utils";
 import type { Product } from "@/types/product";
 
 export const metadata: Metadata = {
-  title: "Produkty admin | Pawly",
+  title: `Produkty admin | ${storeBrandName}`,
 };
 
 export const dynamic = "force-dynamic";
@@ -78,7 +79,7 @@ export default async function AdminProductsPage({
               Katalog
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f]">
-              Produkty Pawly
+              Produkty {storeBrandName}
             </h1>
             <p className="mt-3 text-sm leading-6 text-[#6d675f]">
               Produkty są w bazie Supabase. ID generuje baza automatycznie.

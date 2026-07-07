@@ -2,7 +2,7 @@ import type { ProductCategory } from "@/types/product";
 
 export const defaultCategoryAsset = {
   src: "/images/categories/zestawy.jpg",
-  alt: "Produkt Pawly w jasnej sesji produktowej",
+  alt: "Produkt Pawly Pet Shop w jasnej sesji produktowej",
   objectPosition: "50% 50%",
   accent: "text-[#7b3f32]",
 };

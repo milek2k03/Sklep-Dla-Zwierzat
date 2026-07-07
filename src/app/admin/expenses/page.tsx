@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { deleteExpenseAction } from "@/app/admin/expenses/actions";
 import { ExpenseForm } from "@/components/admin/ExpenseForm";
+import { storeBrandName } from "@/lib/brand";
 import {
   expenseCategoryLabels,
   expensePaymentMethodLabels,
@@ -22,7 +23,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 
 export const metadata: Metadata = {
-  title: "Koszty admin | Pawly",
+  title: `Koszty admin | ${storeBrandName}`,
 };
 
 export const dynamic = "force-dynamic";
@@ -82,7 +83,7 @@ export default async function AdminExpensesPage({
               Uproszczona ewidencja
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f]">
-              Koszty Pawly
+              Koszty {storeBrandName}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6d675f]">
               Zapisuj wydatki związane ze sklepem: towar, opakowania, wysyłkę,

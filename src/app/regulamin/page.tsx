@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { storeBrandName } from "@/lib/brand";
 import { deliveryOptions, FREE_DELIVERY_THRESHOLD } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import {
@@ -7,7 +8,7 @@ import {
 } from "@/lib/returns";
 
 export const metadata: Metadata = {
-  title: "Regulamin | Pawly",
+  title: `Regulamin | ${storeBrandName}`,
 };
 
 const storeEmail = process.env.ORDER_NOTIFICATION_EMAIL ?? "pawlyassista@gmail.com";
@@ -20,7 +21,7 @@ const sections = [
   {
     title: "1. Dane sprzedawcy i kontakt",
     content: [
-      "Sklep internetowy Pawly działa pod adresem tej strony i prowadzi sprzedaż akcesoriów dla psów i kotów.",
+      `Sklep internetowy ${storeBrandName} działa pod adresem tej strony i prowadzi sprzedaż akcesoriów dla psów i kotów.`,
       `Sprzedawca i właściciel sklepu: ${sellerName}.`,
       "Sprzedaż jest prowadzona w ramach działalności nierejestrowanej, o której mowa w art. 5 ustawy Prawo przedsiębiorców, o ile spełnione są warunki ustawowe dla tej formy działalności.",
       `Adres do korespondencji, zwrotów i reklamacji: ${sellerAddressLines.join(", ")}.`,
@@ -139,7 +140,7 @@ export default function TermsPage() {
         Regulamin
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f]">
-        Regulamin sklepu Pawly
+        Regulamin sklepu {storeBrandName}
       </h1>
       <p className="mt-4 max-w-3xl text-sm leading-6 text-[#6d675f]">
         Dokument opisuje aktualny proces sklepu: koszyk, płatność online,

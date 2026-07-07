@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Check, RotateCcw, Star, Truck } from "lucide-react";
 import { ProductImagePlaceholder } from "@/components/ProductImagePlaceholder";
 import { ProductPurchaseControls } from "@/components/ProductPurchaseControls";
+import { storeBrandName } from "@/lib/brand";
 import { formatPrice } from "@/lib/format";
 import { getStockLabel } from "@/lib/inventory";
 import {
@@ -32,12 +33,12 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: "Produkt | Pawly",
+      title: `Produkt | ${storeBrandName}`,
     };
   }
 
   return {
-    title: `${product.name} | Pawly`,
+    title: `${product.name} | ${storeBrandName}`,
     description: product.description,
   };
 }

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { storeBrandName } from "@/lib/brand";
 
 export const metadata: Metadata = {
-  title: "Polityka prywatności | Pawly",
+  title: `Polityka prywatności | ${storeBrandName}`,
 };
 
 const ownerName = "Miłosz Czech";
@@ -13,7 +14,7 @@ const sections = [
   {
     title: "1. Administrator danych",
     content: [
-      `Administratorem danych osobowych klientów i użytkowników sklepu Pawly jest ${ownerName}, prowadzący sprzedaż w ramach działalności nierejestrowanej, o ile spełnione są warunki ustawowe dla tej formy działalności.`,
+      `Administratorem danych osobowych klientów i użytkowników sklepu ${storeBrandName} jest ${ownerName}, prowadzący sprzedaż w ramach działalności nierejestrowanej, o ile spełnione są warunki ustawowe dla tej formy działalności.`,
       `Adres do korespondencji: ${contactAddress}.`,
       `Kontakt w sprawach danych osobowych: ${contactEmail}.`,
       `Telefon kontaktowy: ${contactPhone}.`,
@@ -119,7 +120,8 @@ export default function PrivacyPage() {
         Polityka prywatności
       </h1>
       <p className="mt-4 max-w-3xl text-sm leading-6 text-[#6d675f]">
-        Ten dokument wyjaśnia, jakie dane są przetwarzane w sklepie Pawly,
+        Ten dokument wyjaśnia, jakie dane są przetwarzane w sklepie{" "}
+        {storeBrandName},
         dlaczego są potrzebne i jakie prawa przysługują klientowi.
       </p>
 
