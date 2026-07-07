@@ -18,9 +18,10 @@ export function ProductGrid({
   categories,
   searchQuery = "",
 }: ProductGridProps) {
+  const initialCategory = getCategoryFromSearchQuery(searchQuery, categories);
   const [activeCategory, setActiveCategory] = useState<
     "Wszystkie" | ProductCategory
-  >("Wszystkie");
+  >(initialCategory);
   const normalizedQuery = normalizeSearchValue(searchQuery);
 
   const filteredProducts = useMemo(() => {
@@ -150,4 +151,18 @@ function normalizeSearchValue(value: string) {
     .toLocaleLowerCase("pl")
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "");
+}
+
+function getCategoryFromSearchQuery(
+  searchQuery: string,
+  categories: Array<"Wszystkie" | ProductCategory>,
+) {
+  const normalizedQuery = normalizeSearchValue(searchQuery);
+  const matchedCategory = categories.find(
+    (category) =>
+      category !== "Wszystkie" &&
+      normalizeSearchValue(category) === normalizedQuery,
+  );
+
+  return matchedCategory ?? "Wszystkie";
 }
