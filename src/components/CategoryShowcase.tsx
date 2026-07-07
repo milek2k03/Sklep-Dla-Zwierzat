@@ -12,37 +12,37 @@ const categories: Array<{
 }> = [
   {
     title: "Dla psa",
-    description: "Praktyczne rzeczy na spacer, auto i codzienną rutynę psa.",
+    description: "Akcesoria na spacery, do auta i do domu.",
     href: "/produkty",
     icon: Dog,
   },
   {
     title: "Dla kota",
-    description: "Proste akcesoria do spokojnego domu i wygody kota.",
+    description: "Miski, maty i dodatki do codziennego użycia.",
     href: "/produkty",
     icon: Cat,
   },
   {
     title: "Spacer i podróż",
-    description: "Miski, organizery i dodatki, które są zawsze pod ręką.",
+    description: "Miski, organizery i drobiazgi na wyjście.",
     href: "/produkty",
     icon: Luggage,
   },
   {
     title: "Auto",
-    description: "Akcesoria, które pomagają utrzymać porządek w podróży.",
+    description: "Pokrowce i dodatki do przewożenia pupila.",
     href: "/produkty",
     icon: Car,
   },
   {
     title: "Dom",
-    description: "Proste produkty do czystszej i spokojniejszej rutyny.",
+    description: "Maty, ręczniki i akcesoria do karmienia.",
     href: "/produkty",
     icon: Home,
   },
   {
     title: "Zestawy",
-    description: "Gotowe pakiety dla psa, kota albo całej domowej rutyny.",
+    description: "Pakiety produktów dobrane do jednej potrzeby.",
     href: "/produkty",
     icon: Package,
   },

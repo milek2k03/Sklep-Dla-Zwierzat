@@ -34,8 +34,7 @@ export default async function Home() {
             </h2>
           </div>
           <p className="max-w-xl text-sm leading-6 text-[#6d675f]">
-            Produkty, które pomagają uporządkować spacer, dom, auto i podróż
-            z psem albo kotem.
+            Najczęściej kupowane akcesoria dla psów i kotów.
           </p>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -53,7 +52,7 @@ export default async function Home() {
             Dlaczego Pawly?
           </p>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[#1f1f1f]">
-            Mniej wyborów, więcej sensu
+            Krótki wybór, konkretne produkty
           </h2>
         </div>
 
@@ -62,17 +61,17 @@ export default async function Home() {
             {
               icon: Check,
               title: "Praktyczne produkty",
-              text: "Wybieramy akcesoria, które realnie ułatwiają codzienność z pupilem.",
+              text: "Produkty do spaceru, karmienia, podróży i sprzątania.",
             },
             {
               icon: PackageCheck,
               title: "Proste zestawy",
-              text: "Gotowe pakiety pomagają kupić wszystko bez długiego porównywania.",
+              text: "Pakiety łączą rzeczy, które zwykle kupuje się razem.",
             },
             {
               icon: ShieldCheck,
-              title: "Zakupy bez presji",
-              text: "Czytelne ceny, lokalny koszyk i ręczne potwierdzenie zamówienia.",
+              title: "Czytelne zamówienie",
+              text: "Koszyk pokazuje cenę, dostawę i dostępny stan przed płatnością.",
             },
           ].map((item) => {
             const Icon = item.icon;

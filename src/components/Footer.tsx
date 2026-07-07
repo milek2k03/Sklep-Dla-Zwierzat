@@ -23,8 +23,8 @@ export function Footer() {
             {storeBrandName}
           </div>
           <p className="mt-4 max-w-sm text-sm leading-6 text-[#6d675f]">
-            Starannie wybrane produkty dla pupili — do domu, na spacer, do auta
-            i w podróż. Prosto, wygodnie i bez bałaganu.
+            Akcesoria dla psów i kotów do domu, na spacer, do auta i w podróż.
+            Jasne ceny, szybka wysyłka i prosty kontakt po zakupie.
           </p>
         </div>
 

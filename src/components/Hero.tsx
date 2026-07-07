@@ -27,8 +27,8 @@ export function Hero() {
             Praktyczne akcesoria dla psów i kotów
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-8 text-[#4f4942] sm:text-xl">
-            Starannie wybrane produkty dla pupili — do domu, na spacer, do auta
-            i w podróż. Prosto, wygodnie i bez bałaganu.
+            Akcesoria dla psów i kotów do domu, na spacer, do auta i w podróż.
+            Krótkie serie, jasne ceny i szybka wysyłka.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">

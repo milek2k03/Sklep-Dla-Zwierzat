@@ -17,14 +17,14 @@ export const products: Product[] = [
     category: "Zestawy",
     rating: 4.9,
     reviewCount: 128,
-    description: "Kompletny zestaw na codzienne spacery i krótkie wyjazdy z psem.",
+    description: "Saszetka, miska i etui na woreczki w jednym zestawie na spacer.",
     tag: "Bestseller",
     stockQuantity: 12,
     features: [
       "saszetka na smaczki",
       "składana miska silikonowa",
       "etui na woreczki",
-      "wygoda na spacer i podróż",
+      "na spacer i krótki wyjazd",
     ],
   },
   {
@@ -36,7 +36,7 @@ export const products: Product[] = [
     category: "Auto",
     rating: 4.8,
     reviewCount: 96,
-    description: "Zestaw dla osób, które podróżują samochodem z psem i chcą utrzymać porządek.",
+    description: "Akcesoria do podróży samochodem z psem i łatwiejszego sprzątania auta.",
     stockQuantity: 8,
     features: [
       "pokrowiec do auta",
@@ -53,12 +53,12 @@ export const products: Product[] = [
     category: "Dom",
     rating: 4.8,
     reviewCount: 64,
-    description: "Pomaga utrzymać porządek przy miskach psa lub kota.",
+    description: "Mata pod miski, która chroni podłogę przed wodą i karmą.",
     stockQuantity: 15,
     features: [
       "chroni podłogę",
       "łatwe czyszczenie",
-      "minimalistyczny wygląd",
+      "prosty wygląd",
     ],
   },
   {
@@ -70,12 +70,12 @@ export const products: Product[] = [
     category: "Spacer i podróż",
     rating: 4.9,
     reviewCount: 74,
-    description: "Lekka miska na wodę lub karmę dla psa albo kota w podróży.",
+    description: "Składana miska na wodę lub karmę, dobra na spacer i wyjazd.",
     stockQuantity: 1,
     features: [
       "składana konstrukcja",
       "łatwa do opłukania",
-      "dobra na spacer, auto i wyjazd",
+      "na spacer, auto i wyjazd",
     ],
   },
   {
@@ -87,7 +87,7 @@ export const products: Product[] = [
     category: "Dom",
     rating: 4.6,
     reviewCount: 57,
-    description: "Przydatny po spacerze, deszczu, kąpieli albo podróży z pupilem.",
+    description: "Ręcznik z mikrofibry do osuszenia psa lub kota po spacerze i kąpieli.",
     stockQuantity: 7,
     features: [
       "szybko chłonie wilgoć",
@@ -104,12 +104,12 @@ export const products: Product[] = [
     category: "Spacer i podróż",
     rating: 4.7,
     reviewCount: 81,
-    description: "Poręczny organizer na smycz, woreczki, przysmaki i drobiazgi dla pupila.",
+    description: "Organizer na smycz, woreczki, przysmaki i drobne akcesoria.",
     stockQuantity: 10,
     features: [
       "miejsce na spacerowe akcesoria",
       "łatwy dostęp w domu i aucie",
-      "pomaga utrzymać porządek",
+      "porządek w akcesoriach",
     ],
   },
   {
@@ -121,12 +121,12 @@ export const products: Product[] = [
     category: "Dla psa",
     rating: 4.7,
     reviewCount: 46,
-    description: "Prosty dodatek dla psa lub kota, dobry do zdjęć i spacerów.",
+    description: "Lekka bandana dla psa lub kota, dobra na spacer i do zdjęć.",
     stockQuantity: 18,
     features: [
       "lekki materiał",
       "prosty sposób zapięcia",
-      "subtelny spacerowy dodatek",
+      "na spacer i zdjęcia",
     ],
   },
   {
@@ -138,14 +138,14 @@ export const products: Product[] = [
     category: "Dla kota",
     rating: 4.8,
     reviewCount: 69,
-    description: "Zestaw prostych akcesoriów do wygodnej domowej rutyny kota.",
+    description: "Mata, ręcznik i organizer w jednym zestawie dla kota.",
     tag: "Nowość",
     stockQuantity: 9,
     features: [
       "mata pod miski",
       "ręcznik z mikrofibry",
       "organizer na drobiazgi",
-      "spójny zestaw do domu",
+      "zestaw do domu",
     ],
   },
 ];

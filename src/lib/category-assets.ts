@@ -2,7 +2,7 @@ import type { ProductCategory } from "@/types/product";
 
 export const defaultCategoryAsset = {
   src: "/images/categories/zestawy.jpg",
-  alt: "Produkt Pawly Pet Shop w jasnej sesji produktowej",
+  alt: "Akcesoria Pawly Pet Shop dla psa i kota",
   objectPosition: "50% 50%",
   accent: "text-[#7b3f32]",
 };
@@ -12,13 +12,13 @@ export const categoryAssets: Partial<
 > = {
   "Dla psa": {
     src: "/images/categories/spacer.jpg",
-    alt: "Akcesoria dla psa w jasnej sesji produktowej",
+    alt: "Akcesoria dla psa na spacer",
     objectPosition: "50% 50%",
     accent: "text-[#8a4c1e]",
   },
   "Dla kota": {
     src: "/images/categories/dom.jpg",
-    alt: "Domowe akcesoria dla kota w jasnej sesji produktowej",
+    alt: "Domowe akcesoria dla kota",
     objectPosition: "50% 50%",
     accent: "text-[#5a6347]",
   },
@@ -30,7 +30,7 @@ export const categoryAssets: Partial<
   },
   Auto: {
     src: "/images/categories/auto.jpg",
-    alt: "Akcesoria dla pupila do auta na jasnym fotelu samochodowym",
+    alt: "Akcesoria dla pupila do auta",
     objectPosition: "50% 50%",
     accent: "text-[#35594d]",
   },
@@ -42,7 +42,7 @@ export const categoryAssets: Partial<
   },
   Zestawy: {
     src: "/images/categories/zestawy.jpg",
-    alt: "Zestaw akcesoriów dla pupili ułożony w jasnej sesji produktowej",
+    alt: "Zestaw akcesoriów dla psa i kota",
     objectPosition: "50% 50%",
     accent: "text-[#7b3f32]",
   },
