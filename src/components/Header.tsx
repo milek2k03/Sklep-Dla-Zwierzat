@@ -15,10 +15,11 @@ import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Start" },
   { href: "/produkty", label: "Produkty" },
-  { href: "/zamowienie/status", label: "Status" },
-  { href: "/regulamin", label: "Regulamin" },
+  { href: "/produkty?q=dla%20psa", label: "Dla psa" },
+  { href: "/produkty?q=dla%20kota", label: "Dla kota" },
+  { href: "/produkty?q=zestawy", label: "Zestawy" },
+  { href: "/produkty?q=bestseller", label: "Bestsellery" },
 ];
 
 type ProductSuggestion = {
@@ -289,7 +290,7 @@ export function Header() {
           ) : null}
         </form>
 
-        <nav className="hidden items-center gap-4 text-sm font-medium text-[#5f5a52] md:col-start-3 md:flex lg:gap-6">
+        <nav className="hidden items-center gap-3 whitespace-nowrap text-sm font-medium text-[#5f5a52] md:col-start-3 md:flex lg:gap-5">
           {navItems.map((item) => (
             <Link
               key={item.href}
