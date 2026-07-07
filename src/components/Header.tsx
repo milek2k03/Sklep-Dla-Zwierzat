@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/", label: "Start" },
   { href: "/produkty", label: "Produkty" },
+  { href: "/zamowienie/status", label: "Status" },
+  { href: "/regulamin", label: "Regulamin" },
 ];
 
 type ProductSuggestion = {
@@ -174,7 +176,7 @@ export function Header() {
         </Link>
 
         <form
-          className="relative col-span-3 row-start-2 w-full md:col-span-1 md:col-start-2 md:row-start-1 md:max-w-xl md:justify-self-center"
+          className="relative col-span-3 row-start-2 w-full md:col-span-1 md:col-start-2 md:row-start-1 md:max-w-md md:justify-self-center lg:max-w-lg"
           onSubmit={handleSearchSubmit}
           onBlur={handleSearchBlur}
           role="search"
@@ -287,7 +289,7 @@ export function Header() {
           ) : null}
         </form>
 
-        <nav className="hidden items-center gap-5 text-sm font-medium text-[#5f5a52] md:col-start-3 md:flex lg:gap-7">
+        <nav className="hidden items-center gap-4 text-sm font-medium text-[#5f5a52] md:col-start-3 md:flex lg:gap-6">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -303,12 +305,6 @@ export function Header() {
         </nav>
 
         <div className="col-start-3 row-start-1 flex items-center justify-end gap-2 md:col-start-4">
-          <Link
-            href="/produkty"
-            className="hidden min-h-10 items-center justify-center rounded-full bg-[#1f1f1f] px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#34302d] lg:inline-flex"
-          >
-            Zobacz produkty
-          </Link>
           <Link
             href="/koszyk"
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#e7dfd2] bg-white text-[#1f1f1f] transition hover:border-[#1f1f1f]"
