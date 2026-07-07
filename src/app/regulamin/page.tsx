@@ -15,7 +15,7 @@ const storeEmail = process.env.ORDER_NOTIFICATION_EMAIL ?? "pawlyassista@gmail.c
 const storePhone = process.env.STORE_PHONE ?? "+48 531 353 773";
 const returnAddressLines = getReturnAddressLines();
 const sellerName = "Miłosz Czech";
-const sellerAddressLines = ["ul. Żwirowa 24", "86-070 Czarże", "Polska"];
+const sellerAddressLines = ["ul. Żwirowa 24h", "86-070 Czarże", "Polska"];
 
 const sections = [
   {

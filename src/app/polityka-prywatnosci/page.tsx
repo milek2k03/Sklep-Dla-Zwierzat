@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 const ownerName = "Miłosz Czech";
 const contactEmail = process.env.ORDER_NOTIFICATION_EMAIL ?? "pawlyassista@gmail.com";
 const contactPhone = process.env.STORE_PHONE ?? "+48 531 353 773";
-const contactAddress = "ul. Żwirowa 24, 86-070 Czarże, Polska";
+const contactAddress = "ul. Żwirowa 24h, 86-070 Czarże, Polska";
 
 const sections = [
   {
