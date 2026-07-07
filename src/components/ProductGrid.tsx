@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
@@ -12,23 +13,39 @@ type ProductGridProps = {
   categories: Array<"Wszystkie" | ProductCategory>;
   searchQuery?: string;
 };
+type CatalogFilter = "Wszystkie" | ProductCategory | "Bestseller";
 
 export function ProductGrid({
   products,
   categories,
   searchQuery = "",
 }: ProductGridProps) {
-  const initialCategory = getCategoryFromSearchQuery(searchQuery, categories);
-  const [activeCategory, setActiveCategory] = useState<
-    "Wszystkie" | ProductCategory
-  >(initialCategory);
-  const normalizedQuery = normalizeSearchValue(searchQuery);
+  const router = useRouter();
+  const initialFilter = getFilterFromSearchQuery(searchQuery, categories);
+  const [activeFilter, setActiveFilter] = useState<CatalogFilter>(initialFilter);
+  const [activeSearchQuery, setActiveSearchQuery] = useState(
+    initialFilter === "Wszystkie" ? searchQuery : "",
+  );
+  const normalizedQuery = normalizeSearchValue(activeSearchQuery);
+  const filterOptions = useMemo<CatalogFilter[]>(() => {
+    const visibleCategories = categories.filter(
+      (category) => normalizeSearchValue(category) !== "bestseller",
+    );
+
+    return [
+      ...visibleCategories.slice(0, 1),
+      "Bestseller",
+      ...visibleCategories.slice(1),
+    ];
+  }, [categories]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesCategory =
-        activeCategory === "Wszystkie" ||
-        product.category === activeCategory;
+        activeFilter === "Wszystkie" ||
+        (activeFilter === "Bestseller"
+          ? normalizeSearchValue(product.tag ?? "") === "bestseller"
+          : product.category === activeFilter);
       const searchableContent = normalizeSearchValue(
         [
           product.name,
@@ -47,7 +64,13 @@ export function ProductGrid({
 
       return matchesCategory && matchesQuery;
     });
-  }, [activeCategory, normalizedQuery, products]);
+  }, [activeFilter, normalizedQuery, products]);
+
+  const handleFilterChange = (filter: CatalogFilter) => {
+    setActiveFilter(filter);
+    setActiveSearchQuery("");
+    router.replace("/produkty", { scroll: false });
+  };
 
   return (
     <div>
@@ -86,11 +109,11 @@ export function ProductGrid({
         </div>
         <div className="text-sm text-[#7a746d] md:text-right">
           <p>{filteredProducts.length} produktów</p>
-          {searchQuery ? (
+          {activeSearchQuery ? (
             <p className="mt-1">
               Wyniki dla:{" "}
               <span className="font-semibold text-[#1f1f1f]">
-                „{searchQuery}”
+                „{activeSearchQuery}”
               </span>
             </p>
           ) : null}
@@ -98,19 +121,19 @@ export function ProductGrid({
       </div>
 
       <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
-        {categories.map((category) => (
+        {filterOptions.map((filter) => (
           <button
-            key={category}
+            key={filter}
             type="button"
             className={cn(
               "min-h-11 shrink-0 rounded-full border px-5 text-sm font-semibold transition",
-              activeCategory === category
+              activeFilter === filter
                 ? "border-[#1f1f1f] bg-[#1f1f1f] text-white"
                 : "border-[#e7dfd2] bg-white text-[#5f5a52] hover:border-[#1f1f1f]",
             )}
-            onClick={() => setActiveCategory(category)}
+            onClick={() => handleFilterChange(filter)}
           >
-            {category}
+            {filter}
           </button>
         ))}
       </div>
@@ -132,9 +155,10 @@ export function ProductGrid({
           <p className="mt-2 max-w-md text-sm leading-6 text-[#7a746d]">
             Zmień wyszukiwaną frazę lub wybierz inną kategorię.
           </p>
-          {searchQuery ? (
+          {activeSearchQuery ? (
             <Link
               href="/produkty"
+              onClick={() => setActiveSearchQuery("")}
               className="mt-5 text-sm font-semibold text-[#b65320] underline decoration-[#d8b7a1] underline-offset-4"
             >
               Wyczyść wyszukiwanie
@@ -153,11 +177,16 @@ function normalizeSearchValue(value: string) {
     .replace(/\p{Diacritic}/gu, "");
 }
 
-function getCategoryFromSearchQuery(
+function getFilterFromSearchQuery(
   searchQuery: string,
   categories: Array<"Wszystkie" | ProductCategory>,
-) {
+): CatalogFilter {
   const normalizedQuery = normalizeSearchValue(searchQuery);
+
+  if (normalizedQuery === "bestseller" || normalizedQuery === "bestsellery") {
+    return "Bestseller";
+  }
+
   const matchedCategory = categories.find(
     (category) =>
       category !== "Wszystkie" &&
