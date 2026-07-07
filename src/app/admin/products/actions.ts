@@ -109,6 +109,41 @@ export async function createCategoryAction(formData: FormData) {
   redirect("/admin/products?saved=1");
 }
 
+export async function deleteCategoryAction(formData: FormData) {
+  await requireAdmin();
+
+  const name = getRequiredString(formData, "categoryName");
+  const supabase = await createSupabaseServerClient();
+  const { count, error: countError } = await supabase
+    .from("products")
+    .select("sku", { count: "exact", head: true })
+    .eq("category", name);
+
+  if (countError) {
+    redirect(`/admin/products?error=${encodeURIComponent(countError.message)}`);
+  }
+
+  if ((count ?? 0) > 0) {
+    redirect(
+      `/admin/products?error=${encodeURIComponent(
+        `Nie można usunąć kategorii "${name}", bo ma przypisane produkty.`,
+      )}`,
+    );
+  }
+
+  const { error } = await supabase
+    .from("product_categories")
+    .delete()
+    .eq("name", name);
+
+  if (error) {
+    redirect(`/admin/products?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidateProductPaths("");
+  redirect("/admin/products?saved=1");
+}
+
 export async function importProductsAction(formData: FormData) {
   await requireAdmin();
 

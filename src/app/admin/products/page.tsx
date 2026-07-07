@@ -2,10 +2,20 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Boxes, FileSpreadsheet, PackagePlus, Pencil, Save, Search } from "lucide-react";
+import {
+  ArrowLeft,
+  Boxes,
+  FileSpreadsheet,
+  PackagePlus,
+  Pencil,
+  Save,
+  Search,
+  Trash2,
+} from "lucide-react";
 import {
   createCategoryAction,
   createProductAction,
+  deleteCategoryAction,
   deleteProductAction,
   importProductsAction,
   updateProductAction,
@@ -61,6 +71,8 @@ export default async function AdminProductsPage({
   const categoryFilter = getFirstSearchParam(resolvedSearchParams.category) ?? "";
   const products = filterProducts(allProducts, query, categoryFilter);
   const editedProduct = allProducts.find((product) => product.id === editSku);
+  const visibleCategories = categories.filter((category) => category !== "Wszystkie");
+  const categoryUsage = getCategoryUsage(allProducts);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
@@ -283,14 +295,15 @@ export default async function AdminProductsPage({
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <form
-          action={createCategoryAction}
-          className="rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm"
-        >
+        <div className="rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm">
           <h2 className="text-xl font-semibold text-[#1f1f1f]">
-            Nowa kategoria
+            Kategorie
           </h2>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <p className="mt-2 text-sm leading-6 text-[#6d675f]">
+            Kategorię można usunąć dopiero wtedy, gdy nie ma przypisanych
+            produktów.
+          </p>
+          <form action={createCategoryAction} className="mt-4 flex flex-col gap-3 sm:flex-row">
             <input
               name="categoryName"
               className="field-input"
@@ -303,8 +316,54 @@ export default async function AdminProductsPage({
             >
               Dodaj
             </button>
+          </form>
+
+          <div className="mt-5 divide-y divide-[#eee7db] rounded-lg border border-[#eee7db]">
+            {visibleCategories.map((category) => {
+              const usageCount = categoryUsage.get(category) ?? 0;
+              const canDelete = usageCount === 0;
+
+              return (
+                <div
+                  key={category}
+                  className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-[#1f1f1f]">
+                      {category}
+                    </p>
+                    <p className="mt-1 text-xs text-[#6d675f]">
+                      {usageCount === 1
+                        ? "1 produkt"
+                        : `${usageCount} produktów`}
+                    </p>
+                  </div>
+                  <form action={deleteCategoryAction}>
+                    <input type="hidden" name="categoryName" value={category} />
+                    <button
+                      type="submit"
+                      disabled={!canDelete}
+                      className={cn(
+                        "inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition",
+                        canDelete
+                          ? "border-[#f1b7a6] text-[#a64022] hover:border-[#a64022] hover:bg-[#fff1e8]"
+                          : "cursor-not-allowed border-[#eee7db] bg-[#f7f1e8] text-[#8a8177]",
+                      )}
+                      title={
+                        canDelete
+                          ? `Usuń kategorię ${category}`
+                          : "Najpierw przenieś albo usuń produkty z tej kategorii"
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      Usuń
+                    </button>
+                  </form>
+                </div>
+              );
+            })}
           </div>
-        </form>
+        </div>
 
         <form
           action={importProductsAction}
@@ -591,4 +650,14 @@ function filterProducts(products: Product[], query: string, category: string) {
 
     return matchesCategory && matchesQuery;
   });
+}
+
+function getCategoryUsage(products: Product[]) {
+  const usage = new Map<string, number>();
+
+  for (const product of products) {
+    usage.set(product.category, (usage.get(product.category) ?? 0) + 1);
+  }
+
+  return usage;
 }
