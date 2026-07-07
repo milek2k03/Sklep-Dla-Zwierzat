@@ -13,6 +13,7 @@ import {
   Store,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { AdminLoadingOverlay } from "@/components/admin/AdminLoadingOverlay";
 import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
 import { storeBrandName } from "@/lib/brand";
 import { cn } from "@/lib/utils";
@@ -60,6 +61,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(244,162,97,0.14),transparent_34%),linear-gradient(135deg,#0f1115_0%,#17191f_54%,#101318_100%)]">
           {children}
         </div>
+        <AdminLoadingOverlay />
       </div>
     );
   }
@@ -163,6 +165,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <main className="min-h-screen">{children}</main>
         </div>
       </div>
+      <AdminLoadingOverlay />
     </div>
   );
 }

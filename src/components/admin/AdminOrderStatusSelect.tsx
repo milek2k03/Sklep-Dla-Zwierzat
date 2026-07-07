@@ -4,6 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
+  startAdminLoading,
+  stopAdminLoading,
+} from "@/components/admin/AdminLoadingOverlay";
+import {
   orderStatusLabels,
   orderStatuses,
   type OrderStatus,
@@ -64,6 +68,7 @@ export function AdminOrderStatusSelect({
     }
 
     setIsSaving(true);
+    startAdminLoading("Zapisywanie zamówienia...");
 
     try {
       const response = await fetch(`/api/admin/orders/${orderId}/status`, {
@@ -100,6 +105,7 @@ export function AdminOrderStatusSelect({
       });
     } finally {
       setIsSaving(false);
+      stopAdminLoading();
     }
   }
 

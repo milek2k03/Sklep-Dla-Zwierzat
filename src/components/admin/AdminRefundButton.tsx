@@ -3,6 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import {
+  startAdminLoading,
+  stopAdminLoading,
+} from "@/components/admin/AdminLoadingOverlay";
 
 export function AdminRefundButton({
   orderId,
@@ -25,6 +29,7 @@ export function AdminRefundButton({
     }
 
     setIsRefunding(true);
+    startAdminLoading("Zlecanie zwrotu...");
 
     try {
       const response = await fetch(`/api/admin/orders/${orderId}/refund`, {
@@ -59,6 +64,7 @@ export function AdminRefundButton({
       });
     } finally {
       setIsRefunding(false);
+      stopAdminLoading();
     }
   }
 
