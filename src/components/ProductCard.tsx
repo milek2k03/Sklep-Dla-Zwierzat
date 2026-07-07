@@ -38,17 +38,19 @@ export function ProductCard({ product }: ProductCardProps) {
           ) : null}
         </div>
 
-        <h2 className="mt-3 text-lg font-semibold leading-tight text-[#1f1f1f] transition group-hover:text-[#b65320]">
+        <h2 className="mt-3 line-clamp-2 min-h-[3rem] text-lg font-semibold leading-tight text-[#1f1f1f] transition group-hover:text-[#b65320]">
           {product.name}
         </h2>
-        <p className="mt-2 line-clamp-2 min-h-11 text-sm leading-6 text-[#6d675f]">
+        <p className="mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-[#6d675f]">
           {product.description}
         </p>
-        {stockLabel ? (
-          <p className="mt-3 text-sm font-semibold text-[#b65320]">
-            {stockLabel}
-          </p>
-        ) : null}
+        <div className="mt-3 min-h-5">
+          {stockLabel ? (
+            <p className="text-sm font-semibold text-[#b65320]">
+              {stockLabel}
+            </p>
+          ) : null}
+        </div>
 
         <div className="mt-4 flex items-center gap-2 text-sm text-[#6d675f]">
           <Star
