@@ -19,10 +19,7 @@ import { CheckoutTrust } from "@/components/CheckoutTrust";
 import { FreeDeliveryMeter } from "@/components/FreeDeliveryMeter";
 import { storeBrandName } from "@/lib/brand";
 import {
-  DELIVERY_COUNTRY,
-  formatDeliveryAddress,
   isPolishPostalCode,
-  normalizePolishPostalCode,
 } from "@/lib/address";
 import {
   DEFAULT_DELIVERY_METHOD,
@@ -123,14 +120,6 @@ function saveOrder(order: LocalOrder) {
     JSON.stringify([order, ...existingOrders].slice(0, 10)),
   );
   window.localStorage.setItem("pawly-last-order", JSON.stringify(order));
-}
-
-function createOrderId() {
-  return `PAWLY-${Date.now().toString().slice(-6)}`;
-}
-
-function createOrderTimestamp() {
-  return new Date().toISOString();
 }
 
 export function OrderForm() {
@@ -244,15 +233,9 @@ export function OrderForm() {
     }
 
     if (response.status === 503 && result?.error === "SUPABASE_NOT_CONFIGURED") {
-      const localOrder = createLocalFallbackOrder(values);
-
-      saveOrder(localOrder);
-      setSubmittedOrder(localOrder);
-      clearCart();
-      reset(defaultValues);
-      toast.warning("Tryb testowy", {
+      toast.error("Zamówienie jest chwilowo niedostępne", {
         description:
-          "Supabase nie jest skonfigurowany, więc zamówienie zapisano lokalnie.",
+          "Konfiguracja sklepu nie jest kompletna. Skontaktuj się ze sklepem albo spróbuj ponownie później.",
       });
       return;
     }
@@ -262,34 +245,6 @@ export function OrderForm() {
         result?.message ?? "Spróbuj ponownie lub skontaktuj się ze sklepem.",
     });
   };
-
-  function createLocalFallbackOrder(values: OrderFormValues): LocalOrder {
-    return {
-      id: createOrderId(),
-      createdAt: createOrderTimestamp(),
-      customer: {
-        fullName: values.fullName,
-        email: values.email,
-        phone: values.phone,
-        address: getFormattedAddress(values),
-        city: values.city?.trim(),
-        street: values.street?.trim(),
-        buildingNumber: values.buildingNumber?.trim(),
-        postalCode: values.postalCode
-          ? normalizePolishPostalCode(values.postalCode)
-          : undefined,
-        country: DELIVERY_COUNTRY,
-        notes: values.notes?.trim() || undefined,
-      },
-      deliveryMethod: values.deliveryMethod,
-      deliveryCost,
-      subtotal,
-      discountCode: values.discountCode?.trim().toUpperCase() || undefined,
-      discountTotal: 0,
-      total,
-      items,
-    };
-  }
 
   if (!isHydrated) {
     return (
@@ -708,15 +663,6 @@ export function OrderForm() {
       </div>
     </section>
   );
-}
-
-function getFormattedAddress(values: OrderFormValues) {
-  return formatDeliveryAddress({
-    street: values.street,
-    buildingNumber: values.buildingNumber,
-    postalCode: values.postalCode,
-    city: values.city,
-  });
 }
 
 function FormSection({

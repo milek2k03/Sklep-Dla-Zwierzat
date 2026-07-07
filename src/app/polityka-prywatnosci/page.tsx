@@ -14,7 +14,7 @@ const sections = [
   {
     title: "1. Administrator danych",
     content: [
-      `Administratorem danych osobowych klientów i użytkowników sklepu ${storeBrandName} jest ${ownerName}, prowadzący sprzedaż w ramach działalności nierejestrowanej, o ile spełnione są warunki ustawowe dla tej formy działalności.`,
+      `Administratorem danych osobowych klientów i użytkowników sklepu ${storeBrandName} jest ${ownerName}, prowadzący sprzedaż w ramach działalności nierejestrowanej.`,
       `Adres do korespondencji: ${contactAddress}.`,
       `Kontakt w sprawach danych osobowych: ${contactEmail}.`,
       `Telefon kontaktowy: ${contactPhone}.`,
@@ -125,10 +125,10 @@ export default function PrivacyPage() {
         dlaczego są potrzebne i jakie prawa przysługują klientowi.
       </p>
 
-      <div className="mt-8 rounded-lg border border-[#f3cbbd] bg-[#fff8f4] p-5 text-sm leading-6 text-[#7a3b24]">
-        <strong>Do weryfikacji przed produkcją:</strong> ewentualne informacje o
-        dodatkowych narzędziach analitycznych lub marketingowych, jeśli zostaną
-        wdrożone.
+      <div className="mt-8 rounded-lg border border-[#e9dcc8] bg-[#fffaf2] p-5 text-sm leading-6 text-[#5f5a52]">
+        Sklep nie prowadzi obecnie newslettera ani profilowania marketingowego.
+        Jeżeli zostaną wdrożone dodatkowe narzędzia analityczne lub
+        marketingowe, polityka prywatności zostanie zaktualizowana.
       </div>
 
       <div className="mt-6 space-y-4">

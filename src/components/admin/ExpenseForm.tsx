@@ -150,7 +150,7 @@ export function ExpenseForm({ today }: ExpenseFormProps) {
         <textarea
           className="field-input mt-2 min-h-20 resize-y"
           name="notes"
-          placeholder="np. koszt testowy, dostawa, zwrot do dostawcy"
+          placeholder="np. numer faktury, zakres zakupu, zwrot od dostawcy"
         />
       </label>
 

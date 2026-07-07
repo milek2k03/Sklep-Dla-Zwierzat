@@ -23,7 +23,7 @@ const sections = [
     content: [
       `Sklep internetowy ${storeBrandName} działa pod adresem tej strony i prowadzi sprzedaż akcesoriów dla psów i kotów.`,
       `Sprzedawca i właściciel sklepu: ${sellerName}.`,
-      "Sprzedaż jest prowadzona w ramach działalności nierejestrowanej, o której mowa w art. 5 ustawy Prawo przedsiębiorców, o ile spełnione są warunki ustawowe dla tej formy działalności.",
+      "Sprzedaż jest prowadzona w ramach działalności nierejestrowanej, o której mowa w art. 5 ustawy Prawo przedsiębiorców. Sprzedawca monitoruje limit przychodów dla tej formy sprzedaży i w razie utraty warunków będzie działać zgodnie z obowiązującymi przepisami.",
       `Adres do korespondencji, zwrotów i reklamacji: ${sellerAddressLines.join(", ")}.`,
       `Kontakt e-mail: ${storeEmail}.`,
       `Telefon kontaktowy: ${storePhone}.`,
@@ -119,7 +119,7 @@ const sections = [
     content: [
       "Dane klienta są przetwarzane w celu obsługi zamówienia, płatności, dostawy, kontaktu, zwrotów, reklamacji i obowiązków prawnych sprzedawcy.",
       `Administratorem danych osobowych jest ${sellerName}, prowadzący sprzedaż w ramach działalności nierejestrowanej.`,
-      "Szczegóły dotyczące przetwarzania danych osobowych powinny znajdować się w Polityce prywatności. Politykę prywatności należy uzupełnić przed uruchomieniem sprzedaży produkcyjnej.",
+      "Szczegóły dotyczące przetwarzania danych osobowych znajdują się w Polityce prywatności.",
     ],
   },
   {
@@ -128,7 +128,7 @@ const sections = [
       "Regulamin obowiązuje od dnia publikacji na stronie sklepu.",
       "Zmiany regulaminu nie naruszają praw nabytych klientów, którzy złożyli zamówienie przed zmianą regulaminu.",
       "W sprawach nieuregulowanych regulaminem stosuje się przepisy prawa polskiego, w szczególności przepisy dotyczące praw konsumenta.",
-      "Ten regulamin należy zweryfikować przed sprzedażą produkcyjną oraz po każdej zmianie formy sprzedaży, operatorów usług lub zakresu danych przetwarzanych w sklepie.",
+      "W razie zmiany formy sprzedaży, operatorów usług, metod dostawy lub zakresu przetwarzanych danych regulamin zostanie odpowiednio zaktualizowany.",
     ],
   },
 ];
@@ -148,10 +148,11 @@ export default function TermsPage() {
         reklamacji i wymian.
       </p>
 
-      <div className="mt-8 rounded-lg border border-[#f3cbbd] bg-[#fff8f4] p-5 text-sm leading-6 text-[#7a3b24]">
-        <strong>Do weryfikacji przed produkcją:</strong> jeżeli forma sprzedaży
-        zmieni się z działalności nierejestrowanej na działalność gospodarczą,
-        trzeba będzie uzupełnić dane rejestrowe, np. NIP/REGON.
+      <div className="mt-8 rounded-lg border border-[#e9dcc8] bg-[#fffaf2] p-5 text-sm leading-6 text-[#5f5a52]">
+        Sprzedaż jest prowadzona przez osobę fizyczną w ramach działalności
+        nierejestrowanej. Jeżeli forma sprzedaży zmieni się na działalność
+        gospodarczą, dane sprzedawcy zostaną uzupełnione o właściwe dane
+        rejestrowe.
       </div>
 
       <div className="mt-6 space-y-4">

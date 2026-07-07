@@ -65,7 +65,8 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-[#f1eadf] px-4 py-5 text-center text-xs text-[#7a746d]">
-        © 2026 {storeBrandName}. Sklep w wersji testowej.
+        © 2026 {storeBrandName}. Sprzedaż prowadzona w ramach działalności
+        nierejestrowanej.
       </div>
     </footer>
   );
