@@ -220,7 +220,8 @@ export default async function AdminReturnsPage({
               />
               <input
                 name="q"
-                className="field-input min-h-11 py-2.5 pl-12"
+                className="field-input min-h-11 py-2.5"
+                style={{ paddingLeft: "3.25rem" }}
                 defaultValue={query}
                 placeholder="Numer, e-mail, klient..."
               />
