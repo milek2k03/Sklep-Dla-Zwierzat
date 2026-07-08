@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
+import {
+  asJsonObject,
+  buildSystemConversionIdentity,
+  recordConversionEvent,
+} from "@/lib/conversion";
 import { sendPaidOrderEmails } from "@/lib/email/order-emails";
 import { getStripeWebhookSecret } from "@/lib/stripe/env";
 import { getStripeClient } from "@/lib/stripe/server";
@@ -124,6 +129,31 @@ async function markOrderAsPaid(session: Stripe.Checkout.Session) {
       checkoutSessionId: session.id,
       paymentIntentId,
     },
+  });
+
+  const conversionIdentity =
+    session.metadata?.conversion_visitor_id &&
+    session.metadata?.conversion_session_id
+      ? {
+          visitor_id: session.metadata.conversion_visitor_id,
+          session_id: session.metadata.conversion_session_id,
+        }
+      : buildSystemConversionIdentity(updatedOrder.order_number);
+
+  await recordConversionEvent({
+    event_type: "order_paid",
+    ...conversionIdentity,
+    order_id: updatedOrder.id,
+    order_number: updatedOrder.order_number,
+    amount: Number(updatedOrder.total ?? 0),
+    quantity: updatedOrder.order_items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    ),
+    metadata: asJsonObject({
+      checkoutSessionId: session.id,
+      paymentIntentId,
+    }),
   });
 
   await sendPaidOrderEmailsAndMark(updatedOrder as PaidOrderRow);

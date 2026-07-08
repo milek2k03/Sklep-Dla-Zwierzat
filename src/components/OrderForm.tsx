@@ -19,6 +19,10 @@ import { CheckoutTrust } from "@/components/CheckoutTrust";
 import { FreeDeliveryMeter } from "@/components/FreeDeliveryMeter";
 import { storeBrandName } from "@/lib/brand";
 import {
+  getConversionIdentity,
+  trackConversionEvent,
+} from "@/lib/conversion-client";
+import {
   isPolishPostalCode,
 } from "@/lib/address";
 import {
@@ -194,11 +198,22 @@ export function OrderForm() {
 
     const payload = {
       ...values,
+      conversion: getConversionIdentity(),
       items: items.map((item) => ({
         slug: item.product.slug,
         quantity: item.quantity,
       })),
     };
+
+    trackConversionEvent({
+      eventType: "checkout_started",
+      amount: total,
+      quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+      metadata: {
+        deliveryMethod: values.deliveryMethod,
+        itemCount: items.length,
+      },
+    });
 
     const response = await fetch("/api/orders", {
       method: "POST",

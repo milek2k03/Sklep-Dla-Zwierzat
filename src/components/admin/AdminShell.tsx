@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BadgePercent,
+  BarChart3,
   Boxes,
   ClipboardList,
   Home,
@@ -50,6 +51,12 @@ const adminNavItems = [
     label: "Koszty",
     description: "Ewidencja wydatkow",
     icon: ReceiptText,
+  },
+  {
+    href: "/admin/conversion",
+    label: "Konwersja",
+    description: "Lejek i produkty",
+    icon: BarChart3,
   },
 ];
 

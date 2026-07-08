@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import {
+  asJsonObject,
+  buildSystemConversionIdentity,
+  recordConversionEvent,
+} from "@/lib/conversion";
+import {
   buildVerifiedOrder,
   createOrderNumber,
   InsufficientOrderStockError,
@@ -235,6 +240,12 @@ export async function POST(request: NextRequest) {
 
   const stripe = getStripeClient();
   const appUrl = getStripeEnv().appUrl.replace(/\/$/, "");
+  const conversionIdentity = parsedPayload.data.conversion
+    ? {
+        visitor_id: parsedPayload.data.conversion.visitorId,
+        session_id: parsedPayload.data.conversion.sessionId,
+      }
+    : buildSystemConversionIdentity(insertedOrder.order_number);
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "payment",
     client_reference_id: insertedOrder.order_number,
@@ -242,6 +253,12 @@ export async function POST(request: NextRequest) {
     metadata: {
       order_id: insertedOrder.order_id,
       order_number: insertedOrder.order_number,
+      ...(parsedPayload.data.conversion
+        ? {
+            conversion_visitor_id: parsedPayload.data.conversion.visitorId,
+            conversion_session_id: parsedPayload.data.conversion.sessionId,
+          }
+        : {}),
     },
     line_items: [
       ...order.items.map((item) => ({
@@ -310,6 +327,20 @@ export async function POST(request: NextRequest) {
   if (stripeUpdateError) {
     console.error("Failed to store Stripe session ID", stripeUpdateError);
   }
+
+  await recordConversionEvent({
+    event_type: "order_created",
+    ...conversionIdentity,
+    order_id: insertedOrder.order_id,
+    order_number: insertedOrder.order_number,
+    amount: order.total,
+    quantity: order.items.reduce((sum, item) => sum + item.quantity, 0),
+    metadata: asJsonObject({
+      checkoutSessionId: checkoutSession.id,
+      deliveryMethod: order.deliveryMethod,
+      itemCount: order.items.length,
+    }),
+  });
 
   const publicOrder = {
     ...order,

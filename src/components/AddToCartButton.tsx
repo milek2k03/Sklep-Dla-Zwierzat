@@ -2,6 +2,7 @@
 
 import { ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { trackConversionEvent } from "@/lib/conversion-client";
 import { useCartStore } from "@/lib/cart-store";
 import { getAvailableStock } from "@/lib/inventory";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,18 @@ export function AddToCartButton({
 
         toast.success("Dodano do koszyka", {
           description: `${product.name} jest już w koszyku.`,
+        });
+        trackConversionEvent({
+          eventType: "add_to_cart",
+          productSlug: product.slug,
+          productName: product.name,
+          productCategory: product.category,
+          amount: product.price,
+          quantity: result.added,
+          metadata: {
+            quantityInCart: result.quantityInCart,
+            stock: result.stock,
+          },
         });
       }}
     >

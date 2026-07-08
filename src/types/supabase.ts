@@ -138,6 +138,68 @@ export type Database = {
         };
         Relationships: [];
       };
+      conversion_events: {
+        Row: {
+          id: string;
+          event_type:
+            | "page_view"
+            | "product_view"
+            | "add_to_cart"
+            | "checkout_started"
+            | "order_created"
+            | "order_paid";
+          visitor_id: string;
+          session_id: string;
+          page_path: string | null;
+          page_title: string | null;
+          referrer: string | null;
+          product_slug: string | null;
+          product_name: string | null;
+          product_category: string | null;
+          order_id: string | null;
+          order_number: string | null;
+          amount: number | null;
+          quantity: number | null;
+          metadata: Json;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_type:
+            | "page_view"
+            | "product_view"
+            | "add_to_cart"
+            | "checkout_started"
+            | "order_created"
+            | "order_paid";
+          visitor_id: string;
+          session_id: string;
+          page_path?: string | null;
+          page_title?: string | null;
+          referrer?: string | null;
+          product_slug?: string | null;
+          product_name?: string | null;
+          product_category?: string | null;
+          order_id?: string | null;
+          order_number?: string | null;
+          amount?: number | null;
+          quantity?: number | null;
+          metadata?: Json;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "conversion_events_order_id_fkey";
+            columns: ["order_id"];
+            isOneToOne: false;
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       orders: {
         Row: {
           id: string;

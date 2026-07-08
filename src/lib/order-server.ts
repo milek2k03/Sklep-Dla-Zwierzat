@@ -32,6 +32,13 @@ export const orderRequestSchema = z
     postalCode: z.string().max(12).optional(),
     notes: z.string().max(1000).optional(),
     discountCode: z.string().max(40).optional(),
+    conversion: z
+      .object({
+        visitorId: z.string().trim().min(4).max(120),
+        sessionId: z.string().trim().min(4).max(120),
+      })
+      .optional()
+      .nullable(),
     termsAccepted: z.literal(true),
     items: z
       .array(

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Check, RotateCcw, Star, Truck } from "lucide-react";
 import { ProductImagePlaceholder } from "@/components/ProductImagePlaceholder";
 import { ProductPurchaseControls } from "@/components/ProductPurchaseControls";
+import { ProductViewTracker } from "@/components/ProductViewTracker";
 import { storeBrandName } from "@/lib/brand";
 import { formatPrice } from "@/lib/format";
 import { getStockLabel } from "@/lib/inventory";
@@ -85,6 +86,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <ProductViewTracker
+        product={{
+          slug: product.slug,
+          name: product.name,
+          category: product.category,
+          price: product.price,
+        }}
+      />
       <Link
         href="/produkty"
         className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f5a52] transition hover:text-[#1f1f1f]"
