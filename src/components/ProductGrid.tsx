@@ -15,6 +15,22 @@ type ProductGridProps = {
   searchQuery?: string;
 };
 type CatalogFilter = "Wszystkie" | ProductCategory | "Bestseller";
+type CatalogSort =
+  | "default"
+  | "price-asc"
+  | "price-desc"
+  | "name-asc"
+  | "name-desc"
+  | "reviews-desc";
+
+const sortOptions: Array<{ label: string; value: CatalogSort }> = [
+  { label: "Domyślnie", value: "default" },
+  { label: "Cena: od najniższej", value: "price-asc" },
+  { label: "Cena: od najwyższej", value: "price-desc" },
+  { label: "Alfabetycznie A-Z", value: "name-asc" },
+  { label: "Alfabetycznie Z-A", value: "name-desc" },
+  { label: "Najwięcej opinii", value: "reviews-desc" },
+];
 
 export function ProductGrid({
   products,
@@ -27,6 +43,7 @@ export function ProductGrid({
   const [activeSearchQuery, setActiveSearchQuery] = useState(
     initialFilter === "Wszystkie" ? searchQuery : "",
   );
+  const [activeSort, setActiveSort] = useState<CatalogSort>("default");
   const normalizedQuery = normalizeSearchValue(activeSearchQuery);
   const filterOptions = useMemo<CatalogFilter[]>(() => {
     const visibleCategories = categories.filter(
@@ -66,6 +83,35 @@ export function ProductGrid({
       return matchesCategory && matchesQuery;
     });
   }, [activeFilter, normalizedQuery, products]);
+
+  const sortedProducts = useMemo(() => {
+    const sortableProducts = [...filteredProducts];
+
+    switch (activeSort) {
+      case "price-asc":
+        return sortableProducts.sort((firstProduct, secondProduct) => {
+          return firstProduct.price - secondProduct.price;
+        });
+      case "price-desc":
+        return sortableProducts.sort((firstProduct, secondProduct) => {
+          return secondProduct.price - firstProduct.price;
+        });
+      case "name-asc":
+        return sortableProducts.sort((firstProduct, secondProduct) => {
+          return firstProduct.name.localeCompare(secondProduct.name, "pl");
+        });
+      case "name-desc":
+        return sortableProducts.sort((firstProduct, secondProduct) => {
+          return secondProduct.name.localeCompare(firstProduct.name, "pl");
+        });
+      case "reviews-desc":
+        return sortableProducts.sort((firstProduct, secondProduct) => {
+          return secondProduct.reviewCount - firstProduct.reviewCount;
+        });
+      default:
+        return sortableProducts;
+    }
+  }, [activeSort, filteredProducts]);
 
   const handleFilterChange = (filter: CatalogFilter) => {
     setActiveFilter(filter);
@@ -109,7 +155,7 @@ export function ProductGrid({
           </p>
         </div>
         <div className="text-sm text-[#7a746d] md:text-right">
-          <p>{filteredProducts.length} produktów</p>
+          <p>{sortedProducts.length} produktów</p>
           {activeSearchQuery ? (
             <p className="mt-1">
               Wyniki dla:{" "}
@@ -121,27 +167,43 @@ export function ProductGrid({
         </div>
       </div>
 
-      <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
-        {filterOptions.map((filter) => (
-          <button
-            key={filter}
-            type="button"
-            className={cn(
-              "min-h-11 shrink-0 rounded-full border px-5 text-sm font-semibold transition",
-              activeFilter === filter
-                ? "border-[#1f1f1f] bg-[#1f1f1f] text-white"
-                : "border-[#e7dfd2] bg-white text-[#5f5a52] hover:border-[#1f1f1f]",
-            )}
-            onClick={() => handleFilterChange(filter)}
+      <div className="mb-8 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0">
+          {filterOptions.map((filter) => (
+            <button
+              key={filter}
+              type="button"
+              className={cn(
+                "min-h-11 shrink-0 rounded-full border px-5 text-sm font-semibold transition",
+                activeFilter === filter
+                  ? "border-[#1f1f1f] bg-[#1f1f1f] text-white"
+                  : "border-[#e7dfd2] bg-white text-[#5f5a52] hover:border-[#1f1f1f]",
+              )}
+              onClick={() => handleFilterChange(filter)}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+        <label className="flex min-w-0 items-center gap-3 text-sm font-semibold text-[#5f5a52] sm:self-start lg:self-auto">
+          <span className="shrink-0">Sortuj</span>
+          <select
+            className="min-h-11 w-full rounded-full border border-[#e7dfd2] bg-white px-4 text-sm font-semibold text-[#1f1f1f] outline-none transition hover:border-[#1f1f1f] focus:border-[#1f1f1f] focus:ring-2 focus:ring-[#e86f2c]/20 sm:w-56"
+            value={activeSort}
+            onChange={(event) => setActiveSort(event.target.value as CatalogSort)}
           >
-            {filter}
-          </button>
-        ))}
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
-      {filteredProducts.length > 0 ? (
+      {sortedProducts.length > 0 ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {filteredProducts.map((product) => (
+          {sortedProducts.map((product) => (
             <ProductCard key={product.slug} product={product} />
           ))}
         </div>
