@@ -502,8 +502,13 @@ function ProductForm({
             numberMode="float"
             className="field-input"
             defaultValue={product?.price ?? ""}
+            min="0"
+            step="0.01"
             required
           />
+          <span className="mt-2 block text-xs leading-5 text-[#6d675f]">
+            Nie może być niższa niż cena zakupu.
+          </span>
         </Field>
         <Field label="Cena zakupu">
           <SanitizedNumberInput
@@ -511,8 +516,13 @@ function ProductForm({
             numberMode="float"
             className="field-input"
             defaultValue={product?.purchasePrice ?? ""}
+            min="0"
+            step="0.01"
             required
           />
+          <span className="mt-2 block text-xs leading-5 text-[#6d675f]">
+            Nie może być wyższa niż cena sprzedaży.
+          </span>
         </Field>
         <Field label="Stan magazynowy">
           <SanitizedNumberInput
@@ -532,7 +542,13 @@ function ProductForm({
             numberMode="float"
             className="field-input"
             defaultValue={product?.compareAtPrice ?? ""}
+            min="0"
+            step="0.01"
           />
+          <span className="mt-2 block text-xs leading-5 text-[#6d675f]">
+            Stara cena widoczna jako przekreślona. Musi być większa niż cena
+            sprzedaży.
+          </span>
         </Field>
         <Field label="Tag">
           <input

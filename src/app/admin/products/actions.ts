@@ -221,14 +221,17 @@ async function parseProductForm(formData: FormData): Promise<ProductInsert> {
   ]);
   const imageUrls =
     uploadedImageUrls.length > 0 ? uploadedImageUrls : existingImageUrls;
+  const price = getRequiredNumber(formData, "price");
+  const purchasePrice = getRequiredNumber(formData, "purchasePrice");
+  const compareAtPrice = getOptionalNumber(formData, "compareAtPrice");
 
   const product: ProductInsert = {
     ...(sku ? { sku } : {}),
     slug,
     name,
-    price: getRequiredNumber(formData, "price"),
-    purchase_price: getRequiredNumber(formData, "purchasePrice"),
-    compare_at_price: getOptionalNumber(formData, "compareAtPrice"),
+    price,
+    purchase_price: purchasePrice,
+    compare_at_price: compareAtPrice,
     category,
     rating: getOptionalNumber(formData, "rating") ?? 0,
     review_count: Math.floor(getOptionalNumber(formData, "reviewCount") ?? 0),
@@ -239,6 +242,12 @@ async function parseProductForm(formData: FormData): Promise<ProductInsert> {
     is_bundle: formData.get("isBundle") === "on",
     stock_quantity: getRequiredInteger(formData, "stockQuantity"),
   };
+
+  validateProductPrices({
+    price,
+    purchasePrice,
+    compareAtPrice,
+  });
 
   if (imageUrls.length > 0) {
     product.image_url = imageUrls[0];
@@ -347,7 +356,7 @@ function parseImportedProduct(row: Record<string, unknown>) {
 
   const imageUrl = getImportedString(row, ["image_url", "zdjecie", "image"]) || null;
 
-  return {
+  const product = {
     ...(sku ? { sku: sku.toUpperCase() } : {}),
     slug,
     name,
@@ -366,10 +375,48 @@ function parseImportedProduct(row: Record<string, unknown>) {
     is_bundle: getImportedBoolean(row, ["is_bundle", "zestaw"], false),
     stock_quantity: getImportedInteger(row, ["stock", "stan", "stock_quantity"]) ?? 0,
   } satisfies ProductInsert;
+
+  validateProductPrices({
+    price,
+    purchasePrice,
+    compareAtPrice,
+  });
+
+  return product;
 }
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Nieznany błąd.";
+}
+
+function validateProductPrices({
+  compareAtPrice,
+  price,
+  purchasePrice,
+}: {
+  compareAtPrice?: number | null;
+  price: number;
+  purchasePrice: number;
+}) {
+  if (purchasePrice > price) {
+    throw new Error("Cena zakupu nie może być większa niż cena sprzedaży.");
+  }
+
+  if (price < purchasePrice) {
+    throw new Error("Cena sprzedaży nie może być niższa niż cena zakupu.");
+  }
+
+  if (compareAtPrice === null || compareAtPrice === undefined) {
+    return;
+  }
+
+  if (compareAtPrice <= price) {
+    throw new Error("Cena przekreślona musi być większa niż cena sprzedaży.");
+  }
+
+  if (compareAtPrice < purchasePrice) {
+    throw new Error("Cena przekreślona nie może być niższa niż cena zakupu.");
+  }
 }
 
 function getRequiredString(formData: FormData, key: string) {
