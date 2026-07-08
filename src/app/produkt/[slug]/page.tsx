@@ -37,9 +37,37 @@ export async function generateMetadata({
     };
   }
 
+  const productImage = product.imageUrls?.[0] ?? product.imageUrl;
+  const productTitle = `${product.name} | ${storeBrandName}`;
+
   return {
-    title: `${product.name} | ${storeBrandName}`,
+    title: productTitle,
     description: product.description,
+    alternates: {
+      canonical: `/produkt/${product.slug}`,
+    },
+    openGraph: {
+      title: productTitle,
+      description: product.description,
+      url: `/produkt/${product.slug}`,
+      siteName: storeBrandName,
+      locale: "pl_PL",
+      type: "website",
+      images: productImage
+        ? [
+            {
+              url: productImage,
+              alt: product.name,
+            },
+          ]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: productTitle,
+      description: product.description,
+      images: productImage ? [productImage] : undefined,
+    },
   };
 }
 

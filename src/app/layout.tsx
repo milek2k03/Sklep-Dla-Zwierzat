@@ -16,10 +16,40 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = new URL(
+  process.env.NEXT_PUBLIC_APP_URL || "https://www.pawlypetshop.pl",
+);
+const siteDescription =
+  "Sklep z praktycznymi akcesoriami dla psów i kotów do domu, spaceru, auta i podróży.";
+const siteOgImage = {
+  url: "/images/pawly-hero.jpg",
+  width: 1774,
+  height: 887,
+  alt: `${storeBrandName} - akcesoria dla psów i kotów`,
+};
+
 export const metadata: Metadata = {
+  metadataBase: siteUrl,
   title: `${storeBrandName} - akcesoria dla psów i kotów`,
-  description:
-    "Sklep z praktycznymi akcesoriami dla psów i kotów do domu, spaceru, auta i podróży.",
+  description: siteDescription,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: `${storeBrandName} - akcesoria dla psów i kotów`,
+    description: siteDescription,
+    url: "/",
+    siteName: storeBrandName,
+    locale: "pl_PL",
+    type: "website",
+    images: [siteOgImage],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${storeBrandName} - akcesoria dla psów i kotów`,
+    description: siteDescription,
+    images: [siteOgImage.url],
+  },
 };
 
 export default function RootLayout({
