@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BadgePercent,
   Boxes,
@@ -13,6 +13,7 @@ import {
   Store,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useCallback, useEffect } from "react";
 import { AdminLoadingOverlay } from "@/components/admin/AdminLoadingOverlay";
 import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
 import { storeBrandName } from "@/lib/brand";
@@ -54,6 +55,28 @@ const adminNavItems = [
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const prefetchAdminRoute = useCallback(
+    (href: string) => {
+      if (href !== pathname) {
+        router.prefetch(href);
+      }
+    },
+    [pathname, router],
+  );
+
+  useEffect(() => {
+    if (pathname === "/admin/login") {
+      return;
+    }
+
+    const warmAdminRoutes = () => {
+      adminNavItems.forEach((item) => prefetchAdminRoute(item.href));
+    };
+
+    const timer = window.setTimeout(warmAdminRoutes, 250);
+    return () => window.clearTimeout(timer);
+  }, [pathname, prefetchAdminRoute]);
 
   if (pathname === "/admin/login") {
     return (
@@ -73,6 +96,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <div className="sticky top-0 flex h-screen flex-col px-5 py-5">
             <Link
               href="/admin"
+              prefetch={true}
+              onMouseEnter={() => prefetchAdminRoute("/admin")}
+              onFocus={() => prefetchAdminRoute("/admin")}
               className="flex min-h-12 items-center gap-3 rounded-lg px-2 text-[#f5f7fb]"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#f4a261] text-[#121417]">
@@ -99,6 +125,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                       ? pathname === item.href
                       : pathname.startsWith(item.href)
                   }
+                  onPrefetch={prefetchAdminRoute}
                   label={item.label}
                   description={item.description}
                 />
@@ -108,6 +135,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <div className="mt-auto space-y-3 border-t border-white/10 pt-5">
               <Link
                 href="/"
+                prefetch={true}
                 className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-[#cbd5e1] transition hover:bg-white/7 hover:text-white"
               >
                 <Store className="h-4 w-4" aria-hidden="true" />
@@ -121,7 +149,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <div className="min-w-0 flex-1">
           <div className="sticky top-0 z-30 border-b border-white/10 bg-[#0f1115]/92 px-4 py-3 backdrop-blur lg:hidden">
             <div className="flex items-center justify-between gap-3">
-              <Link href="/admin" className="flex items-center gap-2 text-white">
+              <Link
+                href="/admin"
+                prefetch={true}
+                onMouseEnter={() => prefetchAdminRoute("/admin")}
+                onFocus={() => prefetchAdminRoute("/admin")}
+                className="flex items-center gap-2 text-white"
+              >
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f4a261] text-[#121417]">
                   <Home className="h-4 w-4" aria-hidden="true" />
                 </span>
@@ -131,6 +165,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </Link>
               <Link
                 href="/"
+                prefetch={true}
                 className="inline-flex min-h-9 items-center justify-center rounded-lg border border-white/10 px-3 text-xs font-semibold text-[#cbd5e1]"
               >
                 Sklep
@@ -147,6 +182,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={true}
+                    onMouseEnter={() => prefetchAdminRoute(item.href)}
+                    onFocus={() => prefetchAdminRoute(item.href)}
                     className={cn(
                       "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-semibold transition",
                       isActive
@@ -176,16 +214,21 @@ function AdminNavLink({
   icon: Icon,
   isActive,
   label,
+  onPrefetch,
 }: {
   description: string;
   href: string;
   icon: typeof LayoutDashboard;
   isActive: boolean;
   label: string;
+  onPrefetch: (href: string) => void;
 }) {
   return (
     <Link
       href={href}
+      prefetch={true}
+      onMouseEnter={() => onPrefetch(href)}
+      onFocus={() => onPrefetch(href)}
       className={cn(
         "group flex min-h-14 items-center gap-3 rounded-lg border px-3 transition",
         isActive
