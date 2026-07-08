@@ -6,6 +6,7 @@ import {
   createSupabaseServerClient,
   createSupabaseServiceClient,
 } from "@/lib/supabase/server";
+import { rejectCrossOriginRequest, rejectLargeRequest } from "@/lib/security";
 import type { Database } from "@/types/supabase";
 
 type RefundedOrder =
@@ -17,6 +18,18 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+  const invalidOrigin = rejectCrossOriginRequest(request);
+
+  if (invalidOrigin) {
+    return invalidOrigin;
+  }
+
+  const tooLarge = rejectLargeRequest(request);
+
+  if (tooLarge) {
+    return tooLarge;
+  }
+
   const adminSession = await getAdminSession();
 
   if (adminSession.status === "unconfigured") {

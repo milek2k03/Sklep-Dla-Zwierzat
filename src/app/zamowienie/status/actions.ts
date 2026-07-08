@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { sendReturnCaseCreatedEmail } from "@/lib/email/order-emails";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { getServerRequestClientIp } from "@/lib/security";
 import { hasSupabaseServiceEnv } from "@/lib/supabase/env";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
@@ -20,6 +22,11 @@ const caseTypes = [
 ] as const satisfies readonly ReturnCaseType[];
 
 export async function createPublicReturnCaseAction(formData: FormData) {
+  const ip = await getServerRequestClientIp();
+  const rateLimit = checkRateLimit(`public-return-case:${ip}`, {
+    limit: 5,
+    windowMs: 15 * 60 * 1000,
+  });
   const orderNumber = getRequiredString(formData, "orderNumber")
     .toUpperCase()
     .slice(0, 80);
@@ -27,6 +34,13 @@ export async function createPublicReturnCaseAction(formData: FormData) {
   const caseType = getCaseType(getRequiredString(formData, "caseType"));
   const customerMessage = getRequiredString(formData, "customerMessage").slice(0, 1200);
   const redirectBase = getRedirectBase(orderNumber, email);
+
+  if (!rateLimit.allowed) {
+    redirectWithCaseError(
+      redirectBase,
+      "Zbyt wiele prób zgłoszenia sprawy. Spróbuj ponownie za chwilę.",
+    );
+  }
 
   if (!hasSupabaseServiceEnv()) {
     redirectWithCaseError(redirectBase, "Brak konfiguracji Supabase.");

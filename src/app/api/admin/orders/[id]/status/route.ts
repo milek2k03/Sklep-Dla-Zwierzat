@@ -17,6 +17,7 @@ import {
   normalizeTrackingNumber,
   normalizeTrackingUrl,
 } from "@/lib/tracking";
+import { rejectCrossOriginRequest, rejectLargeRequest } from "@/lib/security";
 import type { Database } from "@/types/supabase";
 
 type ShippedOrder =
@@ -28,6 +29,18 @@ export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+  const invalidOrigin = rejectCrossOriginRequest(request);
+
+  if (invalidOrigin) {
+    return invalidOrigin;
+  }
+
+  const tooLarge = rejectLargeRequest(request);
+
+  if (tooLarge) {
+    return tooLarge;
+  }
+
   const adminSession = await getAdminSession();
 
   if (adminSession.status === "unconfigured") {

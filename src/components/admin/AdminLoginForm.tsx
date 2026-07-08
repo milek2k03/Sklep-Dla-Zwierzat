@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { LockKeyhole } from "lucide-react";
 import { FormEvent, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -18,14 +17,19 @@ export function AdminLoginForm() {
     setIsLoading(true);
 
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
 
-      if (signInError) {
-        setError("Nieprawidłowy e-mail lub hasło.");
+      if (!response.ok) {
+        setError(result?.message ?? "Nieprawidłowy e-mail lub hasło.");
         return;
       }
 

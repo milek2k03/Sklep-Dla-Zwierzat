@@ -13,8 +13,25 @@ import { getStripeEnv, hasStripeCheckoutEnv } from "@/lib/stripe/env";
 import { getStripeClient } from "@/lib/stripe/server";
 import { hasSupabaseServiceEnv } from "@/lib/supabase/env";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import {
+  getClientIp,
+  rejectCrossOriginRequest,
+  rejectLargeRequest,
+} from "@/lib/security";
 
 export async function POST(request: NextRequest) {
+  const invalidOrigin = rejectCrossOriginRequest(request);
+
+  if (invalidOrigin) {
+    return invalidOrigin;
+  }
+
+  const tooLarge = rejectLargeRequest(request);
+
+  if (tooLarge) {
+    return tooLarge;
+  }
+
   const ip = getClientIp(request);
   const rateLimit = checkRateLimit(`orders:${ip}`, {
     limit: 8,
@@ -310,16 +327,6 @@ export async function POST(request: NextRequest) {
     },
     checkoutUrl: checkoutSession.url,
   });
-}
-
-function getClientIp(request: NextRequest) {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0]?.trim() ?? "unknown";
-  }
-
-  return request.headers.get("x-real-ip") ?? "unknown";
 }
 
 function parseStockErrorDetails(details: string | null | undefined) {

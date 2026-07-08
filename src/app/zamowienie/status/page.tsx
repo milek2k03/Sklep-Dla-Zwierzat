@@ -5,10 +5,12 @@ import { storeBrandName } from "@/lib/brand";
 import { deliveryOptions } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import { orderStatusLabels } from "@/lib/order-status";
+import { checkRateLimit } from "@/lib/rate-limit";
 import {
   getReturnAddressLines,
   getReturnShipmentInstructionLines,
 } from "@/lib/returns";
+import { getServerRequestClientIp } from "@/lib/security";
 import { hasSupabaseServiceEnv } from "@/lib/supabase/env";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
@@ -69,7 +71,16 @@ export default async function OrderStatusPage({
   const caseSaved = normalizeBooleanParam(resolvedSearchParams.caseSaved);
   const caseError = normalizeMessageParam(resolvedSearchParams.caseError);
   const shouldSearch = Boolean(orderNumber && email);
-  const order = shouldSearch ? await findOrder(orderNumber, email) : null;
+  const lookupRateLimit = shouldSearch
+    ? checkRateLimit(`order-status:${await getServerRequestClientIp()}`, {
+        limit: 20,
+        windowMs: 15 * 60 * 1000,
+      })
+    : { allowed: true };
+  const order =
+    shouldSearch && lookupRateLimit.allowed
+      ? await findOrder(orderNumber, email)
+      : null;
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -138,6 +149,11 @@ export default async function OrderStatusPage({
             <MessageCard
               title="Wprowadź dane zamówienia"
               message="Po sprawdzeniu zobaczysz status płatności, wysyłki, numer śledzenia i sprawy zwrotów lub reklamacji."
+            />
+          ) : shouldSearch && !lookupRateLimit.allowed ? (
+            <MessageCard
+              title="Zbyt wiele prób"
+              message="Spróbuj ponownie za chwilę. Ograniczamy liczbę sprawdzeń, żeby chronić dane zamówień."
             />
           ) : order ? (
             <OrderDetails order={order} />
