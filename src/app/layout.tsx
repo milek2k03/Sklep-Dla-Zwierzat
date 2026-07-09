@@ -32,6 +32,13 @@ export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: `${storeBrandName} - akcesoria dla psów i kotów`,
   description: siteDescription,
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico",
+  },
   alternates: {
     canonical: "/",
   },
