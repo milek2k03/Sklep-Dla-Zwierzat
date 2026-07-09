@@ -22,6 +22,7 @@ import {
 } from "@/app/admin/products/actions";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 import { ProductImageInput } from "@/components/admin/ProductImageInput";
+import { ProductPriceHint } from "@/components/admin/ProductPriceHint";
 import { SanitizedNumberInput } from "@/components/admin/SanitizedNumberInput";
 import { storeBrandName } from "@/lib/brand";
 import { formatPrice } from "@/lib/format";
@@ -506,9 +507,7 @@ function ProductForm({
             step="0.01"
             required
           />
-          <span className="mt-2 block text-xs leading-5 text-[#6d675f]">
-            Nie może być niższa niż cena zakupu.
-          </span>
+          <ProductPriceHint field="price" />
         </Field>
         <Field label="Cena zakupu">
           <SanitizedNumberInput
@@ -520,11 +519,12 @@ function ProductForm({
             step="0.01"
             required
           />
-          <span className="mt-2 block text-xs leading-5 text-[#6d675f]">
-            Nie może być wyższa niż cena sprzedaży.
-          </span>
+          <ProductPriceHint field="purchasePrice" />
         </Field>
-        <Field label="Stan magazynowy">
+        <Field
+          label="Stan magazynowy"
+          labelClassName="text-[11px] leading-4 whitespace-nowrap"
+        >
           <SanitizedNumberInput
             name="stockQuantity"
             numberMode="int"
@@ -545,10 +545,7 @@ function ProductForm({
             min="0"
             step="0.01"
           />
-          <span className="mt-2 block text-xs leading-5 text-[#6d675f]">
-            Stara cena widoczna jako przekreślona. Musi być większa niż cena
-            sprzedaży.
-          </span>
+          <ProductPriceHint field="compareAtPrice" />
         </Field>
         <Field label="Tag">
           <input
@@ -635,15 +632,24 @@ function ProductForm({
 }
 
 function Field({
+  labelClassName,
   label,
   children,
 }: {
+  labelClassName?: string;
   label: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-semibold text-[#1f1f1f]">{label}</span>
+      <span
+        className={cn(
+          "text-sm font-semibold text-[#1f1f1f]",
+          labelClassName,
+        )}
+      >
+        {label}
+      </span>
       <span className="mt-2 block">{children}</span>
     </label>
   );
