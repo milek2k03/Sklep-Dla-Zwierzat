@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import type { CartItem, DeliveryMethod } from "@/types/cart";
 import type { Product } from "@/types/product";
 import { clampQuantityToStock, getAvailableStock } from "@/lib/inventory";
@@ -26,6 +26,8 @@ type CartState = {
   getTotal: () => number;
   getItemsCount: () => number;
 };
+
+const cartStorageKey = "pawly-cart";
 
 function normalizeQuantity(quantity: number) {
   if (!Number.isFinite(quantity)) {
@@ -137,14 +139,14 @@ export const useCartStore = create<CartState>()(
         get().items.reduce((total, item) => total + item.quantity, 0),
     }),
     {
-      name: "pawly-cart",
+      name: cartStorageKey,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         deliveryMethod: state.deliveryMethod,
         items: state.items,
       }),
       merge: (persistedState, currentState) => {
-        const persisted = persistedState as Partial<CartState>;
+        const persisted = (persistedState ?? {}) as Partial<CartState>;
 
         return {
           ...currentState,
@@ -158,10 +160,46 @@ export const useCartStore = create<CartState>()(
   ),
 );
 
+export function getCartItemsCount(items: CartItem[]) {
+  return items.reduce((total, item) => total + item.quantity, 0);
+}
+
 export function useCartHydrated() {
   return useSyncExternalStore(
     (onStoreChange) => useCartStore.persist.onFinishHydration(onStoreChange),
     () => useCartStore.persist.hasHydrated(),
     () => false,
   );
+}
+
+export function useCartStorageSync() {
+  useEffect(() => {
+    const syncCart = () => {
+      void Promise.resolve(useCartStore.persist.rehydrate()).catch(() => {
+        // The current in-memory cart remains usable if browser storage is blocked.
+      });
+    };
+    const syncVisibleCart = () => {
+      if (document.visibilityState === "visible") {
+        syncCart();
+      }
+    };
+    const syncChangedStorage = (event: StorageEvent) => {
+      if (event.key === null || event.key === cartStorageKey) {
+        syncCart();
+      }
+    };
+
+    window.addEventListener("pageshow", syncCart);
+    window.addEventListener("focus", syncCart);
+    window.addEventListener("storage", syncChangedStorage);
+    document.addEventListener("visibilitychange", syncVisibleCart);
+
+    return () => {
+      window.removeEventListener("pageshow", syncCart);
+      window.removeEventListener("focus", syncCart);
+      window.removeEventListener("storage", syncChangedStorage);
+      document.removeEventListener("visibilitychange", syncVisibleCart);
+    };
+  }, []);
 }

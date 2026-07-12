@@ -13,12 +13,16 @@ import { CheckoutSteps } from "@/components/CheckoutSteps";
 import { CheckoutTrust } from "@/components/CheckoutTrust";
 import { FreeDeliveryMeter } from "@/components/FreeDeliveryMeter";
 import { formatPrice } from "@/lib/format";
-import { useCartHydrated, useCartStore } from "@/lib/cart-store";
+import {
+  getCartItemsCount,
+  useCartHydrated,
+  useCartStore,
+} from "@/lib/cart-store";
 
 export function CartView() {
   const items = useCartStore((state) => state.items);
-  const itemCount = useCartStore((state) => state.getItemsCount());
   const isHydrated = useCartHydrated();
+  const itemCount = useMemo(() => getCartItemsCount(items), [items]);
 
   const subtotal = useMemo(
     () =>

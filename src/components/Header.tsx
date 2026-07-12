@@ -11,7 +11,12 @@ import {
   useState,
 } from "react";
 import { storeBrandSuffix, storeShortName } from "@/lib/brand";
-import { useCartHydrated, useCartStore } from "@/lib/cart-store";
+import {
+  getCartItemsCount,
+  useCartHydrated,
+  useCartStorageSync,
+  useCartStore,
+} from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +39,7 @@ type ProductSuggestion = {
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const itemCount = useCartStore((state) => state.getItemsCount());
+  const itemCount = useCartStore((state) => getCartItemsCount(state.items));
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<ProductSuggestion[]>([]);
@@ -42,6 +47,7 @@ export function Header() {
   const [isSearching, setIsSearching] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const isHydrated = useCartHydrated();
+  useCartStorageSync();
 
   useEffect(() => {
     const query = searchQuery.trim();
