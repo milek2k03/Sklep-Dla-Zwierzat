@@ -1,6 +1,11 @@
 import { getDeliveryOption } from "@/lib/delivery";
 import { storeBrandName } from "@/lib/brand";
-import { hasEmailEnv, getEmailEnv } from "@/lib/email/env";
+import {
+  getEmailEnv,
+  getReturnEmailConfig,
+  hasEmailEnv,
+  hasReturnEmailEnv,
+} from "@/lib/email/env";
 import { getResendClient } from "@/lib/email/server";
 import { formatPrice } from "@/lib/format";
 import {
@@ -112,20 +117,20 @@ export async function sendShippedOrderEmail(order: PaidOrder) {
 }
 
 export async function sendRefundedOrderEmail(order: PaidOrder) {
-  if (!hasEmailEnv() || order.refund_email_sent_at) {
+  if (!hasReturnEmailEnv() || order.refund_email_sent_at) {
     return false;
   }
 
-  const { storeFromEmail } = getEmailEnv();
+  const { fromEmail, resendApiKey } = getReturnEmailConfig();
 
-  if (!storeFromEmail) {
+  if (!fromEmail || !resendApiKey) {
     return false;
   }
 
-  const resend = getResendClient();
+  const resend = getResendClient(resendApiKey);
 
   await resend.emails.send({
-    from: storeFromEmail,
+    from: fromEmail,
     to: order.customer_email,
     subject: `Zamówienie ${order.order_number} zostało anulowane`,
     html: renderCustomerRefundedOrderHtml(order),
@@ -178,20 +183,20 @@ async function sendReturnCaseEmail({
   subject: string;
   title: string;
 }) {
-  if (!hasEmailEnv() || !returnCase.orders?.customer_email) {
+  if (!hasReturnEmailEnv() || !returnCase.orders?.customer_email) {
     return false;
   }
 
-  const { storeFromEmail } = getEmailEnv();
+  const { fromEmail, resendApiKey } = getReturnEmailConfig();
 
-  if (!storeFromEmail) {
+  if (!fromEmail || !resendApiKey) {
     return false;
   }
 
-  const resend = getResendClient();
+  const resend = getResendClient(resendApiKey);
 
   await resend.emails.send({
-    from: storeFromEmail,
+    from: fromEmail,
     to: returnCase.orders.customer_email,
     subject,
     html: renderReturnCaseHtml({ intro, returnCase, title }),
