@@ -800,12 +800,15 @@ function renderHighlightMetric(label: string, value: string) {
 
 function renderButton(label: string, href: string, variant: "primary" | "secondary" = "primary") {
   const isPrimary = variant === "primary";
+  const background = isPrimary ? "#1f1f1f" : "#fffdf8";
+  const border = isPrimary ? "#1f1f1f" : "#d7cab9";
+  const color = isPrimary ? "#ffffff" : "#1f1f1f";
 
   return `
-    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:18px 0 0;border-collapse:collapse;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:18px 0 0;border-collapse:separate;border-spacing:0;border:0;outline:0;">
       <tr>
-        <td style="border-radius:999px;background:${isPrimary ? "#1f1f1f" : "#fffdf8"};border:1px solid ${isPrimary ? "#1f1f1f" : "#d7cab9"};">
-          <a href="${escapeHtml(href)}" style="display:inline-block;padding:12px 20px;color:${isPrimary ? "#ffffff" : "#1f1f1f"};font-size:14px;font-weight:800;text-decoration:none;">
+        <td bgcolor="${background}" style="border-radius:999px;background:${background};border:1px solid ${border};border-collapse:separate;outline:0;mso-padding-alt:0;">
+          <a href="${escapeHtml(href)}" style="display:inline-block;border:0;outline:0;border-radius:999px;padding:12px 20px;background:${background};color:${color};font-size:14px;font-weight:800;line-height:18px;text-decoration:none;mso-line-height-rule:exactly;">
             ${escapeHtml(label)}
           </a>
         </td>
