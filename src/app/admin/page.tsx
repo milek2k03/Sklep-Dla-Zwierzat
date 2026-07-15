@@ -697,6 +697,44 @@ function AdminDashboard({
       hint: "Aktywne produkty poniżej 5 szt.",
     },
   ];
+  const tasks = [
+    {
+      href: "/admin?status=paid",
+      label: "Spakuj i wyślij opłacone zamówienia",
+      value: statusCounts.paid,
+      hint: "Najważniejsze, bo klient już zapłacił.",
+      tone: "urgent",
+    },
+    {
+      href: "/admin?status=new",
+      label: "Sprawdź nowe zamówienia",
+      value: statusCounts.new,
+      hint: "Oczekują na płatność albo pierwszą obsługę.",
+      tone: "neutral",
+    },
+    {
+      href: "/admin/returns",
+      label: "Obsłuż zwroty i reklamacje",
+      value: dashboard.openReturnCasesCount,
+      hint: "Otwarte sprawy posprzedażowe.",
+      tone: "neutral",
+    },
+    {
+      href: "/admin/products",
+      label: "Uzupełnij niski stan magazynowy",
+      value: dashboard.lowStockProducts.length,
+      hint: "Aktywne produkty poniżej 5 sztuk.",
+      tone: "neutral",
+    },
+    {
+      href: "/admin?status=new",
+      label: "Sprawdź zaległe płatności Stripe",
+      value: dashboard.staleUnpaidOrdersCount,
+      hint: "Nieopłacone dłużej niż 15 minut. Cron powinien je anulować.",
+      tone: dashboard.staleUnpaidOrdersCount > 0 ? "urgent" : "ok",
+    },
+  ];
+  const activeTasks = tasks.filter((task) => task.value > 0);
 
   return (
     <div className="mt-6 space-y-6">
@@ -864,6 +902,57 @@ function AdminDashboard({
           title="Ewidencja działalności nierejestrowanej"
           variant="pit"
         />
+      </div>
+
+      <div className="rounded-lg border border-[#26313c] bg-[#111820] p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-white">Do zrobienia</p>
+            <p className="mt-1 text-xs leading-5 text-[#9fb1bd]">
+              Krótka lista rzeczy, które najczęściej blokują obsługę sklepu.
+            </p>
+          </div>
+          <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-semibold text-[#cbd6df]">
+            {activeTasks.length === 0
+              ? "Brak pilnych zadań"
+              : `${activeTasks.length} aktywne`}
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-5">
+          {tasks.map((task) => (
+            <Link
+              className={[
+                "rounded-lg border p-3 transition hover:-translate-y-0.5",
+                task.value > 0 && task.tone === "urgent"
+                  ? "border-[#ff9b85]/50 bg-[#331d1b] text-white"
+                  : task.value > 0
+                    ? "border-[#f0c36a]/40 bg-[#2b2517] text-white"
+                    : "border-white/10 bg-black/20 text-[#cbd6df]",
+              ].join(" ")}
+              href={task.href}
+              key={task.label}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold">{task.label}</p>
+                <span
+                  className={[
+                    "rounded-full px-2.5 py-1 text-sm font-semibold",
+                    task.value > 0 && task.tone === "urgent"
+                      ? "bg-[#ff9b85] text-[#1a0d0a]"
+                      : task.value > 0
+                        ? "bg-[#f0c36a] text-[#181610]"
+                        : "bg-white/10 text-[#cbd6df]",
+                  ].join(" ")}
+                >
+                  {task.value}
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-[#9fb1bd]">
+                {task.hint}
+              </p>
+            </Link>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
@@ -1121,12 +1210,14 @@ async function getStatusCounts(orderSearch: string) {
 
 async function getAdminDashboardData() {
   const supabase = await createSupabaseServerClient();
+  const unpaidOrderCutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
   const [
     openReturnCasesResult,
     lowStockResult,
     recentEventsResult,
     financialOrdersResult,
     returnLossResult,
+    staleUnpaidOrdersResult,
   ] =
     await Promise.all([
       supabase
@@ -1152,6 +1243,13 @@ async function getAdminDashboardData() {
       supabase
         .from("return_cases")
         .select("order_id, approved_refund_amount, created_at, updated_at, refunded_at, return_case_items(quantity, return_condition, order_items(purchase_total, quantity, unit_purchase_price))"),
+      supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["new", "confirmed"])
+        .eq("payment_method", "stripe")
+        .is("stock_restored_at", null)
+        .lte("created_at", unpaidOrderCutoff),
     ]);
   const financialOrders = (financialOrdersResult.data ?? []) as FinancialOrderRow[];
   const returnCases = (returnLossResult.data ?? []) as FinancialReturnCaseRow[];
@@ -1163,6 +1261,7 @@ async function getAdminDashboardData() {
       returnCases,
     ),
     openReturnCasesCount: openReturnCasesResult.count ?? 0,
+    staleUnpaidOrdersCount: staleUnpaidOrdersResult.count ?? 0,
     lowStockProducts: (lowStockResult.data ?? []) as Pick<
       ProductRow,
       "sku" | "name" | "stock_quantity"

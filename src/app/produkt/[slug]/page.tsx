@@ -83,9 +83,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const stockLabel = getStockLabel(product);
   const galleryImages =
     product.imageUrls?.slice(0, 5) ?? (product.imageUrl ? [product.imageUrl] : []);
+  const productJsonLd = getProductJsonLd(product);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(productJsonLd) }}
+      />
       <ProductViewTracker
         product={{
           slug: product.slug,
@@ -226,4 +231,60 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
     </section>
   );
+}
+
+function getProductJsonLd(product: NonNullable<Awaited<ReturnType<typeof getPublishedProductBySlug>>>) {
+  const siteUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
+    "https://www.pawlypetshop.pl";
+  const productUrl = `${siteUrl}/produkt/${product.slug}`;
+  const stockQuantity = product.stockQuantity ?? 0;
+  const images = (product.imageUrls ?? (product.imageUrl ? [product.imageUrl] : []))
+    .slice(0, 5)
+    .map((imageUrl) => toAbsoluteUrl(imageUrl, siteUrl));
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    sku: product.id,
+    image: images.length > 0 ? images : undefined,
+    brand: {
+      "@type": "Brand",
+      name: storeBrandName,
+    },
+    category: product.category,
+    aggregateRating:
+      product.rating > 0 && product.reviewCount > 0
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: product.rating,
+            reviewCount: product.reviewCount,
+          }
+        : undefined,
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: "PLN",
+      price: product.price.toFixed(2),
+      availability:
+        stockQuantity > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+    },
+  };
+}
+
+function toAbsoluteUrl(value: string, siteUrl: string) {
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `${siteUrl}${value.startsWith("/") ? "" : "/"}${value}`;
+}
+
+function safeJsonLd(value: unknown) {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
 }
