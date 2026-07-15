@@ -6,6 +6,7 @@ import {
   recordConversionEvent,
 } from "@/lib/conversion";
 import { sendPaidOrderEmails } from "@/lib/email/order-emails";
+import { notifyAdminError } from "@/lib/monitoring/admin-alerts";
 import { getStripeWebhookSecret } from "@/lib/stripe/env";
 import { getStripeClient } from "@/lib/stripe/server";
 import { hasSupabaseServiceEnv } from "@/lib/supabase/env";
@@ -112,6 +113,16 @@ async function markOrderAsPaid(session: Stripe.Checkout.Session) {
     }
 
     console.error("Failed to mark Stripe order as paid", error);
+    await notifyAdminError({
+      title: "Nie udało się oznaczyć zamówienia Stripe jako opłacone",
+      source: "stripe.webhook.markOrderAsPaid",
+      error,
+      context: {
+        checkoutSessionId: session.id,
+        orderId,
+        paymentIntentId,
+      },
+    });
     return;
   }
 
@@ -185,6 +196,16 @@ async function sendPaidOrderEmailsAndMark(order: PaidOrderRow) {
 
     if (error) {
       console.error("Failed to store order email timestamps", error);
+      await notifyAdminError({
+        title: "Nie udało się zapisać daty wysłania e-maili zamówienia",
+        source: "stripe.webhook.sendPaidOrderEmailsAndMark",
+        error,
+        context: {
+          orderId: order.id,
+          orderNumber: order.order_number,
+          update,
+        },
+      });
       return;
     }
 
@@ -197,6 +218,15 @@ async function sendPaidOrderEmailsAndMark(order: PaidOrderRow) {
     });
   } catch (error) {
     console.error("Failed to send paid order emails", error);
+    await notifyAdminError({
+      title: "Nie udało się wysłać e-maili po opłaceniu zamówienia",
+      source: "stripe.webhook.sendPaidOrderEmailsAndMark",
+      error,
+      context: {
+        orderId: order.id,
+        orderNumber: order.order_number,
+      },
+    });
   }
 }
 
@@ -214,6 +244,16 @@ async function cancelOrderAndRestoreStock(
 
   if (error) {
     console.error("Failed to cancel Stripe order and restore stock", error);
+    await notifyAdminError({
+      title: "Nie udało się anulować zamówienia po zdarzeniu Stripe",
+      source: "stripe.webhook.cancelOrderAndRestoreStock",
+      error,
+      context: {
+        checkoutSessionId: session.id,
+        orderId: session.metadata?.order_id ?? null,
+        eventType,
+      },
+    });
     return;
   }
 
@@ -266,5 +306,15 @@ async function recordOrderEvent({
 
   if (error) {
     console.error("Failed to record order event", error);
+    await notifyAdminError({
+      title: "Nie udało się zapisać zdarzenia zamówienia",
+      source: "stripe.webhook.recordOrderEvent",
+      error,
+      context: {
+        orderId,
+        eventType,
+        toStatus,
+      },
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendShippedOrderEmail } from "@/lib/email/order-emails";
 import { getShippingCarrierForDeliveryMethod } from "@/lib/delivery";
+import { notifyAdminError } from "@/lib/monitoring/admin-alerts";
 import {
   canTransitionOrderStatus,
   isOrderStatus,
@@ -213,6 +214,19 @@ export async function PATCH(
           .single();
 
   if (error || !data) {
+    await notifyAdminError({
+      title: "Nie udało się zapisać statusu zamówienia",
+      source: "admin.orders.status.updateOrder",
+      error,
+      context: {
+        orderId: id,
+        fromStatus: currentOrder.status,
+        toStatus: status,
+        shippingCarrier: effectiveShippingCarrier,
+        trackingNumber: normalizedTrackingNumber,
+      },
+    });
+
     return NextResponse.json(
       {
         error: "ORDER_UPDATE_FAILED",
@@ -255,6 +269,17 @@ async function sendShippedOrderEmailAndMark(order: ShippedOrder) {
 
     if (error) {
       console.error("Failed to store shipping email timestamp", error);
+      await notifyAdminError({
+        title: "Nie udało się zapisać daty wysłania e-maila o wysyłce",
+        source: "admin.orders.status.storeShippingEmailTimestamp",
+        error,
+        context: {
+          orderId: order.id,
+          orderNumber: order.order_number,
+          shippingCarrier: order.shipping_carrier,
+          trackingNumber: order.tracking_number,
+        },
+      });
       return;
     }
 
@@ -272,9 +297,31 @@ async function sendShippedOrderEmailAndMark(order: ShippedOrder) {
 
     if (eventError) {
       console.error("Failed to record shipping email event", eventError);
+      await notifyAdminError({
+        title: "Nie udało się zapisać zdarzenia e-maila o wysyłce",
+        source: "admin.orders.status.recordShippingEmailEvent",
+        error: eventError,
+        context: {
+          orderId: order.id,
+          orderNumber: order.order_number,
+          shippingCarrier: order.shipping_carrier,
+          trackingNumber: order.tracking_number,
+        },
+      });
     }
   } catch (error) {
     console.error("Failed to send shipping email", error);
+    await notifyAdminError({
+      title: "Nie udało się wysłać e-maila o wysyłce",
+      source: "admin.orders.status.sendShippingEmail",
+      error,
+      context: {
+        orderId: order.id,
+        orderNumber: order.order_number,
+        shippingCarrier: order.shipping_carrier,
+        trackingNumber: order.tracking_number,
+      },
+    });
   }
 }
 
@@ -332,5 +379,17 @@ async function recordAdminOrderEvent({
 
   if (error) {
     console.error("Failed to record admin order event", error);
+    await notifyAdminError({
+      title: "Nie udało się zapisać zdarzenia zmiany statusu zamówienia",
+      source: "admin.orders.status.recordAdminOrderEvent",
+      error,
+      context: {
+        orderId,
+        fromStatus,
+        toStatus,
+        shippingCarrier,
+        trackingNumber,
+      },
+    });
   }
 }

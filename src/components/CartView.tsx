@@ -138,8 +138,7 @@ export function CartView() {
               Następny krok: dane i dostawa
             </p>
             <p className="mt-2 text-sm leading-6 text-[#6d675f]">
-              W kolejnym kroku wybierzesz InPost lub DPD i uzupełnisz adres albo
-              punkt odbioru.
+              W kolejnym kroku wybierzesz kuriera i uzupełnisz adres dostawy.
             </p>
           </div>
 

@@ -1,3 +1,4 @@
+import { notifyAdminError } from "@/lib/monitoring/admin-alerts";
 import { hasStripeCheckoutEnv } from "@/lib/stripe/env";
 import { getStripeClient } from "@/lib/stripe/server";
 import { hasSupabaseServiceEnv } from "@/lib/supabase/env";
@@ -40,6 +41,15 @@ export async function expireUnpaidOrders() {
 
   if (error) {
     console.error("Failed to fetch unpaid orders for expiration", error);
+    await notifyAdminError({
+      title: "Nie udało się pobrać nieopłaconych zamówień do anulowania",
+      source: "orders.expireUnpaidOrders.fetchOrders",
+      error,
+      context: {
+        cutoff,
+        batchSize: unpaidOrderBatchSize,
+      },
+    });
     return { expired: 0 };
   }
 
@@ -85,6 +95,12 @@ async function expireStripeCheckoutSession(order: ExpirableOrder) {
       `Failed to expire Stripe Checkout session for order ${order.order_number}`,
       error,
     );
+    await notifyAdminError({
+      title: "Nie udało się pobrać sesji Stripe Checkout przed anulowaniem",
+      source: "orders.expireUnpaidOrders.retrieveStripeSession",
+      error,
+      context: getOrderAlertContext(order),
+    });
     return false;
   }
 
@@ -104,6 +120,12 @@ async function expireStripeCheckoutSession(order: ExpirableOrder) {
       `Failed to expire open Stripe Checkout session for order ${order.order_number}`,
       error,
     );
+    await notifyAdminError({
+      title: "Nie udało się wygasić otwartej sesji Stripe Checkout",
+      source: "orders.expireUnpaidOrders.expireStripeSession",
+      error,
+      context: getOrderAlertContext(order),
+    });
     return false;
   }
 }
@@ -122,6 +144,12 @@ async function cancelOrderAndRestoreStock(order: ExpirableOrder) {
       `Failed to cancel unpaid order ${order.order_number}`,
       error,
     );
+    await notifyAdminError({
+      title: "Nie udało się anulować nieopłaconego zamówienia",
+      source: "orders.expireUnpaidOrders.cancelOrder",
+      error,
+      context: getOrderAlertContext(order),
+    });
     return false;
   }
 
@@ -145,9 +173,25 @@ async function cancelOrderAndRestoreStock(order: ExpirableOrder) {
       `Failed to record unpaid order expiration event for ${order.order_number}`,
       eventError,
     );
+    await notifyAdminError({
+      title: "Nie udało się zapisać zdarzenia anulowania nieopłaconego zamówienia",
+      source: "orders.expireUnpaidOrders.recordEvent",
+      error: eventError,
+      context: getOrderAlertContext(order),
+    });
   }
 
   return true;
+}
+
+function getOrderAlertContext(order: ExpirableOrder) {
+  return {
+    orderId: order.id,
+    orderNumber: order.order_number,
+    paymentMethod: order.payment_method,
+    status: order.status,
+    stripeCheckoutSessionId: order.stripe_checkout_session_id,
+  };
 }
 
 function isMissingStripeSessionError(error: unknown) {

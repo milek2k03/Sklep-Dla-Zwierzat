@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { notifyAdminError } from "@/lib/monitoring/admin-alerts";
 import { expireUnpaidOrders } from "@/lib/orders/expire-unpaid";
 
 export const dynamic = "force-dynamic";
@@ -19,10 +20,24 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const result = await expireUnpaidOrders();
+  try {
+    const result = await expireUnpaidOrders();
 
-  return NextResponse.json({
-    ok: true,
-    ...result,
-  });
+    return NextResponse.json({
+      ok: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error("Failed to run unpaid order expiration cron", error);
+    await notifyAdminError({
+      title: "Cron anulowania nieopłaconych zamówień zakończył się błędem",
+      source: "cron.expireUnpaidOrders",
+      error,
+    });
+
+    return NextResponse.json(
+      { error: "EXPIRE_UNPAID_ORDERS_FAILED" },
+      { status: 500 },
+    );
+  }
 }

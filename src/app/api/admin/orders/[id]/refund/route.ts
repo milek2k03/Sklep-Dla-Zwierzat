@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendRefundedOrderEmail } from "@/lib/email/order-emails";
+import { notifyAdminError } from "@/lib/monitoring/admin-alerts";
 import { getStripeClient } from "@/lib/stripe/server";
 import { getAdminSession } from "@/lib/supabase/admin";
 import {
@@ -167,6 +168,17 @@ export async function POST(
     refundId = refund.id;
   } catch (error) {
     console.error("Failed to create Stripe refund", error);
+    await notifyAdminError({
+      title: "Nie udało się zlecić zwrotu Stripe",
+      source: "admin.orders.refund.createStripeRefund",
+      error,
+      context: {
+        orderId: currentOrder.id,
+        orderNumber: currentOrder.order_number,
+        paymentIntentId: currentOrder.stripe_payment_intent_id,
+        productRefundAmount,
+      },
+    });
 
     return NextResponse.json(
       {
@@ -188,6 +200,17 @@ export async function POST(
 
   if (cancelError) {
     console.error("Failed to cancel order after refund", cancelError);
+    await notifyAdminError({
+      title: "Zwrot Stripe zlecony, ale nie udało się anulować zamówienia",
+      source: "admin.orders.refund.cancelOrderAfterRefund",
+      error: cancelError,
+      context: {
+        orderId: currentOrder.id,
+        orderNumber: currentOrder.order_number,
+        refundId,
+        productRefundAmount,
+      },
+    });
 
     return NextResponse.json(
       {
@@ -206,6 +229,17 @@ export async function POST(
     .single();
 
   if (refundedOrderError || !refundedOrder) {
+    await notifyAdminError({
+      title: "Zwrot zapisany, ale nie udało się pobrać zamówienia",
+      source: "admin.orders.refund.fetchRefundedOrder",
+      error: refundedOrderError,
+      context: {
+        orderId: currentOrder.id,
+        orderNumber: currentOrder.order_number,
+        refundId,
+      },
+    });
+
     return NextResponse.json(
       {
         error: "ORDER_REFUNDED_BUT_NOT_FETCHED",
@@ -244,6 +278,16 @@ async function sendRefundedOrderEmailAndMark(order: RefundedOrder) {
 
     if (error) {
       console.error("Failed to store refund email timestamp", error);
+      await notifyAdminError({
+        title: "Nie udało się zapisać daty wysłania e-maila o zwrocie",
+        source: "admin.orders.refund.storeEmailTimestamp",
+        error,
+        context: {
+          orderId: order.id,
+          orderNumber: order.order_number,
+          refundId: order.stripe_refund_id,
+        },
+      });
       return;
     }
 
@@ -260,9 +304,29 @@ async function sendRefundedOrderEmailAndMark(order: RefundedOrder) {
 
     if (eventError) {
       console.error("Failed to record refund email event", eventError);
+      await notifyAdminError({
+        title: "Nie udało się zapisać zdarzenia e-maila o zwrocie",
+        source: "admin.orders.refund.recordEmailEvent",
+        error: eventError,
+        context: {
+          orderId: order.id,
+          orderNumber: order.order_number,
+          refundId: order.stripe_refund_id,
+        },
+      });
     }
   } catch (error) {
     console.error("Failed to send refund email", error);
+    await notifyAdminError({
+      title: "Nie udało się wysłać e-maila o zwrocie zamówienia",
+      source: "admin.orders.refund.sendRefundEmail",
+      error,
+      context: {
+        orderId: order.id,
+        orderNumber: order.order_number,
+        refundId: order.stripe_refund_id,
+      },
+    });
   }
 }
 
@@ -299,6 +363,17 @@ async function recordRefundEvent({
 
   if (error) {
     console.error("Failed to record refund event", error);
+    await notifyAdminError({
+      title: "Nie udało się zapisać zdarzenia zwrotu Stripe",
+      source: "admin.orders.refund.recordRefundEvent",
+      error,
+      context: {
+        orderId: order.id,
+        orderNumber: order.order_number,
+        refundId,
+        productRefundAmount,
+      },
+    });
   }
 }
 
