@@ -6,6 +6,7 @@ import {
   isOrderStatus,
   orderStatusLabels,
 } from "@/lib/order-status";
+import { expireUnpaidOrders } from "@/lib/orders/expire-unpaid";
 import { getAdminSession } from "@/lib/supabase/admin";
 import {
   createSupabaseServerClient,
@@ -106,6 +107,7 @@ export async function PATCH(
   }
 
   const { id } = await context.params;
+  await expireUnpaidOrders();
   const serverSupabase = await createSupabaseServerClient();
   const { data: currentOrder, error: currentOrderError } = await serverSupabase
     .from("orders")
@@ -121,6 +123,10 @@ export async function PATCH(
       },
       { status: 404 },
     );
+  }
+
+  if (currentOrder.status === "cancelled" && status === "cancelled") {
+    return NextResponse.json({ order: currentOrder });
   }
 
   if (

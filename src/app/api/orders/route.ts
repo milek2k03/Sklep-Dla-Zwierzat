@@ -12,6 +12,7 @@ import {
   orderRequestSchema,
   UnknownOrderProductsError,
 } from "@/lib/order-server";
+import { expireUnpaidOrders } from "@/lib/orders/expire-unpaid";
 import { normalizeDiscountCode } from "@/lib/discounts";
 import { getPublishedProducts } from "@/lib/products";
 import { getStripeEnv, hasStripeCheckoutEnv } from "@/lib/stripe/env";
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createSupabaseServiceClient();
+  await expireUnpaidOrders();
 
   try {
     const productCatalog = await getPublishedProducts({

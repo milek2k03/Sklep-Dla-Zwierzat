@@ -5,6 +5,7 @@ import { storeBrandName } from "@/lib/brand";
 import { deliveryOptions } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import { orderStatusLabels } from "@/lib/order-status";
+import { expireUnpaidOrders } from "@/lib/orders/expire-unpaid";
 import { checkRateLimit } from "@/lib/rate-limit";
 import {
   getReturnAddressLines,
@@ -173,6 +174,8 @@ async function findOrder(orderNumber: string, email: string) {
   if (!hasSupabaseServiceEnv()) {
     return null;
   }
+
+  await expireUnpaidOrders();
 
   const supabase = createSupabaseServiceClient();
   const { data, error } = await supabase

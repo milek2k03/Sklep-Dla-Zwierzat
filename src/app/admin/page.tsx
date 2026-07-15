@@ -28,6 +28,7 @@ import {
   orderStatuses,
   type OrderStatus,
 } from "@/lib/order-status";
+import { expireUnpaidOrders } from "@/lib/orders/expire-unpaid";
 import { getProductBySlug } from "@/lib/products";
 import { getAdminSession } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -129,6 +130,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const orderSearch = normalizeOrderSearch(resolvedSearchParams.q);
   const statusFilter = normalizeOrderStatus(resolvedSearchParams.status);
   const hasFilters = Boolean(orderSearch || statusFilter);
+  await expireUnpaidOrders();
   const supabase = await createSupabaseServerClient();
   let ordersQuery = supabase
     .from("orders")
