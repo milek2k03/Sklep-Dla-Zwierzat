@@ -625,26 +625,31 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                             <p className="font-semibold text-[#1f1f1f]">
                               Historia
                             </p>
-                            <div className="mt-3 grid gap-2 lg:grid-cols-2">
-                              {getSortedOrderEvents(order.order_events)
-                                .slice(0, 8)
-                                .map((event) => (
-                                  <div
+                            <ol className="mt-3 grid gap-2 lg:grid-cols-2">
+                              {getChronologicalOrderEvents(order.order_events).map(
+                                (event, eventIndex) => (
+                                  <li
                                     key={event.id}
-                                    className="rounded-lg border border-[#eee7db] bg-white p-3"
+                                    className="grid grid-cols-[40px_minmax(0,1fr)] gap-3 rounded-lg border border-[#eee7db] bg-white p-3"
                                   >
-                                    <p className="font-medium text-[#1f1f1f]">
-                                      {formatOrderEvent(event)}
-                                    </p>
-                                    <p className="mt-1 text-xs text-[#7a746d]">
-                                      {new Date(event.created_at).toLocaleString(
-                                        "pl-PL",
-                                      )}{" "}
-                                      • {formatEventActor(event.actor_type)}
-                                    </p>
-                                  </div>
-                                ))}
-                            </div>
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4a261] text-sm font-semibold text-[#11151b]">
+                                      {eventIndex + 1}
+                                    </span>
+                                    <span className="min-w-0">
+                                      <span className="block font-medium text-[#1f1f1f]">
+                                        {formatOrderEvent(event)}
+                                      </span>
+                                      <span className="mt-1 block text-xs text-[#7a746d]">
+                                        {new Date(event.created_at).toLocaleString(
+                                          "pl-PL",
+                                        )}{" "}
+                                        • {formatEventActor(event.actor_type)}
+                                      </span>
+                                    </span>
+                                  </li>
+                                ),
+                              )}
+                            </ol>
                           </div>
                         ) : null}
                       </div>
@@ -1702,6 +1707,16 @@ function getSortedOrderEvents(
     (firstEvent, secondEvent) =>
       new Date(secondEvent.created_at).getTime() -
       new Date(firstEvent.created_at).getTime(),
+  );
+}
+
+function getChronologicalOrderEvents(
+  events: Database["public"]["Tables"]["order_events"]["Row"][],
+) {
+  return [...events].sort(
+    (firstEvent, secondEvent) =>
+      new Date(firstEvent.created_at).getTime() -
+      new Date(secondEvent.created_at).getTime(),
   );
 }
 
