@@ -681,7 +681,7 @@ function AdminDetailsSummary({
         "flex min-h-[76px] cursor-pointer list-none select-none items-center justify-between gap-4 rounded-lg border-2 px-4 py-3 text-left shadow-lg transition hover:-translate-y-0.5 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#11151b] group-open:rounded-b-none marker:hidden [&::-webkit-details-marker]:hidden",
         isPrimary
           ? "border-[#ffb06f] bg-[#f4a261] text-[#11151b] shadow-[0_16px_34px_rgba(244,162,97,0.28)] hover:bg-[#ffb06f] focus:ring-[#f4a261]/60 group-open:bg-[#ffb06f]"
-          : "border-white bg-white text-[#11151b] shadow-[0_16px_34px_rgba(226,232,240,0.18)] hover:border-[#f4a261] hover:bg-[#fff7e8] focus:ring-[#f4a261]/50 group-open:border-[#f4a261] group-open:bg-[#fff7e8]",
+          : "border-[#344252] bg-[#151b22] text-white shadow-[0_16px_34px_rgba(0,0,0,0.28)] hover:border-[#f4a261] hover:bg-[#1b232d] focus:ring-[#f4a261]/50 group-open:border-[#f4a261] group-open:bg-[#111820] group-open:text-white group-open:shadow-[0_0_0_1px_rgba(244,162,97,0.35),0_18px_38px_rgba(0,0,0,0.32)]",
       ].join(" ")}
     >
       <span className="flex min-w-0 items-center gap-3">
@@ -702,7 +702,7 @@ function AdminDetailsSummary({
           <span
             className={[
               "mt-1.5 block text-sm font-semibold leading-5",
-              isPrimary ? "text-[#4b2f18]" : "text-[#334155]",
+              isPrimary ? "text-[#4b2f18]" : "text-[#b8c7d9] group-open:text-[#f4c28e]",
             ].join(" ")}
           >
             {description}
