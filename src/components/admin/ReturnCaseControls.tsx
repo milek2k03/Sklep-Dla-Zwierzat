@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { getConsumerWithdrawalDeliveryRefundLimit } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
 import {
   getReturnCondition,
@@ -99,7 +100,11 @@ export function ReturnCaseControls({
   );
   const supportsMoneyRefund = caseType !== "exchange";
   const canRefund = supportsMoneyRefund && selectedStatus === "accepted";
-  const canRefundDelivery = canRefund && orderDeliveryCost > 0;
+  const maxDeliveryRefundAmount =
+    caseType === "return"
+      ? getConsumerWithdrawalDeliveryRefundLimit(orderDeliveryCost)
+      : money(orderDeliveryCost);
+  const canRefundDelivery = canRefund && maxDeliveryRefundAmount > 0;
   const closeDisabled =
     !canClose || hasPendingStockDecision || hasMissingDisposalReason;
 
@@ -242,15 +247,15 @@ export function ReturnCaseControls({
               type="number"
               inputMode="decimal"
               min="0"
-              max={orderDeliveryCost.toFixed(2)}
+              max={maxDeliveryRefundAmount.toFixed(2)}
               step="0.01"
               defaultValue="0"
               placeholder="0,00"
             />
             <span className="mt-1 block text-xs leading-5 text-[#7a746d]">
-              Maksymalnie pobrana dostawa: {formatPrice(orderDeliveryCost)}.
-              Przy pełnym odstąpieniu zwykle zwracasz dostawę do wysokości
-              najtańszej dostępnej opcji.
+              {caseType === "return"
+                ? `Przy odstąpieniu od umowy limit zwrotu dostawy to ${formatPrice(maxDeliveryRefundAmount)}: nie więcej niż pobrana dostawa i nie więcej niż najtańsza zwykła opcja.`
+                : `Przy uznanej reklamacji możesz zwrócić do ${formatPrice(maxDeliveryRefundAmount)} pobranej dostawy.`}
             </span>
           </label>
         ) : (
@@ -285,4 +290,8 @@ export function ReturnCaseControls({
       </form>
     </div>
   );
+}
+
+function money(value: number) {
+  return Math.round(Number(value) * 100) / 100;
 }

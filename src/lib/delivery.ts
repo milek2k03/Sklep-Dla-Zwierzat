@@ -61,3 +61,28 @@ export function getDeliveryCost(method: DeliveryMethod, subtotal: number) {
 
   return option.price;
 }
+
+export function getCheapestRegularDeliveryCost() {
+  return money(
+    Math.min(
+      ...deliveryOptions.map((option) =>
+        Number.isFinite(option.price) ? option.price : 0,
+      ),
+    ),
+  );
+}
+
+export function getConsumerWithdrawalDeliveryRefundLimit(
+  paidDeliveryCost: number,
+) {
+  return money(
+    Math.min(
+      Math.max(0, paidDeliveryCost),
+      getCheapestRegularDeliveryCost(),
+    ),
+  );
+}
+
+function money(value: number) {
+  return Math.round(Number(value) * 100) / 100;
+}

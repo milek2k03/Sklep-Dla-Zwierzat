@@ -7,6 +7,7 @@ import {
   sendReturnCaseCreatedEmail,
   sendReturnCaseStatusEmail,
 } from "@/lib/email/order-emails";
+import { getConsumerWithdrawalDeliveryRefundLimit } from "@/lib/delivery";
 import {
   getRestockActionForCondition,
   getReturnToStock,
@@ -287,7 +288,9 @@ export async function closeReturnCaseAction(formData: FormData) {
   }
 
   const order = returnCase.orders as OrderRow | null;
-  const maxDeliveryRefundAmount = order ? roundMoney(Number(order.delivery_cost)) : 0;
+  const maxDeliveryRefundAmount = order
+    ? getMaxDeliveryRefundAmount(returnCase.case_type, Number(order.delivery_cost))
+    : 0;
 
   if (approvedDeliveryRefundAmount > maxDeliveryRefundAmount) {
     redirect(
@@ -659,6 +662,15 @@ function getOptionalMoney(formData: FormData, key: string) {
 
 function roundMoney(value: number) {
   return Math.round(Number(value) * 100) / 100;
+}
+
+function getMaxDeliveryRefundAmount(
+  caseType: ReturnCaseRow["case_type"],
+  paidDeliveryCost: number,
+) {
+  return caseType === "return"
+    ? getConsumerWithdrawalDeliveryRefundLimit(paidDeliveryCost)
+    : roundMoney(Number(paidDeliveryCost));
 }
 
 function calculateReturnProductsTotal(
