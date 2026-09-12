@@ -49,6 +49,7 @@ export function ReturnCaseControls({
   caseType,
   closeAction,
   items,
+  orderDeliveryCost,
   returnItemsTotal,
   status,
   updateAction,
@@ -58,6 +59,7 @@ export function ReturnCaseControls({
   caseType: ReturnCaseType;
   closeAction: (formData: FormData) => Promise<void>;
   items: ReturnCaseControlItem[];
+  orderDeliveryCost: number;
   returnItemsTotal: number;
   status: ReturnCaseStatus;
   updateAction: (formData: FormData) => Promise<void>;
@@ -97,6 +99,7 @@ export function ReturnCaseControls({
   );
   const supportsMoneyRefund = caseType !== "exchange";
   const canRefund = supportsMoneyRefund && selectedStatus === "accepted";
+  const canRefundDelivery = canRefund && orderDeliveryCost > 0;
   const closeDisabled =
     !canClose || hasPendingStockDecision || hasMissingDisposalReason;
 
@@ -209,7 +212,7 @@ export function ReturnCaseControls({
               Zatwierdzona kwota zwrotu za produkty
             </span>
             <input
-              name="approvedRefundAmount"
+              name="approvedProductRefundAmount"
               className="field-input mt-2"
               type="number"
               inputMode="decimal"
@@ -221,12 +224,37 @@ export function ReturnCaseControls({
             />
             <span className="mt-1 block text-xs leading-5 text-[#7a746d]">
               Suma zwracanych produktów: {formatPrice(returnItemsTotal)}.
-              Dostawa nie jest wliczana. Możesz wpisać mniej, np. przy
-              częściowej reklamacji.
+              Możesz wpisać mniej, np. przy częściowej reklamacji.
             </span>
           </label>
         ) : (
-          <input type="hidden" name="approvedRefundAmount" value="0" />
+          <input type="hidden" name="approvedProductRefundAmount" value="0" />
+        )}
+
+        {canRefundDelivery ? (
+          <label className="block">
+            <span className="text-sm font-semibold text-[#1f1f1f]">
+              Zwrot kosztu dostawy
+            </span>
+            <input
+              name="approvedDeliveryRefundAmount"
+              className="field-input mt-2"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max={orderDeliveryCost.toFixed(2)}
+              step="0.01"
+              defaultValue="0"
+              placeholder="0,00"
+            />
+            <span className="mt-1 block text-xs leading-5 text-[#7a746d]">
+              Maksymalnie pobrana dostawa: {formatPrice(orderDeliveryCost)}.
+              Przy pełnym odstąpieniu zwykle zwracasz dostawę do wysokości
+              najtańszej dostępnej opcji.
+            </span>
+          </label>
+        ) : (
+          <input type="hidden" name="approvedDeliveryRefundAmount" value="0" />
         )}
 
         <button

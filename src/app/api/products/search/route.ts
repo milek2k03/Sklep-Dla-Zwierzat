@@ -7,7 +7,7 @@ const MAX_QUERY_LENGTH = 100;
 const MAX_SUGGESTIONS = 6;
 
 export async function GET(request: NextRequest) {
-  const rateLimit = checkRateLimit(`product-search:${getClientIp(request)}`, {
+  const rateLimit = await checkRateLimit(`product-search:${getClientIp(request)}`, {
     limit: 120,
     windowMs: 60 * 1000,
   });

@@ -157,6 +157,9 @@ function buildFinancialReportCsv({
       "Rabat zamowienia",
       "Dostawa",
       "Razem zamowienie",
+      "Zwrot klientowi",
+      "Zwrot produktow",
+      "Zwrot dostawy",
       "Metoda platnosci",
       "Stripe Payment Intent",
     ],
@@ -173,6 +176,9 @@ function buildFinancialReportCsv({
       "E-mail",
       "Oczekiwany zwrot",
       "Zatwierdzony zwrot",
+      "Zwrot produktow",
+      "Zwrot dostawy",
+      "Czy zwrocono dostawe",
       "Stripe Refund ID",
       "Zrefundowano",
       "Notatka admina",
@@ -229,12 +235,7 @@ function getFinancialSummary(
       0,
     ),
   );
-  const customerRefundLoss = money(
-    returnCases.reduce(
-      (total, returnCase) => total + Number(returnCase.approved_refund_amount),
-      0,
-    ),
-  );
+  const customerRefundLoss = getCustomerRefundLoss(orders, returnCases);
   const inventoryLoss = money(
     returnCases.reduce(
       (total, returnCase) =>
@@ -286,7 +287,10 @@ function getOrderRows(order: ReportOrder) {
         formatMoney(order.discount_total),
         formatMoney(order.delivery_cost),
         formatMoney(order.total),
-        order.payment_method,
+        formatMoney(getDirectOrderRefundAmount(order)),
+        formatMoney(getDirectOrderProductRefundAmount(order)),
+        formatMoney(getDirectOrderDeliveryRefundAmount(order)),
+        getPaymentMethodLabel(order),
         order.stripe_payment_intent_id ?? "",
       ],
     ];
@@ -311,7 +315,10 @@ function getOrderRows(order: ReportOrder) {
     formatMoney(order.discount_total),
     formatMoney(order.delivery_cost),
     formatMoney(order.total),
-    order.payment_method,
+    formatMoney(getDirectOrderRefundAmount(order)),
+    formatMoney(getDirectOrderProductRefundAmount(order)),
+    formatMoney(getDirectOrderDeliveryRefundAmount(order)),
+    getPaymentMethodLabel(order),
     order.stripe_payment_intent_id ?? "",
   ]);
 }
@@ -327,10 +334,116 @@ function getReturnCaseRow(returnCase: ReportReturnCase) {
     returnCase.orders?.customer_email ?? "",
     formatMoney(returnCase.requested_refund_amount),
     formatMoney(returnCase.approved_refund_amount),
+    formatMoney(getReturnCaseProductRefundAmount(returnCase)),
+    formatMoney(getReturnCaseDeliveryRefundAmount(returnCase)),
+    getReturnCaseDeliveryRefundAmount(returnCase) > 0 ? "tak" : "nie",
     returnCase.stripe_refund_id ?? "",
     formatDateTime(returnCase.refunded_at),
     returnCase.admin_notes ?? "",
   ];
+}
+
+function getCustomerRefundLoss(
+  orders: ReportOrder[],
+  returnCases: ReportReturnCase[],
+) {
+  const returnCaseOrderIds = new Set(
+    returnCases.map((returnCase) => returnCase.order_id),
+  );
+  const returnCaseRefunds = returnCases.reduce(
+    (total, returnCase) => total + Number(returnCase.approved_refund_amount),
+    0,
+  );
+  const directOrderRefunds = orders
+    .filter(
+      (order) => order.stripe_refund_id && !returnCaseOrderIds.has(order.id),
+    )
+    .reduce((total, order) => total + getDirectOrderRefundAmount(order), 0);
+
+  return money(returnCaseRefunds + directOrderRefunds);
+}
+
+function getDirectOrderRefundAmount(order: ReportOrder) {
+  if (!order.stripe_refund_id) {
+    return 0;
+  }
+
+  const refundTotal = Number(order.refund_total);
+
+  if (Number.isFinite(refundTotal) && refundTotal > 0) {
+    return money(refundTotal);
+  }
+
+  return money(
+    Math.max(0, Number(order.subtotal) - Number(order.discount_total)) +
+      Number(order.delivery_cost),
+  );
+}
+
+function getDirectOrderProductRefundAmount(order: ReportOrder) {
+  if (!order.stripe_refund_id) {
+    return 0;
+  }
+
+  const refundProductsTotal = Number(order.refund_products_total);
+
+  if (Number.isFinite(refundProductsTotal) && refundProductsTotal > 0) {
+    return money(refundProductsTotal);
+  }
+
+  return money(Math.max(0, Number(order.subtotal) - Number(order.discount_total)));
+}
+
+function getDirectOrderDeliveryRefundAmount(order: ReportOrder) {
+  if (!order.stripe_refund_id) {
+    return 0;
+  }
+
+  const refundDeliveryTotal = Number(order.refund_delivery_total);
+
+  if (Number.isFinite(refundDeliveryTotal) && refundDeliveryTotal > 0) {
+    return money(refundDeliveryTotal);
+  }
+
+  return money(Number(order.delivery_cost));
+}
+
+function getReturnCaseProductRefundAmount(returnCase: ReportReturnCase) {
+  const productRefundAmount = Number(returnCase.approved_product_refund_amount);
+  const deliveryRefundAmount = getReturnCaseDeliveryRefundAmount(returnCase);
+
+  if (Number.isFinite(productRefundAmount) && productRefundAmount > 0) {
+    return money(productRefundAmount);
+  }
+
+  return money(Math.max(0, Number(returnCase.approved_refund_amount) - deliveryRefundAmount));
+}
+
+function getReturnCaseDeliveryRefundAmount(returnCase: ReportReturnCase) {
+  const deliveryRefundAmount = Number(returnCase.approved_delivery_refund_amount);
+
+  if (Number.isFinite(deliveryRefundAmount) && deliveryRefundAmount > 0) {
+    return money(deliveryRefundAmount);
+  }
+
+  return returnCase.delivery_refunded
+    ? money(
+        Math.max(
+          0,
+          Number(returnCase.approved_refund_amount) -
+            getReturnCaseItemsSalesValue(returnCase),
+        ),
+      )
+    : 0;
+}
+
+function getReturnCaseItemsSalesValue(returnCase: ReportReturnCase) {
+  return money(
+    returnCase.return_case_items.reduce(
+      (total, item) => total + getReturnItemSalesValue(item),
+      0,
+    ),
+  );
 }
 
 function getReturnItemRows(returnCase: ReportReturnCase) {
@@ -379,6 +492,29 @@ function getReturnItemRows(returnCase: ReportReturnCase) {
 
 function isProfitOrder(order: Pick<OrderRow, "status">) {
   return profitStatuses.includes(order.status as (typeof profitStatuses)[number]);
+}
+
+function getPaymentMethodLabel(
+  order: Pick<OrderRow, "payment_method" | "stripe_payment_method_type">,
+) {
+  if (order.payment_method === "manual") {
+    return "przelew";
+  }
+
+  if (order.stripe_payment_method_type === "blik") {
+    return "BLIK";
+  }
+
+  if (
+    order.stripe_payment_method_type === "p24" ||
+    order.stripe_payment_method_type === "bank_transfer"
+  ) {
+    return "przelew";
+  }
+
+  return order.stripe_payment_method_type
+    ? `inne (${order.stripe_payment_method_type})`
+    : "inne";
 }
 
 function getReturnItemPurchaseLoss(item: ReportReturnCaseItem) {

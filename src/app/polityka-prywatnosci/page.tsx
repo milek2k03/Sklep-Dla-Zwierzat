@@ -27,6 +27,7 @@ const sections = [
       "W związku z obsługą sklepu możemy przetwarzać: imię i nazwisko, adres e-mail, numer telefonu, adres dostawy, kod punktu odbioru, dane zamówienia, dane płatności otrzymane od operatora płatności, treść wiadomości i notatek klienta, informacje o zwrotach, reklamacjach i wymianach oraz dane techniczne potrzebne do bezpieczeństwa i działania strony.",
       "Nie przechowujemy pełnych danych kart płatniczych. Dane płatnicze są obsługiwane przez operatora płatności Stripe.",
       "Koszyk jest zapisywany w pamięci przeglądarki użytkownika przez localStorage pod nazwą pawly-cart, aby klient mógł wrócić do rozpoczętych zakupów.",
+      "Sklep zapisuje także własne zdarzenia konwersji, takie jak wyświetlenie strony, wyświetlenie produktu, dodanie do koszyka, rozpoczęcie checkoutu oraz utworzenie lub opłacenie zamówienia. Zdarzenia mogą zawierać techniczny identyfikator odwiedzającego, identyfikator sesji, adres strony, referrer, dane produktu, kwotę zdarzenia i user-agent.",
     ],
   },
   {
@@ -35,6 +36,7 @@ const sections = [
       "Realizacja zamówienia, płatności, dostawy, obsługa statusu zamówienia, zwrotów, reklamacji i wymian: art. 6 ust. 1 lit. b RODO, czyli wykonanie umowy lub działania przed jej zawarciem.",
       "Wypełnianie obowiązków prawnych, w tym obowiązków konsumenckich, podatkowych, księgowych i archiwizacyjnych: art. 6 ust. 1 lit. c RODO.",
       "Kontakt z klientem, dochodzenie lub obrona roszczeń, zapobieganie nadużyciom, prowadzenie historii zdarzeń zamówienia oraz zapewnienie bezpieczeństwa sklepu: art. 6 ust. 1 lit. f RODO, czyli prawnie uzasadniony interes administratora.",
+      "Pomiar skuteczności sklepu i poprawa ścieżki zakupowej na podstawie własnych zdarzeń konwersji: art. 6 ust. 1 lit. f RODO, czyli prawnie uzasadniony interes administratora.",
       "Jeżeli w przyszłości pojawi się newsletter lub marketing e-mailowy, będzie wymagał osobnej zgody albo innej właściwej podstawy prawnej. Obecnie sklep nie prowadzi newslettera.",
     ],
   },
@@ -60,6 +62,7 @@ const sections = [
       "Dane związane z obowiązkami podatkowymi i księgowymi przechowujemy przez okres wymagany przepisami prawa.",
       "Dane zwrotów, reklamacji i korespondencji przechowujemy przez okres potrzebny do rozpatrzenia sprawy oraz zabezpieczenia ewentualnych roszczeń.",
       "Dane koszyka zapisane w localStorage pozostają w przeglądarce użytkownika do czasu ich usunięcia przez użytkownika, wyczyszczenia danych przeglądarki albo opróżnienia koszyka.",
+      "Identyfikator odwiedzającego używany do własnej analityki konwersji pozostaje w localStorage do czasu usunięcia danych strony w przeglądarce. Identyfikator sesji jest przechowywany w sessionStorage i odnawiany po zakończeniu sesji.",
     ],
   },
   {
@@ -83,6 +86,7 @@ const sections = [
     content: [
       "Sklep nie podejmuje wobec klientów decyzji wywołujących skutki prawne w sposób wyłącznie zautomatyzowany.",
       "Sklep nie prowadzi profilowania marketingowego. System może automatycznie przeliczać koszyk, rabaty, dostępny stan magazynowy, koszt dostawy oraz status zamówienia.",
+      "Własna analityka konwersji służy do zbiorczego sprawdzania, które strony i produkty pomagają w zakupie. Nie jest używana do automatycznego ustalania indywidualnych cen ani warunków sprzedaży.",
     ],
   },
   {
@@ -90,7 +94,8 @@ const sections = [
     content: [
       "Strona może korzystać z technicznych cookies lub podobnych technologii potrzebnych do działania aplikacji, bezpieczeństwa, utrzymania sesji administracyjnej i poprawnego wyświetlania strony.",
       "Koszyk klienta jest zapisywany w localStorage przeglądarki. Dane te są przechowywane lokalnie na urządzeniu użytkownika i mogą zostać usunięte przez wyczyszczenie danych strony w przeglądarce.",
-      "Obecnie sklep nie korzysta z banerów reklamowych, newslettera ani narzędzi marketingowych opisujących zachowanie klienta w celach reklamowych.",
+      "Sklep używa własnych identyfikatorów w localStorage i sessionStorage do pomiaru konwersji oraz poprawy działania koszyka i checkoutu.",
+      "Obecnie sklep nie korzysta z newslettera ani zewnętrznych pikseli reklamowych opisujących zachowanie klienta w celach reklamowych.",
     ],
   },
   {
@@ -126,9 +131,10 @@ export default function PrivacyPage() {
       </p>
 
       <div className="mt-8 rounded-lg border border-[#e9dcc8] bg-[#fffaf2] p-5 text-sm leading-6 text-[#5f5a52]">
-        Sklep nie prowadzi obecnie newslettera ani profilowania marketingowego.
-        Jeżeli zostaną wdrożone dodatkowe narzędzia analityczne lub
-        marketingowe, polityka prywatności zostanie zaktualizowana.
+        Sklep prowadzi własną techniczną analitykę konwersji, ale nie prowadzi
+        obecnie newslettera ani profilowania marketingowego. Jeżeli zostaną
+        wdrożone zewnętrzne narzędzia analityczne lub marketingowe, polityka
+        prywatności zostanie zaktualizowana.
       </div>
 
       <div className="mt-6 space-y-4">

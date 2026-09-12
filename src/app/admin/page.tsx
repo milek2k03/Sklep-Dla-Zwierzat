@@ -65,9 +65,12 @@ type FinancialOrderItemRow = Pick<
 type FinancialOrderRow = Pick<
   Database["public"]["Tables"]["orders"]["Row"],
   | "created_at"
+  | "delivery_cost"
   | "discount_total"
   | "id"
   | "paid_at"
+  | "refund_delivery_total"
+  | "refund_total"
   | "refunded_at"
   | "status"
   | "stripe_refund_id"
@@ -88,7 +91,12 @@ type FinancialReturnCaseItemRow = Pick<
 };
 type FinancialReturnCaseRow = Pick<
   ReturnCaseRow,
-  "approved_refund_amount" | "created_at" | "order_id" | "refunded_at" | "updated_at"
+  | "approved_refund_amount"
+  | "approved_delivery_refund_amount"
+  | "created_at"
+  | "order_id"
+  | "refunded_at"
+  | "updated_at"
 > & {
   return_case_items: FinancialReturnCaseItemRow[];
 };
@@ -1314,10 +1322,10 @@ async function getAdminDashboardData() {
         .limit(10),
       supabase
         .from("orders")
-        .select("id, status, created_at, paid_at, subtotal, discount_total, total, stripe_refund_id, refunded_at, updated_at, order_items(line_total, purchase_total, quantity, unit_purchase_price)"),
+        .select("id, status, created_at, paid_at, subtotal, discount_total, delivery_cost, total, refund_total, refund_delivery_total, stripe_refund_id, refunded_at, updated_at, order_items(line_total, purchase_total, quantity, unit_purchase_price)"),
       supabase
         .from("return_cases")
-        .select("order_id, approved_refund_amount, created_at, updated_at, refunded_at, return_case_items(quantity, return_condition, order_items(purchase_total, quantity, unit_purchase_price))"),
+        .select("order_id, approved_refund_amount, approved_delivery_refund_amount, created_at, updated_at, refunded_at, return_case_items(quantity, return_condition, order_items(purchase_total, quantity, unit_purchase_price))"),
       supabase
         .from("orders")
         .select("id", { count: "exact", head: true })
@@ -1527,8 +1535,15 @@ function isDashboardRevenueOrder(
 }
 
 function getDashboardOrderRefundAmount(order: FinancialOrderRow) {
+  const refundTotal = Number(order.refund_total);
+
+  if (Number.isFinite(refundTotal) && refundTotal > 0) {
+    return money(refundTotal);
+  }
+
   return money(
-    Math.max(0, Number(order.subtotal) - Number(order.discount_total)),
+    Math.max(0, Number(order.subtotal) - Number(order.discount_total)) +
+      Number(order.delivery_cost),
   );
 }
 

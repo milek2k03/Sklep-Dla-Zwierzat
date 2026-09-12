@@ -42,14 +42,16 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  const ipLimit = checkRateLimit(`admin-login-ip:${ip}`, {
-    limit: LOGIN_IP_LIMIT,
-    windowMs: LOGIN_WINDOW_MS,
-  });
-  const emailLimit = checkRateLimit(`admin-login-email:${email}`, {
-    limit: LOGIN_EMAIL_LIMIT,
-    windowMs: LOGIN_WINDOW_MS,
-  });
+  const [ipLimit, emailLimit] = await Promise.all([
+    checkRateLimit(`admin-login-ip:${ip}`, {
+      limit: LOGIN_IP_LIMIT,
+      windowMs: LOGIN_WINDOW_MS,
+    }),
+    checkRateLimit(`admin-login-email:${email}`, {
+      limit: LOGIN_EMAIL_LIMIT,
+      windowMs: LOGIN_WINDOW_MS,
+    }),
+  ]);
 
   if (!ipLimit.allowed || !emailLimit.allowed) {
     return NextResponse.json(

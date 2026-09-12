@@ -28,6 +28,7 @@ type CartState = {
 };
 
 const cartStorageKey = "pawly-cart";
+const cartChangedEvent = "pawly-cart:changed";
 
 function normalizeQuantity(quantity: number) {
   if (!Number.isFinite(quantity)) {
@@ -90,15 +91,21 @@ export const useCartStore = create<CartState>()(
           };
         });
 
+        if (result.added > 0) {
+          notifyCartChanged();
+        }
+
         return result;
       },
       removeItem: (slug) => {
         set((state) => ({
           items: state.items.filter((item) => item.product.slug !== slug),
         }));
+        notifyCartChanged();
       },
       setDeliveryMethod: (method) => {
         set({ deliveryMethod: method });
+        notifyCartChanged();
       },
       updateQuantity: (slug, quantity) => {
         const nextQuantity = Math.floor(quantity);
@@ -128,8 +135,12 @@ export const useCartStore = create<CartState>()(
             }),
           };
         });
+        notifyCartChanged();
       },
-      clearCart: () => set({ items: [] }),
+      clearCart: () => {
+        set({ items: [] });
+        notifyCartChanged();
+      },
       getTotal: () =>
         get().items.reduce(
           (total, item) => total + item.product.price * item.quantity,
@@ -189,17 +200,31 @@ export function useCartStorageSync() {
         syncCart();
       }
     };
+    const syncLocalCartChange = () => {
+      window.requestAnimationFrame(syncCart);
+    };
 
+    syncCart();
     window.addEventListener("pageshow", syncCart);
     window.addEventListener("focus", syncCart);
     window.addEventListener("storage", syncChangedStorage);
+    window.addEventListener(cartChangedEvent, syncLocalCartChange);
     document.addEventListener("visibilitychange", syncVisibleCart);
 
     return () => {
       window.removeEventListener("pageshow", syncCart);
       window.removeEventListener("focus", syncCart);
       window.removeEventListener("storage", syncChangedStorage);
+      window.removeEventListener(cartChangedEvent, syncLocalCartChange);
       document.removeEventListener("visibilitychange", syncVisibleCart);
     };
   }, []);
+}
+
+function notifyCartChanged() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(cartChangedEvent));
 }

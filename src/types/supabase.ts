@@ -200,6 +200,26 @@ export type Database = {
           },
         ];
       };
+      rate_limit_buckets: {
+        Row: {
+          rate_key: string;
+          count: number;
+          reset_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          rate_key: string;
+          count?: number;
+          reset_at: string;
+          updated_at?: string;
+        };
+        Update: {
+          count?: number;
+          reset_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       orders: {
         Row: {
           id: string;
@@ -224,8 +244,12 @@ export type Database = {
           total: number;
           payment_method: "manual" | "stripe";
           stripe_checkout_session_id: string | null;
+          stripe_payment_method_type: string | null;
           stripe_payment_intent_id: string | null;
           stripe_refund_id: string | null;
+          refund_total: number;
+          refund_products_total: number;
+          refund_delivery_total: number;
           paid_at: string | null;
           refunded_at: string | null;
           refund_reason: string | null;
@@ -264,8 +288,12 @@ export type Database = {
           total: number;
           payment_method?: "manual" | "stripe";
           stripe_checkout_session_id?: string | null;
+          stripe_payment_method_type?: string | null;
           stripe_payment_intent_id?: string | null;
           stripe_refund_id?: string | null;
+          refund_total?: number;
+          refund_products_total?: number;
+          refund_delivery_total?: number;
           paid_at?: string | null;
           refunded_at?: string | null;
           refund_reason?: string | null;
@@ -290,8 +318,12 @@ export type Database = {
           delivery_country?: string;
           payment_method?: "manual" | "stripe";
           stripe_checkout_session_id?: string | null;
+          stripe_payment_method_type?: string | null;
           stripe_payment_intent_id?: string | null;
           stripe_refund_id?: string | null;
+          refund_total?: number;
+          refund_products_total?: number;
+          refund_delivery_total?: number;
           paid_at?: string | null;
           refunded_at?: string | null;
           refund_reason?: string | null;
@@ -533,6 +565,9 @@ export type Database = {
           admin_notes: string | null;
           requested_refund_amount: number;
           approved_refund_amount: number;
+          approved_product_refund_amount: number;
+          approved_delivery_refund_amount: number;
+          delivery_refunded: boolean;
           stripe_refund_id: string | null;
           refunded_at: string | null;
           stock_processed_at: string | null;
@@ -555,6 +590,9 @@ export type Database = {
           admin_notes?: string | null;
           requested_refund_amount?: number;
           approved_refund_amount?: number;
+          approved_product_refund_amount?: number;
+          approved_delivery_refund_amount?: number;
+          delivery_refunded?: boolean;
           stripe_refund_id?: string | null;
           refunded_at?: string | null;
           stock_processed_at?: string | null;
@@ -574,6 +612,9 @@ export type Database = {
           admin_notes?: string | null;
           requested_refund_amount?: number;
           approved_refund_amount?: number;
+          approved_product_refund_amount?: number;
+          approved_delivery_refund_amount?: number;
+          delivery_refunded?: boolean;
           stripe_refund_id?: string | null;
           refunded_at?: string | null;
           stock_processed_at?: string | null;
@@ -654,6 +695,9 @@ export type Database = {
           p_order_id: string;
           p_refund_id: string;
           p_refund_reason?: string | null;
+          p_refund_amount?: number;
+          p_refund_product_amount?: number;
+          p_refund_delivery_amount?: number;
         };
         Returns: Array<{
           order_id: string;
@@ -679,6 +723,7 @@ export type Database = {
           p_return_case_id: string;
           p_refund_id?: string | null;
           p_refund_amount?: number;
+          p_delivery_refund_amount?: number;
         };
         Returns: Array<{
           return_case_id: string;
@@ -686,6 +731,18 @@ export type Database = {
           stock_processed_at: string;
           stripe_refund_id: string | null;
           refunded_at: string | null;
+        }>;
+      };
+      check_rate_limit: {
+        Args: {
+          p_key: string;
+          p_limit: number;
+          p_window_seconds: number;
+        };
+        Returns: Array<{
+          allowed: boolean;
+          remaining: number;
+          retry_after: number;
         }>;
       };
       create_order_with_stock: {

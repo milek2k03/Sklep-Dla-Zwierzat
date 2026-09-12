@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  const rateLimit = checkRateLimit(`conversion:${ip}`, {
+  const rateLimit = await checkRateLimit(`conversion:${ip}`, {
     limit: 120,
     windowMs: 60 * 1000,
   });

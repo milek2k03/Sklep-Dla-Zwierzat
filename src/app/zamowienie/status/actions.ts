@@ -23,7 +23,7 @@ const caseTypes = [
 
 export async function createPublicReturnCaseAction(formData: FormData) {
   const ip = await getServerRequestClientIp();
-  const rateLimit = checkRateLimit(`public-return-case:${ip}`, {
+  const rateLimit = await checkRateLimit(`public-return-case:${ip}`, {
     limit: 5,
     windowMs: 15 * 60 * 1000,
   });

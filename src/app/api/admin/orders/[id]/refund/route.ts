@@ -77,7 +77,7 @@ export async function POST(
   const { data: currentOrder, error: currentOrderError } = await serverSupabase
     .from("orders")
     .select(
-      "id, order_number, status, payment_method, subtotal, discount_total, delivery_cost, stripe_payment_intent_id, stripe_refund_id, refunded_at",
+      "id, order_number, status, payment_method, subtotal, discount_total, delivery_cost, refund_total, refund_products_total, refund_delivery_total, stripe_payment_intent_id, stripe_refund_id, refunded_at",
     )
     .eq("id", id)
     .single();
@@ -134,13 +134,15 @@ export async function POST(
     subtotal: Number(currentOrder.subtotal),
     discountTotal: Number(currentOrder.discount_total),
   });
+  const deliveryRefundAmount = money(Number(currentOrder.delivery_cost));
+  const totalRefundAmount = money(productRefundAmount + deliveryRefundAmount);
   let refundId: string;
 
-  if (productRefundAmount <= 0) {
+  if (totalRefundAmount <= 0) {
     return NextResponse.json(
       {
-        error: "ORDER_HAS_NO_PRODUCT_REFUND_AMOUNT",
-        message: "Zamówienie nie ma kwoty produktów do zwrotu.",
+        error: "ORDER_HAS_NO_REFUND_AMOUNT",
+        message: "Zamówienie nie ma kwoty do zwrotu.",
       },
       { status: 422 },
     );
@@ -150,14 +152,15 @@ export async function POST(
     const refund = await stripe.refunds.create(
       {
         payment_intent: currentOrder.stripe_payment_intent_id,
-        amount: toStripeAmount(productRefundAmount),
+        amount: toStripeAmount(totalRefundAmount),
         reason: "requested_by_customer",
         metadata: {
           order_id: currentOrder.id,
           order_number: currentOrder.order_number,
           admin_user_id: adminSession.userId ?? "",
-          refund_amount_without_delivery: productRefundAmount.toFixed(2),
-          delivery_cost_not_refunded: Number(currentOrder.delivery_cost).toFixed(2),
+          refund_amount: totalRefundAmount.toFixed(2),
+          refund_products_total: productRefundAmount.toFixed(2),
+          refund_delivery_total: deliveryRefundAmount.toFixed(2),
         },
       },
       {
@@ -176,7 +179,9 @@ export async function POST(
         orderId: currentOrder.id,
         orderNumber: currentOrder.order_number,
         paymentIntentId: currentOrder.stripe_payment_intent_id,
+        totalRefundAmount,
         productRefundAmount,
+        deliveryRefundAmount,
       },
     });
 
@@ -195,6 +200,9 @@ export async function POST(
       p_order_id: currentOrder.id,
       p_refund_id: refundId,
       p_refund_reason: reason,
+      p_refund_amount: totalRefundAmount,
+      p_refund_product_amount: productRefundAmount,
+      p_refund_delivery_amount: deliveryRefundAmount,
     })
     .single();
 
@@ -208,7 +216,9 @@ export async function POST(
         orderId: currentOrder.id,
         orderNumber: currentOrder.order_number,
         refundId,
+        totalRefundAmount,
         productRefundAmount,
+        deliveryRefundAmount,
       },
     });
 
@@ -251,10 +261,12 @@ export async function POST(
 
   await recordRefundEvent({
     actorId: adminSession.userId,
+    deliveryRefundAmount,
     order: refundedOrder as RefundedOrder,
     productRefundAmount,
     refundId,
     reason,
+    totalRefundAmount,
   });
   await sendRefundedOrderEmailAndMark(refundedOrder as RefundedOrder);
 
@@ -332,16 +344,20 @@ async function sendRefundedOrderEmailAndMark(order: RefundedOrder) {
 
 async function recordRefundEvent({
   actorId,
+  deliveryRefundAmount,
   order,
   productRefundAmount,
   reason,
   refundId,
+  totalRefundAmount,
 }: {
   actorId: string | null;
+  deliveryRefundAmount: number;
   order: RefundedOrder;
   productRefundAmount: number;
   reason: string;
   refundId: string;
+  totalRefundAmount: number;
 }) {
   const supabase = createSupabaseServiceClient();
   const { error } = await supabase.from("order_events").insert({
@@ -351,12 +367,13 @@ async function recordRefundEvent({
     to_status: "cancelled",
     actor_type: "admin",
     actor_id: actorId,
-    message: "Zlecono zwrot Stripe, anulowano zamówienie i przywrócono magazyn.",
+    message: "Zlecono pełny zwrot Stripe, anulowano zamówienie i przywrócono magazyn.",
     metadata: {
       stripeRefundId: refundId,
       refundReason: reason,
+      totalRefundAmount,
       productRefundAmount,
-      deliveryCostNotRefunded: order.delivery_cost,
+      deliveryRefundAmount,
       totalPaid: order.total,
     },
   });
@@ -371,7 +388,9 @@ async function recordRefundEvent({
         orderId: order.id,
         orderNumber: order.order_number,
         refundId,
+        totalRefundAmount,
         productRefundAmount,
+        deliveryRefundAmount,
       },
     });
   }
@@ -389,6 +408,10 @@ function getProductRefundAmount({
 
 function toStripeAmount(value: number) {
   return Math.round(value * 100);
+}
+
+function money(value: number) {
+  return Math.round(Number(value) * 100) / 100;
 }
 
 function getStringPayloadValue(payload: unknown, key: string) {

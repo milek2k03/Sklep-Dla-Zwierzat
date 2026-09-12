@@ -369,7 +369,7 @@ function getSalesRows(
       formatMoney(getOrderProductsGross(order)),
       formatMoney(order.delivery_cost),
       formatMoney(order.total),
-      getPaymentMethodLabel(order.payment_method),
+      getPaymentMethodLabel(order),
       getOrderReportStatus(order, returnAmountByOrderId.get(order.id) ?? 0),
       formatMoney(runningTotal),
       getOrderNotes(order),
@@ -455,13 +455,17 @@ function getCustomerReturnRecords({
 function getReturnCaseRecord(returnCase: PitReturnCase): CustomerReturnRecord {
   const order = returnCase.orders;
   const amount = money(Number(returnCase.approved_refund_amount));
+  const deliveryRefundAmount = Number(returnCase.approved_delivery_refund_amount);
 
   return {
     amount,
     condition: getReturnCaseConditionLabel(returnCase),
     customer: order?.customer_full_name ?? "",
     date: getReturnCaseCorrectionDate(returnCase),
-    deliveryRefunded: order ? amount > getOrderProductsGross(order) : false,
+    deliveryRefunded:
+      returnCase.delivery_refunded ||
+      (Number.isFinite(deliveryRefundAmount) && deliveryRefundAmount > 0) ||
+      (order ? amount > getOrderProductsGross(order) : false),
     moneyReturnedAt: returnCase.refunded_at,
     notes: [returnCase.case_number, returnCase.admin_notes, returnCase.stripe_refund_id]
       .filter(Boolean)
@@ -476,13 +480,16 @@ function getReturnCaseRecord(returnCase: PitReturnCase): CustomerReturnRecord {
 
 function getDirectOrderRefundRecord(order: PitOrder): CustomerReturnRecord {
   const amount = getOrderFullRefundCorrection(order);
+  const deliveryRefundAmount = Number(order.refund_delivery_total);
 
   return {
     amount,
     condition: "wraca na magazyn",
     customer: order.customer_full_name,
     date: order.refunded_at ?? order.updated_at,
-    deliveryRefunded: amount > getOrderProductsGross(order),
+    deliveryRefunded:
+      (Number.isFinite(deliveryRefundAmount) && deliveryRefundAmount > 0) ||
+      amount > getOrderProductsGross(order),
     moneyReturnedAt: order.refunded_at,
     notes: [order.refund_reason, order.stripe_refund_id].filter(Boolean).join(" | "),
     orderId: order.id,
@@ -840,8 +847,21 @@ function getOrderNotes(order: PitOrder) {
   return notes.join("; ");
 }
 
-function getPaymentMethodLabel(paymentMethod: OrderRow["payment_method"]) {
-  if (paymentMethod === "manual") {
+function getPaymentMethodLabel(
+  order: Pick<OrderRow, "payment_method" | "stripe_payment_method_type">,
+) {
+  if (order.payment_method === "manual") {
+    return "przelew";
+  }
+
+  if (order.stripe_payment_method_type === "blik") {
+    return "BLIK";
+  }
+
+  if (
+    order.stripe_payment_method_type === "p24" ||
+    order.stripe_payment_method_type === "bank_transfer"
+  ) {
     return "przelew";
   }
 
@@ -868,7 +888,13 @@ function getOrderFullRefundCorrection(order: PitOrder) {
     return 0;
   }
 
-  return getOrderProductsGross(order);
+  const refundTotal = Number(order.refund_total);
+
+  if (Number.isFinite(refundTotal) && refundTotal > 0) {
+    return money(refundTotal);
+  }
+
+  return money(getOrderProductsGross(order) + Number(order.delivery_cost));
 }
 
 function getReturnItemPurchaseLoss(item: PitReturnCaseItem) {

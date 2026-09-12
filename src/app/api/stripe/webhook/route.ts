@@ -83,12 +83,17 @@ async function markOrderAsPaid(session: Stripe.Checkout.Session) {
     typeof session.payment_intent === "string"
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
+  const stripePaymentMethodType = await getStripePaymentMethodType({
+    paymentIntentId,
+    session,
+  });
 
   const supabase = createSupabaseServiceClient();
   const update = {
     status: "paid" as const,
     payment_method: "stripe" as const,
     stripe_checkout_session_id: session.id,
+    stripe_payment_method_type: stripePaymentMethodType,
     stripe_payment_intent_id: paymentIntentId,
     paid_at: new Date().toISOString(),
   };
@@ -163,6 +168,7 @@ async function markOrderAsPaid(session: Stripe.Checkout.Session) {
     ),
     metadata: asJsonObject({
       checkoutSessionId: session.id,
+      stripePaymentMethodType,
       paymentIntentId,
     }),
   });
@@ -228,6 +234,51 @@ async function sendPaidOrderEmailsAndMark(order: PaidOrderRow) {
       },
     });
   }
+}
+
+async function getStripePaymentMethodType({
+  paymentIntentId,
+  session,
+}: {
+  paymentIntentId: string | null;
+  session: Stripe.Checkout.Session;
+}) {
+  if (!paymentIntentId) {
+    return session.payment_method_types?.[0] ?? null;
+  }
+
+  try {
+    const stripe = getStripeClient();
+    const paymentIntent = await stripe.paymentIntents.retrieve(
+      paymentIntentId,
+      {
+        expand: ["payment_method"],
+      },
+    );
+    const paymentMethod = paymentIntent.payment_method;
+
+    if (
+      paymentMethod &&
+      typeof paymentMethod === "object" &&
+      "type" in paymentMethod &&
+      typeof paymentMethod.type === "string"
+    ) {
+      return paymentMethod.type;
+    }
+  } catch (error) {
+    console.error("Failed to fetch Stripe payment method type", error);
+    await notifyAdminError({
+      title: "Nie udało się pobrać typu płatności Stripe",
+      source: "stripe.webhook.getPaymentMethodType",
+      error,
+      context: {
+        checkoutSessionId: session.id,
+        paymentIntentId,
+      },
+    });
+  }
+
+  return session.payment_method_types?.[0] ?? null;
 }
 
 async function cancelOrderAndRestoreStock(

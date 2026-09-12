@@ -80,7 +80,7 @@ export default async function OrderStatusPage({
   const caseError = normalizeMessageParam(resolvedSearchParams.caseError);
   const shouldSearch = Boolean(orderNumber && email);
   const lookupRateLimit = shouldSearch
-    ? checkRateLimit(`order-status:${await getServerRequestClientIp()}`, {
+    ? await checkRateLimit(`order-status:${await getServerRequestClientIp()}`, {
         limit: 20,
         windowMs: 15 * 60 * 1000,
       })
@@ -417,11 +417,17 @@ function OrderDetails({ order }: { order: PublicOrder }) {
         />
         {sortedCases.length > 0 ? (
           <div className="mt-4 space-y-3">
-            {sortedCases.map((returnCase) => (
-              <div
-                className="rounded-lg border border-[#f0e7da] bg-[#fffaf2] p-4"
-                key={returnCase.id}
-              >
+            {sortedCases.map((returnCase) => {
+              const productRefundAmount =
+                getReturnCaseProductRefundAmount(returnCase);
+              const deliveryRefundAmount =
+                getReturnCaseDeliveryRefundAmount(returnCase);
+
+              return (
+                <div
+                  className="rounded-lg border border-[#f0e7da] bg-[#fffaf2] p-4"
+                  key={returnCase.id}
+                >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="font-semibold text-[#1f1f1f]">
@@ -449,6 +455,9 @@ function OrderDetails({ order }: { order: PublicOrder }) {
                     <p className="font-semibold text-[#1f1f1f]">
                       Zatwierdzony zwrot:{" "}
                       {formatPrice(returnCase.approved_refund_amount)}
+                      {deliveryRefundAmount > 0
+                        ? ` (produkty ${formatPrice(productRefundAmount)}, dostawa ${formatPrice(deliveryRefundAmount)})`
+                        : ""}
                     </p>
                   ) : null}
                   {shouldShowReturnAddress(returnCase.status) &&
@@ -476,8 +485,9 @@ function OrderDetails({ order }: { order: PublicOrder }) {
                     </div>
                   ) : null}
                 </div>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <p className="mt-3 text-sm leading-6 text-[#6d675f]">
@@ -779,6 +789,25 @@ function formatAddress(order: OrderRow) {
   ].filter(Boolean);
 
   return parts.length > 0 ? parts.join(", ") : order.delivery_address;
+}
+
+function getReturnCaseProductRefundAmount(returnCase: ReturnCaseRow) {
+  const productRefundAmount = Number(returnCase.approved_product_refund_amount);
+  const deliveryRefundAmount = getReturnCaseDeliveryRefundAmount(returnCase);
+
+  if (Number.isFinite(productRefundAmount) && productRefundAmount > 0) {
+    return productRefundAmount;
+  }
+
+  return Math.max(0, Number(returnCase.approved_refund_amount) - deliveryRefundAmount);
+}
+
+function getReturnCaseDeliveryRefundAmount(returnCase: ReturnCaseRow) {
+  const deliveryRefundAmount = Number(returnCase.approved_delivery_refund_amount);
+
+  return Number.isFinite(deliveryRefundAmount) && deliveryRefundAmount > 0
+    ? deliveryRefundAmount
+    : 0;
 }
 
 function formatDate(value: string) {

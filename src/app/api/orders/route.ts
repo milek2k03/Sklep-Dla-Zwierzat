@@ -5,6 +5,7 @@ import {
   buildSystemConversionIdentity,
   recordConversionEvent,
 } from "@/lib/conversion";
+import { notifyAdminError } from "@/lib/monitoring/admin-alerts";
 import {
   buildVerifiedOrder,
   createOrderNumber,
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
   }
 
   const ip = getClientIp(request);
-  const rateLimit = checkRateLimit(`orders:${ip}`, {
+  const rateLimit = await checkRateLimit(`orders:${ip}`, {
     limit: 8,
     windowMs: 15 * 60 * 1000,
   });
@@ -248,67 +249,97 @@ export async function POST(request: NextRequest) {
         session_id: parsedPayload.data.conversion.sessionId,
       }
     : buildSystemConversionIdentity(insertedOrder.order_number);
-  const checkoutSession = await stripe.checkout.sessions.create({
-    mode: "payment",
-    client_reference_id: insertedOrder.order_number,
-    customer_email: order.customer.email,
-    metadata: {
-      order_id: insertedOrder.order_id,
-      order_number: insertedOrder.order_number,
-      ...(parsedPayload.data.conversion
-        ? {
-            conversion_visitor_id: parsedPayload.data.conversion.visitorId,
-            conversion_session_id: parsedPayload.data.conversion.sessionId,
-          }
-        : {}),
-    },
-    line_items: [
-      ...order.items.map((item) => ({
-        quantity: item.quantity,
-        price_data: {
-          currency: "pln",
-          unit_amount: toStripeAmount(item.product.price),
-          product_data: {
-            name: item.product.name,
-            metadata: {
-              product_slug: item.product.slug,
-              product_id: item.product.id,
-            },
-          },
-        },
-      })),
-      ...(order.deliveryCost > 0
-        ? [
-            {
-              quantity: 1,
-              price_data: {
-                currency: "pln",
-                unit_amount: toStripeAmount(order.deliveryCost),
-                product_data: {
-                  name: "Dostawa",
-                },
+  let checkoutSession: Awaited<
+    ReturnType<typeof stripe.checkout.sessions.create>
+  >;
+
+  try {
+    checkoutSession = await stripe.checkout.sessions.create({
+      mode: "payment",
+      client_reference_id: insertedOrder.order_number,
+      customer_email: order.customer.email,
+      metadata: {
+        order_id: insertedOrder.order_id,
+        order_number: insertedOrder.order_number,
+        ...(parsedPayload.data.conversion
+          ? {
+              conversion_visitor_id: parsedPayload.data.conversion.visitorId,
+              conversion_session_id: parsedPayload.data.conversion.sessionId,
+            }
+          : {}),
+      },
+      line_items: [
+        ...order.items.map((item) => ({
+          quantity: item.quantity,
+          price_data: {
+            currency: "pln",
+            unit_amount: toStripeAmount(item.product.price),
+            product_data: {
+              name: item.product.name,
+              metadata: {
+                product_slug: item.product.slug,
+                product_id: item.product.id,
               },
             },
-          ]
-        : []),
-    ],
-    discounts:
-      order.discountTotal && order.discountTotal > 0
-        ? [
-            {
-              coupon: await createCheckoutDiscountCoupon(
-                order.discountCode ?? "RABAT",
-                order.discountTotal,
-              ),
-            },
-          ]
-        : undefined,
-    success_url: `${appUrl}/zamowienie/sukces?order=${encodeURIComponent(insertedOrder.order_number)}`,
-    cancel_url: `${appUrl}/koszyk?payment=cancelled&order=${encodeURIComponent(insertedOrder.order_number)}`,
-  });
+          },
+        })),
+        ...(order.deliveryCost > 0
+          ? [
+              {
+                quantity: 1,
+                price_data: {
+                  currency: "pln",
+                  unit_amount: toStripeAmount(order.deliveryCost),
+                  product_data: {
+                    name: "Dostawa",
+                  },
+                },
+              },
+            ]
+          : []),
+      ],
+      discounts:
+        order.discountTotal && order.discountTotal > 0
+          ? [
+              {
+                coupon: await createCheckoutDiscountCoupon(
+                  order.discountCode ?? "RABAT",
+                  order.discountTotal,
+                ),
+              },
+            ]
+          : undefined,
+      success_url: `${appUrl}/zamowienie/sukces?order=${encodeURIComponent(insertedOrder.order_number)}`,
+      cancel_url: `${appUrl}/koszyk?payment=cancelled&order=${encodeURIComponent(insertedOrder.order_number)}`,
+    });
+  } catch (error) {
+    await cleanupCheckoutFailure({
+      error,
+      orderId: insertedOrder.order_id,
+      orderNumber: insertedOrder.order_number,
+      source: "orders.createCheckoutSession",
+      supabase,
+    });
+
+    return NextResponse.json(
+      {
+        error: "STRIPE_CHECKOUT_FAILED",
+        message: "Nie udało się uruchomić płatności Stripe.",
+      },
+      { status: 500 },
+    );
+  }
 
   if (!checkoutSession.url) {
     console.error("Stripe checkout session has no URL", checkoutSession.id);
+    await cleanupCheckoutFailure({
+      checkoutSessionId: checkoutSession.id,
+      error: new Error("Stripe checkout session has no URL"),
+      orderId: insertedOrder.order_id,
+      orderNumber: insertedOrder.order_number,
+      source: "orders.checkoutSessionMissingUrl",
+      supabase,
+    });
 
     return NextResponse.json(
       {
@@ -328,6 +359,23 @@ export async function POST(request: NextRequest) {
 
   if (stripeUpdateError) {
     console.error("Failed to store Stripe session ID", stripeUpdateError);
+    await cleanupCheckoutFailure({
+      checkoutSessionId: checkoutSession.id,
+      error: stripeUpdateError,
+      orderId: insertedOrder.order_id,
+      orderNumber: insertedOrder.order_number,
+      source: "orders.storeStripeSessionId",
+      supabase,
+    });
+
+    return NextResponse.json(
+      {
+        error: "CHECKOUT_SESSION_STORE_FAILED",
+        message:
+          "Nie udało się bezpiecznie zapisać płatności. Spróbuj ponownie za chwilę.",
+      },
+      { status: 500 },
+    );
   }
 
   await recordConversionEvent({
@@ -396,4 +444,70 @@ async function createCheckoutDiscountCoupon(name: string, discountTotal: number)
   });
 
   return coupon.id;
+}
+
+async function cleanupCheckoutFailure({
+  checkoutSessionId,
+  error,
+  orderId,
+  orderNumber,
+  source,
+  supabase,
+}: {
+  checkoutSessionId?: string;
+  error: unknown;
+  orderId: string;
+  orderNumber: string;
+  source: string;
+  supabase: ReturnType<typeof createSupabaseServiceClient>;
+}) {
+  await notifyAdminError({
+    title: "Checkout Stripe przerwany i wymagał cofnięcia zamówienia",
+    source,
+    error,
+    context: {
+      checkoutSessionId,
+      orderId,
+      orderNumber,
+    },
+  });
+
+  if (checkoutSessionId) {
+    try {
+      await getStripeClient().checkout.sessions.expire(checkoutSessionId);
+    } catch (expireError) {
+      console.error("Failed to expire orphaned Stripe session", expireError);
+      await notifyAdminError({
+        title: "Nie udało się wygasić osieroconej sesji Stripe Checkout",
+        source: `${source}.expireStripeSession`,
+        error: expireError,
+        context: {
+          checkoutSessionId,
+          orderId,
+          orderNumber,
+        },
+      });
+    }
+  }
+
+  const { error: cancelError } = await supabase
+    .rpc("cancel_order_and_restore_stock", {
+      p_checkout_session_id: checkoutSessionId ?? null,
+      p_order_id: orderId,
+    })
+    .single();
+
+  if (cancelError) {
+    console.error("Failed to cancel order after checkout failure", cancelError);
+    await notifyAdminError({
+      title: "Nie udało się cofnąć zamówienia po błędzie checkoutu",
+      source: `${source}.cancelOrderAndRestoreStock`,
+      error: cancelError,
+      context: {
+        checkoutSessionId,
+        orderId,
+        orderNumber,
+      },
+    });
+  }
 }

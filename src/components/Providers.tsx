@@ -2,8 +2,11 @@
 
 import { Toaster } from "sonner";
 import { ConversionPageTracker } from "@/components/ConversionPageTracker";
+import { useCartStorageSync } from "@/lib/cart-store";
 
 export function Providers() {
+  useCartStorageSync();
+
   return (
     <>
       <ConversionPageTracker />

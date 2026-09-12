@@ -160,9 +160,8 @@ export async function sendReturnCaseStatusEmail(returnCase: ReturnCaseEmail) {
 
 export async function sendReturnCaseClosedEmail(returnCase: ReturnCaseEmail) {
   const refundMessage =
-    returnCase.approved_refund_amount > 0
-      ? `Zatwierdzona kwota zwrotu: ${formatPrice(Number(returnCase.approved_refund_amount))}.`
-      : "Sprawa została zamknięta bez zwrotu środków.";
+    getReturnCaseRefundMessage(returnCase) ||
+    "Sprawa została zamknięta bez zwrotu środków.";
 
   return sendReturnCaseEmail({
     returnCase,
@@ -254,9 +253,7 @@ function renderReturnCaseText({
     returnCase.customer_message
       ? ["", `Twoja notatka: ${returnCase.customer_message}`].join("\n")
       : null,
-    Number(returnCase.approved_refund_amount) > 0
-      ? `Zatwierdzona kwota zwrotu: ${formatPrice(Number(returnCase.approved_refund_amount))}`
-      : null,
+    getReturnCaseRefundMessage(returnCase),
     shouldShowReturnAddress(returnCase)
       ? [
           "",
@@ -286,6 +283,7 @@ function renderReturnCaseHtml({
     returnCase.case_number,
   );
   const refundAmount = Number(returnCase.approved_refund_amount);
+  const refundValue = getReturnCaseRefundValue(returnCase);
   const returnAddressHtml =
     shouldShowReturnAddress(returnCase) && returnAddressLines.length > 0
       ? renderSectionCard({
@@ -327,13 +325,40 @@ function renderReturnCaseHtml({
       }
       ${
         refundAmount > 0
-          ? renderHighlightMetric("Zatwierdzona kwota zwrotu", formatPrice(refundAmount))
+          ? renderHighlightMetric("Zatwierdzona kwota zwrotu", refundValue)
           : ""
       }
       ${returnAddressHtml}
       ${statusUrl ? renderButton("Sprawdź status sprawy", statusUrl) : ""}
     `,
   });
+}
+
+function getReturnCaseRefundMessage(returnCase: ReturnCaseEmail) {
+  const refundValue = getReturnCaseRefundValue(returnCase);
+
+  return refundValue ? `Zatwierdzona kwota zwrotu: ${refundValue}.` : "";
+}
+
+function getReturnCaseRefundValue(returnCase: ReturnCaseEmail) {
+  const refundAmount = Number(returnCase.approved_refund_amount);
+
+  if (!Number.isFinite(refundAmount) || refundAmount <= 0) {
+    return "";
+  }
+
+  const deliveryAmount = Number(returnCase.approved_delivery_refund_amount);
+  const storedProductAmount = Number(returnCase.approved_product_refund_amount);
+  const productAmount =
+    Number.isFinite(storedProductAmount) && storedProductAmount > 0
+      ? storedProductAmount
+      : Math.max(0, refundAmount - (Number.isFinite(deliveryAmount) ? deliveryAmount : 0));
+
+  if (Number.isFinite(deliveryAmount) && deliveryAmount > 0) {
+    return `${formatPrice(refundAmount)} (produkty ${formatPrice(productAmount)}, dostawa ${formatPrice(deliveryAmount)})`;
+  }
+
+  return formatPrice(refundAmount);
 }
 
 function shouldShowReturnAddress(returnCase: ReturnCaseEmail) {

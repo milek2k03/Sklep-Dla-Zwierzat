@@ -22,7 +22,7 @@ export function AdminRefundButton({
 
   async function refundOrder() {
     const confirmed = window.confirm(
-      `Anulować zamówienie ${orderNumber}, zwrócić płatność Stripe i przywrócić magazyn?`,
+      `Anulować zamówienie ${orderNumber}, zwrócić pełną płatność Stripe razem z dostawą i przywrócić magazyn?`,
     );
 
     if (!confirmed) {
@@ -54,7 +54,7 @@ export function AdminRefundButton({
       }
 
       toast.success("Zwrot zlecony", {
-        description: "Zamówienie anulowano i przywrócono magazyn.",
+        description: "Zamówienie anulowano, zwrócono płatność z dostawą i przywrócono magazyn.",
       });
       startTransition(() => {
         router.refresh();

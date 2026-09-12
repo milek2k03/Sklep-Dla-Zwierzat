@@ -558,7 +558,7 @@ function ProductForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Ocena">
+        <Field label="Ocena z prawdziwych opinii">
           <SanitizedNumberInput
             name="rating"
             numberMode="float"
@@ -566,7 +566,7 @@ function ProductForm({
             defaultValue={product?.rating ?? 0}
           />
         </Field>
-        <Field label="Liczba opinii">
+        <Field label="Liczba prawdziwych opinii">
           <SanitizedNumberInput
             name="reviewCount"
             numberMode="int"

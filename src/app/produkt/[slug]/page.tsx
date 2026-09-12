@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Check, RotateCcw, Star, Truck } from "lucide-react";
+import { ArrowLeft, Check, RotateCcw, Truck } from "lucide-react";
 import { ProductImagePlaceholder } from "@/components/ProductImagePlaceholder";
 import { ProductPurchaseControls } from "@/components/ProductPurchaseControls";
 import { ProductViewTracker } from "@/components/ProductViewTracker";
@@ -81,6 +81,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const stockLabel = getStockLabel(product);
+  const hasVerifiedReviews = product.rating > 0 && product.reviewCount > 0;
   const galleryImages =
     product.imageUrls?.slice(0, 5) ?? (product.imageUrl ? [product.imageUrl] : []);
   const productJsonLd = getProductJsonLd(product);
@@ -159,16 +160,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {product.name}
           </h1>
 
-          <div className="mt-4 flex items-center gap-2 text-sm text-[#6d675f]">
-            <Star
-              className="h-4 w-4 fill-[#f6b84b] text-[#f6b84b]"
-              aria-hidden="true"
-            />
-            <span className="font-semibold text-[#1f1f1f]">
-              {product.rating}
-            </span>
-            <span>({product.reviewCount} opinii)</span>
-          </div>
+          {hasVerifiedReviews ? (
+            <div className="mt-4 flex items-center gap-2 text-sm text-[#6d675f]">
+              <span className="font-semibold text-[#1f1f1f]">
+                {product.rating.toFixed(1)}
+              </span>
+              <span>({product.reviewCount} opinii)</span>
+            </div>
+          ) : null}
 
           <div className="mt-7 flex items-baseline gap-3">
             <span className="text-4xl font-semibold text-[#1f1f1f]">

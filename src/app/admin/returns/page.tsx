@@ -54,6 +54,7 @@ type ReturnCaseListRow = ReturnCaseRow & {
     | "customer_email"
     | "status"
     | "total"
+    | "delivery_cost"
     | "payment_method"
     | "stripe_payment_intent_id"
   > | null;
@@ -112,7 +113,7 @@ export default async function AdminReturnsPage({
     await Promise.all([
       supabase
         .from("return_cases")
-        .select("*, orders(id, order_number, customer_full_name, customer_email, status, total, payment_method, stripe_payment_intent_id), return_case_items(*, order_items(unit_price, line_total, quantity, unit_purchase_price, purchase_total))")
+        .select("*, orders(id, order_number, customer_full_name, customer_email, status, total, delivery_cost, payment_method, stripe_payment_intent_id), return_case_items(*, order_items(unit_price, line_total, quantity, unit_purchase_price, purchase_total))")
         .order("created_at", { ascending: false })
         .limit(50),
       selectedOrderId
@@ -473,6 +474,8 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
   const isClosed = returnCase.status === "closed";
   const returnItemsTotal = getReturnItemsTotal(returnCase.return_case_items);
   const loss = getReturnCaseLoss(returnCase);
+  const productRefundAmount = getReturnCaseProductRefundAmount(returnCase);
+  const deliveryRefundAmount = getReturnCaseDeliveryRefundAmount(returnCase);
 
   return (
     <article className="overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm">
@@ -588,7 +591,7 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
         <div className="m-5 rounded-lg border border-[#cfe8d2] bg-[#ecf8ee] p-4 text-sm text-[#2f6b3f]">
           Sprawa zamknięta.{" "}
           {Number(returnCase.approved_refund_amount) > 0
-            ? `Zwrot: ${formatPrice(Number(returnCase.approved_refund_amount))}.`
+            ? `Zwrot: ${formatPrice(Number(returnCase.approved_refund_amount))} (produkty ${formatPrice(productRefundAmount)}, dostawa ${formatPrice(deliveryRefundAmount)}).`
             : "Bez zwrotu płatności."}
         </div>
       ) : (
@@ -605,6 +608,7 @@ function ReturnCaseCard({ returnCase }: { returnCase: ReturnCaseListRow }) {
             disposalReason: item.disposal_reason,
             conditionNote: item.condition_note,
           }))}
+          orderDeliveryCost={Number(returnCase.orders?.delivery_cost ?? 0)}
           returnItemsTotal={returnItemsTotal}
           status={returnCase.status}
           updateAction={updateReturnCaseStatusAction}
@@ -688,6 +692,34 @@ function getReturnCaseLoss(returnCase: ReturnCaseListRow) {
     inventoryLoss,
     pendingCustomerRefund,
   };
+}
+
+function getReturnCaseProductRefundAmount(returnCase: ReturnCaseListRow) {
+  const productRefundAmount = Number(returnCase.approved_product_refund_amount);
+  const deliveryRefundAmount = getReturnCaseDeliveryRefundAmount(returnCase);
+
+  if (Number.isFinite(productRefundAmount) && productRefundAmount > 0) {
+    return money(productRefundAmount);
+  }
+
+  return money(Math.max(0, Number(returnCase.approved_refund_amount) - deliveryRefundAmount));
+}
+
+function getReturnCaseDeliveryRefundAmount(returnCase: ReturnCaseListRow) {
+  const deliveryRefundAmount = Number(returnCase.approved_delivery_refund_amount);
+
+  if (Number.isFinite(deliveryRefundAmount) && deliveryRefundAmount > 0) {
+    return money(deliveryRefundAmount);
+  }
+
+  return returnCase.delivery_refunded
+    ? money(
+        Math.max(
+          0,
+          Number(returnCase.approved_refund_amount) - getReturnItemsTotal(returnCase.return_case_items),
+        ),
+      )
+    : 0;
 }
 
 function getReturnItemsTotal(items: ReturnCaseItemWithOrderItem[]) {

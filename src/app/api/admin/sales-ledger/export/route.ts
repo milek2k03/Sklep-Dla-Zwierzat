@@ -95,7 +95,9 @@ function buildSalesLedgerCsv(orders: LedgerOrder[]) {
   ];
   let runningTotal = 0;
   const rows = orders.map((order, index) => {
-    runningTotal = money(runningTotal + getRecognizedOrderRevenue(order));
+    runningTotal = money(
+      runningTotal + getRecognizedOrderRevenue(order) - getCustomerRefundAmount(order),
+    );
 
     return [
       String(index + 1),
@@ -106,7 +108,7 @@ function buildSalesLedgerCsv(orders: LedgerOrder[]) {
       formatMoney(getOrderProductsGross(order)),
       formatMoney(order.delivery_cost),
       formatMoney(order.total),
-      getPaymentMethodLabel(order.payment_method),
+      getPaymentMethodLabel(order),
       getLedgerOrderStatus(order),
       formatMoney(runningTotal),
       getLedgerNotes(order),
@@ -128,19 +130,55 @@ function getOrderProductsGross(
   );
 }
 
-function getProductRefundAmount(order: LedgerOrder) {
+function getCustomerRefundAmount(order: LedgerOrder) {
   if (order.stripe_refund_id) {
-    return getOrderProductsGross(order);
+    const refundTotal = Number(order.refund_total);
+
+    if (Number.isFinite(refundTotal) && refundTotal > 0) {
+      return money(refundTotal);
+    }
+
+    return money(getOrderProductsGross(order) + Number(order.delivery_cost));
   }
 
   return money(
     order.return_cases.reduce(
       (sum, returnCase) =>
-        returnCase.stripe_refund_id || returnCase.refunded_at
+        isRefundedReturnCase(returnCase)
           ? sum + money(returnCase.approved_refund_amount)
           : sum,
       0,
     ),
+  );
+}
+
+function getCustomerRefundDeliveryAmount(order: LedgerOrder) {
+  if (order.stripe_refund_id) {
+    const refundDeliveryTotal = Number(order.refund_delivery_total);
+
+    if (Number.isFinite(refundDeliveryTotal) && refundDeliveryTotal > 0) {
+      return money(refundDeliveryTotal);
+    }
+
+    return money(Number(order.delivery_cost));
+  }
+
+  return money(
+    order.return_cases.reduce((sum, returnCase) => {
+      const deliveryRefundAmount = Number(returnCase.approved_delivery_refund_amount);
+
+      return isRefundedReturnCase(returnCase)
+        ? sum + (Number.isFinite(deliveryRefundAmount) ? deliveryRefundAmount : 0)
+        : sum;
+    }, 0),
+  );
+}
+
+function isRefundedReturnCase(returnCase: ReturnCaseRow) {
+  return (
+    Boolean(returnCase.stripe_refund_id) ||
+    Boolean(returnCase.refunded_at) ||
+    Number(returnCase.approved_refund_amount) > 0
   );
 }
 
@@ -162,18 +200,18 @@ function getReturnCaseNumbers(returnCases: ReturnCaseRow[]) {
 }
 
 function getLedgerOrderStatus(order: LedgerOrder) {
-  const productRefundAmount = getProductRefundAmount(order);
+  const customerRefundAmount = getCustomerRefundAmount(order);
   const productsGross = getOrderProductsGross(order);
 
   if (order.status === "cancelled") {
-    return productRefundAmount > 0 ? "zwrócone" : "anulowane";
+    return customerRefundAmount > 0 ? "zwrócone" : "anulowane";
   }
 
-  if (productRefundAmount > 0 && productRefundAmount >= productsGross) {
+  if (customerRefundAmount > 0 && customerRefundAmount >= productsGross) {
     return "zwrócone";
   }
 
-  if (productRefundAmount > 0) {
+  if (customerRefundAmount > 0) {
     return "częściowo zwrócone";
   }
 
@@ -188,8 +226,21 @@ function getLedgerOrderStatus(order: LedgerOrder) {
   return "nowe";
 }
 
-function getPaymentMethodLabel(paymentMethod: OrderRow["payment_method"]) {
-  if (paymentMethod === "manual") {
+function getPaymentMethodLabel(
+  order: Pick<OrderRow, "payment_method" | "stripe_payment_method_type">,
+) {
+  if (order.payment_method === "manual") {
+    return "przelew";
+  }
+
+  if (order.stripe_payment_method_type === "blik") {
+    return "BLIK";
+  }
+
+  if (
+    order.stripe_payment_method_type === "p24" ||
+    order.stripe_payment_method_type === "bank_transfer"
+  ) {
     return "przelew";
   }
 
@@ -201,15 +252,22 @@ function isRevenueOrder(order: Pick<OrderRow, "paid_at" | "status">) {
 }
 
 function getLedgerNotes(order: LedgerOrder) {
-  const productRefundAmount = getProductRefundAmount(order);
+  const customerRefundAmount = getCustomerRefundAmount(order);
+  const deliveryRefundAmount = getCustomerRefundDeliveryAmount(order);
   const notes = [];
 
   if (order.status === "cancelled") {
     notes.push("zamówienie anulowane");
   }
 
-  if (productRefundAmount > 0) {
-    notes.push(`zwrot klientowi: ${formatMoney(productRefundAmount)} zł`);
+  if (customerRefundAmount > 0) {
+    notes.push(
+      `zwrot klientowi: ${formatMoney(customerRefundAmount)} zł${
+        deliveryRefundAmount > 0
+          ? `, w tym dostawa: ${formatMoney(deliveryRefundAmount)} zł`
+          : ""
+      }`,
+    );
   }
 
   if (order.return_cases.length > 0) {

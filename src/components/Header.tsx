@@ -14,7 +14,6 @@ import { storeBrandSuffix, storeShortName } from "@/lib/brand";
 import {
   getCartItemsCount,
   useCartHydrated,
-  useCartStorageSync,
   useCartStore,
 } from "@/lib/cart-store";
 import { formatPrice } from "@/lib/format";
@@ -47,7 +46,6 @@ export function Header() {
   const [isSearching, setIsSearching] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const isHydrated = useCartHydrated();
-  useCartStorageSync();
 
   useEffect(() => {
     const query = searchQuery.trim();

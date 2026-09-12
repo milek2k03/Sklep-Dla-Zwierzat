@@ -233,7 +233,15 @@ export async function closeReturnCaseAction(formData: FormData) {
     "Niepoprawny status sprawy.",
   );
   const submittedAdminNotes = getOptionalString(formData, "adminNotes");
-  const approvedRefundAmount = getOptionalMoney(formData, "approvedRefundAmount") ?? 0;
+  const approvedProductRefundAmount =
+    getOptionalMoney(formData, "approvedProductRefundAmount") ??
+    getOptionalMoney(formData, "approvedRefundAmount") ??
+    0;
+  const approvedDeliveryRefundAmount =
+    getOptionalMoney(formData, "approvedDeliveryRefundAmount") ?? 0;
+  const approvedRefundAmount = roundMoney(
+    approvedProductRefundAmount + approvedDeliveryRefundAmount,
+  );
   const supabase = await createSupabaseServerClient();
   const { data: returnCase, error } = await supabase
     .from("return_cases")
@@ -270,10 +278,21 @@ export async function closeReturnCaseAction(formData: FormData) {
     >,
   );
 
-  if (approvedRefundAmount > maxProductRefundAmount) {
+  if (approvedProductRefundAmount > maxProductRefundAmount) {
     redirect(
       `/admin/returns?error=${encodeURIComponent(
-        `Zwrot za produkty nie może przekraczać ${maxProductRefundAmount.toFixed(2)} zł. Koszt dostawy nie jest zwracany w tej sprawie.`,
+        `Zwrot za produkty nie może przekraczać ${maxProductRefundAmount.toFixed(2)} zł.`,
+      )}`,
+    );
+  }
+
+  const order = returnCase.orders as OrderRow | null;
+  const maxDeliveryRefundAmount = order ? roundMoney(Number(order.delivery_cost)) : 0;
+
+  if (approvedDeliveryRefundAmount > maxDeliveryRefundAmount) {
+    redirect(
+      `/admin/returns?error=${encodeURIComponent(
+        `Zwrot dostawy nie może przekraczać ${maxDeliveryRefundAmount.toFixed(2)} zł.`,
       )}`,
     );
   }
@@ -358,14 +377,15 @@ export async function closeReturnCaseAction(formData: FormData) {
     redirect(`/admin/returns?error=${encodeURIComponent(itemUpdateError.message)}`);
   }
 
-  const order = returnCase.orders as OrderRow | null;
   let refundId: string | null = null;
 
   if (approvedRefundAmount > 0 && order) {
     try {
       refundId = await createPartialRefund({
         amount: approvedRefundAmount,
+        deliveryAmount: approvedDeliveryRefundAmount,
         order,
+        productAmount: approvedProductRefundAmount,
         returnCase,
       });
     } catch (error) {
@@ -382,6 +402,7 @@ export async function closeReturnCaseAction(formData: FormData) {
       p_return_case_id: caseId,
       p_refund_id: refundId,
       p_refund_amount: approvedRefundAmount,
+      p_delivery_refund_amount: approvedDeliveryRefundAmount,
     })
     .single();
 
@@ -397,6 +418,8 @@ export async function closeReturnCaseAction(formData: FormData) {
     metadata: {
       returnCaseId: returnCase.id,
       approvedRefundAmount,
+      approvedProductRefundAmount,
+      approvedDeliveryRefundAmount,
       stripeRefundId: refundId,
     },
   });
@@ -410,6 +433,8 @@ export async function closeReturnCaseAction(formData: FormData) {
       metadata: {
         returnCaseId: returnCase.id,
         approvedRefundAmount,
+        approvedProductRefundAmount,
+        approvedDeliveryRefundAmount,
         stripeRefundId: refundId,
       },
     });
@@ -428,11 +453,15 @@ export async function closeReturnCaseAction(formData: FormData) {
 
 async function createPartialRefund({
   amount,
+  deliveryAmount,
   order,
+  productAmount,
   returnCase,
 }: {
   amount: number;
+  deliveryAmount: number;
   order: OrderRow;
+  productAmount: number;
   returnCase: ReturnCaseRow;
 }) {
   if (order.payment_method !== "stripe" || !order.stripe_payment_intent_id) {
@@ -454,6 +483,9 @@ async function createPartialRefund({
         order_number: order.order_number,
         return_case_id: returnCase.id,
         return_case_number: returnCase.case_number,
+        refund_amount: amount.toFixed(2),
+        refund_products_total: productAmount.toFixed(2),
+        refund_delivery_total: deliveryAmount.toFixed(2),
       },
     },
     {
@@ -622,7 +654,11 @@ function getOptionalMoney(formData: FormData, key: string) {
     throw new Error(`Pole ${key} musi być kwotą większą lub równą 0.`);
   }
 
-  return Math.round(numberValue * 100) / 100;
+  return roundMoney(numberValue);
+}
+
+function roundMoney(value: number) {
+  return Math.round(Number(value) * 100) / 100;
 }
 
 function calculateReturnProductsTotal(
