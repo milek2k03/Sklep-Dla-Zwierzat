@@ -465,13 +465,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   </div>
 
                   <div className="mt-4 grid gap-3 lg:grid-cols-[380px_minmax(0,1fr)]">
-                    <details className="group overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm transition open:border-[#d7b477] open:ring-1 open:ring-[#d7b477]/30">
+                    <details className="group overflow-hidden rounded-lg border border-transparent bg-transparent">
                       <AdminDetailsSummary
+                        actionLabel="Obsłuż"
                         description="Status, tracking, zwrot"
                         icon={ClipboardCheck}
-                        title="Otwórz obsługę"
+                        title="Obsługa zamówienia"
+                        variant="primary"
                       />
-                      <div className="border-t border-[#eee7db] p-4">
+                      <div className="rounded-b-lg border border-t-0 border-[#eee7db] bg-white p-4">
                         <AdminOrderStatusSelect
                           deliveryMethod={order.delivery_method}
                           orderId={order.id}
@@ -501,13 +503,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       </div>
                     </details>
 
-                    <details className="group overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm transition open:border-[#d7b477] open:ring-1 open:ring-[#d7b477]/30">
+                    <details className="group overflow-hidden rounded-lg border border-transparent bg-transparent">
                       <AdminDetailsSummary
+                        actionLabel="Pokaż"
                         description="Produkty, dostawa, historia"
                         icon={Eye}
-                        title="Pokaż szczegóły"
+                        title="Szczegóły"
+                        variant="secondary"
                       />
-                      <div className="grid gap-4 border-t border-[#eee7db] p-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+                      <div className="grid gap-4 rounded-b-lg border border-t-0 border-[#eee7db] bg-white p-4 xl:grid-cols-[minmax(0,1fr)_320px]">
                         <div className="rounded-lg bg-[#fffdf8] p-4">
                           <p className="text-sm font-semibold text-[#1f1f1f]">
                             Produkty
@@ -657,32 +661,64 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 }
 
 function AdminDetailsSummary({
+  actionLabel,
   description,
   icon: Icon,
   title,
+  variant,
 }: {
+  actionLabel: string;
   description: string;
   icon: LucideIcon;
   title: string;
+  variant: "primary" | "secondary";
 }) {
+  const isPrimary = variant === "primary";
+
   return (
-    <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-[#fffdf8] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#f4a261]/45 marker:hidden [&::-webkit-details-marker]:hidden">
+    <summary
+      className={[
+        "flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#11151b] group-open:rounded-b-none marker:hidden [&::-webkit-details-marker]:hidden",
+        isPrimary
+          ? "border-[#f4a261] bg-[#f4a261] text-[#11151b] shadow-[0_14px_28px_rgba(244,162,97,0.18)] hover:bg-[#ffb06f] focus:ring-[#f4a261]/60 group-open:bg-[#ffb06f]"
+          : "border-[#dce7f3] bg-[#dce7f3] text-[#11151b] shadow-[0_14px_28px_rgba(148,163,184,0.14)] hover:bg-white focus:ring-[#dce7f3]/60 group-open:bg-white",
+      ].join(" ")}
+    >
       <span className="flex min-w-0 items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#fff7e8] text-[#b65320] ring-1 ring-[#d7cab9]">
+        <span
+          className={[
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+            isPrimary
+              ? "bg-[#11151b]/12 text-[#11151b]"
+              : "bg-[#11151b] text-white",
+          ].join(" ")}
+        >
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
         <span className="min-w-0">
-          <span className="block text-sm font-semibold text-[#1f1f1f]">
+          <span className="block text-sm font-semibold leading-5">
             {title}
           </span>
-          <span className="mt-0.5 block truncate text-xs font-medium text-[#7a746d]">
+          <span
+            className={[
+              "mt-0.5 block truncate text-xs font-semibold leading-5",
+              isPrimary ? "text-[#4b2f18]" : "text-[#475569]",
+            ].join(" ")}
+          >
             {description}
           </span>
         </span>
       </span>
-      <span className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-[#d7cab9] bg-[#fffdf8] px-3 text-xs font-semibold text-[#1f1f1f] transition group-open:border-[#f4a261] group-open:bg-[#f4a261] group-open:text-[#11151b]">
-        <span className="group-open:hidden">Otwórz</span>
-        <span className="hidden group-open:inline">Otwarte</span>
+      <span
+        className={[
+          "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold transition",
+          isPrimary
+            ? "bg-[#11151b] text-white"
+            : "bg-[#f4a261] text-[#11151b]",
+        ].join(" ")}
+      >
+        <span className="group-open:hidden">{actionLabel}</span>
+        <span className="hidden group-open:inline">Zamknij</span>
         <ChevronDown
           className="h-4 w-4 transition group-open:rotate-180"
           aria-hidden="true"
