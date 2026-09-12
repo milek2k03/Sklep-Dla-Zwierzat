@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ExternalLink, PackageCheck, Search, Truck } from "lucide-react";
+import {
+  ArrowRight,
+  CreditCard,
+  ExternalLink,
+  PackageCheck,
+  RotateCcw,
+  Search,
+  Truck,
+} from "lucide-react";
 import { storeBrandName } from "@/lib/brand";
 import { deliveryOptions } from "@/lib/delivery";
 import { formatPrice } from "@/lib/format";
@@ -223,6 +230,8 @@ function OrderDetails({ order }: { order: PublicOrder }) {
   );
   const canCreateReturnCase = ["paid", "shipped"].includes(order.status);
   const returnAddressLines = getReturnAddressLines();
+  const canOpenReturnForm =
+    canCreateReturnCase && availableReturnItems.length > 0;
 
   return (
     <>
@@ -257,6 +266,7 @@ function OrderDetails({ order }: { order: PublicOrder }) {
             hint={order.shipped_at ? `Wysłano ${formatDate(order.shipped_at)}` : "W przygotowaniu"}
           />
           <StatusTile
+            icon={<CreditCard className="h-5 w-5" aria-hidden="true" />}
             label="Wartość"
             value={formatPrice(order.total)}
             hint={
@@ -265,6 +275,61 @@ function OrderDetails({ order }: { order: PublicOrder }) {
                 : "Razem z dostawą"
             }
           />
+        </div>
+
+        <div className="border-t border-[#f0e7da] p-5">
+          <h3 className="text-sm font-semibold text-[#1f1f1f]">
+            Akcje zamówienia
+          </h3>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {order.tracking_url ? (
+              <OrderActionButton
+                description={
+                  order.tracking_number
+                    ? `Numer przesyłki: ${order.tracking_number}`
+                    : "Otwórz stronę przewoźnika"
+                }
+                href={order.tracking_url}
+                icon={<Truck className="h-5 w-5" aria-hidden="true" />}
+                title="Śledź przesyłkę"
+                external
+              />
+            ) : (
+              <OrderActionNotice
+                description={
+                  hasTracking
+                    ? `Numer przesyłki: ${order.tracking_number}`
+                    : "Link pojawi się po nadaniu paczki."
+                }
+                icon={<Truck className="h-5 w-5" aria-hidden="true" />}
+                title="Tracking po nadaniu"
+              />
+            )}
+
+            {canOpenReturnForm ? (
+              <OrderActionButton
+                description={`Produkty dostępne w formularzu: ${availableReturnItems.length}`}
+                href="#sprawa-zamowienia"
+                icon={<RotateCcw className="h-5 w-5" aria-hidden="true" />}
+                title="Zgłoś zwrot, reklamację lub wymianę"
+                tone="orange"
+              />
+            ) : (
+              <OrderActionNotice
+                description={
+                  canCreateReturnCase
+                    ? "W tym zamówieniu nie ma już produktów do zgłoszenia."
+                    : "Formularz będzie aktywny po opłaceniu zamówienia."
+                }
+                icon={<RotateCcw className="h-5 w-5" aria-hidden="true" />}
+                title={
+                  canCreateReturnCase
+                    ? "Wszystko już zgłoszone"
+                    : "Zgłoszenia po opłaceniu"
+                }
+              />
+            )}
+          </div>
         </div>
 
         <div className="grid gap-5 border-t border-[#f0e7da] p-5 md:grid-cols-2">
@@ -286,15 +351,15 @@ function OrderDetails({ order }: { order: PublicOrder }) {
                 {order.shipping_carrier ? <p>Przewoźnik: {order.shipping_carrier}</p> : null}
                 {order.tracking_number ? <p>Numer: {order.tracking_number}</p> : null}
                 {order.tracking_url ? (
-                  <Link
-                    className="inline-flex items-center gap-1 font-semibold text-[#1f1f1f] underline-offset-4 hover:underline"
+                  <a
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#1f1f1f] px-5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#34302d]"
                     href={order.tracking_url}
                     rel="noreferrer"
                     target="_blank"
                   >
                     Śledź przesyłkę
-                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                  </Link>
+                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                  </a>
                 ) : null}
               </div>
             ) : (
@@ -337,7 +402,10 @@ function OrderDetails({ order }: { order: PublicOrder }) {
         </div>
       </article>
 
-      <article className="rounded-lg border border-[#eadfce] bg-white p-5 shadow-sm">
+      <article
+        className="rounded-lg border border-[#eadfce] bg-white p-5 shadow-sm"
+        id="sprawa-zamowienia"
+      >
         <h3 className="text-lg font-semibold text-[#1f1f1f]">
           Zwroty, reklamacje i wymiany
         </h3>
@@ -453,10 +521,23 @@ function ReturnCaseRequestForm({
   return (
     <form
       action={createPublicReturnCaseAction}
-      className="mt-4 rounded-lg border border-[#f0e7da] bg-[#fffaf2] p-4"
+      className="mt-4 rounded-lg border border-[#e6d4bd] bg-[#fffaf2] p-4 shadow-[0_14px_30px_rgba(80,55,30,0.08)]"
     >
       <input name="orderNumber" type="hidden" value={orderNumber} />
       <input name="email" type="hidden" value={email} />
+      <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#eadfce] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1f1f1f] text-white">
+            <RotateCcw className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="font-semibold text-[#1f1f1f]">Nowe zgłoszenie</p>
+            <p className="mt-1 text-sm leading-6 text-[#6d675f]">
+              Wybierz typ sprawy, ilości produktów i opisz krótko problem.
+            </p>
+          </div>
+        </div>
+      </div>
       <div className="grid gap-4 md:grid-cols-[220px_1fr]">
         <label className="block text-sm font-semibold text-[#1f1f1f]">
           Typ sprawy
@@ -517,10 +598,12 @@ function ReturnCaseRequestForm({
         </label>
       </div>
       <button
-        className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#1f1f1f] px-5 text-sm font-semibold text-white transition hover:bg-[#34302d] sm:w-auto"
+        className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#e86f2c] px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(232,111,44,0.22)] transition hover:-translate-y-0.5 hover:bg-[#cf5f25] sm:w-auto"
         type="submit"
       >
+        <RotateCcw className="h-4 w-4" aria-hidden="true" />
         Zgłoś sprawę
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </button>
     </form>
   );
@@ -546,13 +629,92 @@ function StatusTile({
   hint: string;
 }) {
   return (
-    <div className="rounded-lg bg-[#fbf6ed] p-4">
+    <div className="rounded-lg border border-[#eee7db] bg-[#fbf6ed] p-4">
       <div className="flex items-center gap-2 text-sm font-semibold text-[#1f1f1f]">
-        {icon}
-        {label}
+        {icon ? (
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#b65320]">
+            {icon}
+          </span>
+        ) : null}
+        <span>{label}</span>
       </div>
       <p className="mt-2 text-lg font-semibold text-[#1f1f1f]">{value}</p>
       <p className="mt-1 text-xs leading-5 text-[#6d675f]">{hint}</p>
+    </div>
+  );
+}
+
+function OrderActionButton({
+  description,
+  external = false,
+  href,
+  icon,
+  title,
+  tone = "dark",
+}: {
+  description: string;
+  external?: boolean;
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  tone?: "dark" | "orange";
+}) {
+  const className =
+    tone === "orange"
+      ? "group flex min-h-16 items-center justify-between gap-4 rounded-lg border border-[#e86f2c] bg-[#e86f2c] px-4 py-3 text-left text-white shadow-[0_14px_28px_rgba(232,111,44,0.18)] transition hover:-translate-y-0.5 hover:bg-[#cf5f25] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e86f2c]"
+      : "group flex min-h-16 items-center justify-between gap-4 rounded-lg border border-[#1f1f1f] bg-[#1f1f1f] px-4 py-3 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#34302d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]";
+
+  return (
+    <a
+      className={className}
+      href={href}
+      rel={external ? "noreferrer" : undefined}
+      target={external ? "_blank" : undefined}
+    >
+      <span className="flex min-w-0 items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+          {icon}
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold leading-5">{title}</span>
+          <span className="mt-1 block text-xs leading-5 text-white/80">
+            {description}
+          </span>
+        </span>
+      </span>
+      {external ? (
+        <ExternalLink
+          className="h-4 w-4 shrink-0 transition group-hover:translate-x-0.5"
+          aria-hidden="true"
+        />
+      ) : (
+        <ArrowRight
+          className="h-4 w-4 shrink-0 transition group-hover:translate-x-0.5"
+          aria-hidden="true"
+        />
+      )}
+    </a>
+  );
+}
+
+function OrderActionNotice({
+  description,
+  icon,
+  title,
+}: {
+  description: string;
+  icon: React.ReactNode;
+  title: string;
+}) {
+  return (
+    <div className="flex min-h-16 items-center gap-3 rounded-lg border border-[#eee7db] bg-[#fbf6ed] px-4 py-3 text-left text-[#6d675f]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#b65320]">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-[#1f1f1f]">{title}</span>
+        <span className="mt-1 block text-xs leading-5">{description}</span>
+      </span>
     </div>
   );
 }
