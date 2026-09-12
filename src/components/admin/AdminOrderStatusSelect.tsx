@@ -1,5 +1,6 @@
 "use client";
 
+import { Save, Truck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -110,7 +111,21 @@ export function AdminOrderStatusSelect({
   }
 
   return (
-    <div className="min-w-64 rounded-lg border border-[#eee7db] bg-[#fffdf8] p-3 text-left">
+    <div className="min-w-64 rounded-lg border border-[#eee7db] bg-[#fffdf8] p-4 text-left">
+      <div className="mb-4 flex items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fff7e8] text-[#b65320] ring-1 ring-[#d7cab9]">
+          <Truck className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <div>
+          <p className="text-sm font-semibold text-[#1f1f1f]">
+            Status i tracking
+          </p>
+          <p className="mt-0.5 text-xs text-[#7a746d]">
+            Obsługa wysyłki
+          </p>
+        </div>
+      </div>
+
       <label className="block">
         <span className="text-xs font-semibold uppercase tracking-wide text-[#7a746d]">
           Status
@@ -190,11 +205,12 @@ export function AdminOrderStatusSelect({
 
       <button
         type="button"
-        className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-full bg-[#1f1f1f] px-4 text-sm font-semibold text-white transition hover:bg-[#34302d] disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[#1f1f1f] px-4 text-sm font-semibold text-white transition hover:bg-[#34302d] disabled:cursor-not-allowed disabled:opacity-50"
         onClick={saveStatus}
         disabled={!hasChanges || isSaving || isPending}
       >
-        {isSaving || isPending ? "Zapisywanie..." : "Zapisz"}
+        <Save className="h-4 w-4" aria-hidden="true" />
+        {isSaving || isPending ? "Zapisywanie..." : "Zapisz zmiany"}
       </button>
     </div>
   );

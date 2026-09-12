@@ -23,8 +23,8 @@ import { cn } from "@/lib/utils";
 const adminNavItems = [
   {
     href: "/admin",
-    label: "Zamowienia",
-    description: "Obsluga i statusy",
+    label: "Zamówienia",
+    description: "Obsługa i statusy",
     icon: ClipboardList,
     exact: true,
   },
@@ -49,7 +49,7 @@ const adminNavItems = [
   {
     href: "/admin/expenses",
     label: "Koszty",
-    description: "Ewidencja wydatkow",
+    description: "Ewidencja wydatków",
     icon: ReceiptText,
   },
   {

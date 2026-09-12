@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import {
   AlertTriangle,
   Boxes,
+  ChevronDown,
+  ClipboardCheck,
   Clock3,
+  Eye,
   FileSpreadsheet,
   PackageCheck,
   PackageX,
@@ -15,6 +18,7 @@ import {
   TrendingUp,
   Truck,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
 import { AdminRefundButton } from "@/components/admin/AdminRefundButton";
@@ -461,13 +465,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   </div>
 
                   <div className="mt-4 grid gap-3 lg:grid-cols-[380px_minmax(0,1fr)]">
-                    <details className="group rounded-lg border border-[#eee7db] bg-white">
-                      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-[#1f1f1f] marker:hidden">
-                        Obsługa zamówienia
-                        <span className="ml-2 text-xs font-medium text-[#7a746d]">
-                          status, tracking, zwrot
-                        </span>
-                      </summary>
+                    <details className="group overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm transition open:border-[#d7b477] open:ring-1 open:ring-[#d7b477]/30">
+                      <AdminDetailsSummary
+                        description="Status, tracking, zwrot"
+                        icon={ClipboardCheck}
+                        title="Otwórz obsługę"
+                      />
                       <div className="border-t border-[#eee7db] p-4">
                         <AdminOrderStatusSelect
                           deliveryMethod={order.delivery_method}
@@ -489,21 +492,21 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         {order.status === "paid" || order.status === "shipped" ? (
                           <Link
                             href={`/admin/returns?order=${order.id}`}
-                            className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-full border border-[#d7cab9] bg-white px-4 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#1f1f1f]"
+                            className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border border-[#d7cab9] bg-white px-4 text-sm font-semibold text-[#1f1f1f] transition hover:border-[#f4a261] hover:bg-[#fff7e8] focus:outline-none focus:ring-2 focus:ring-[#f4a261]/40"
                           >
+                            <RotateCcw className="h-4 w-4" aria-hidden="true" />
                             Zwrot / reklamacja
                           </Link>
                         ) : null}
                       </div>
                     </details>
 
-                    <details className="group rounded-lg border border-[#eee7db] bg-white">
-                      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-[#1f1f1f] marker:hidden">
-                        Szczegóły
-                        <span className="ml-2 text-xs font-medium text-[#7a746d]">
-                          produkty, dostawa, historia
-                        </span>
-                      </summary>
+                    <details className="group overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm transition open:border-[#d7b477] open:ring-1 open:ring-[#d7b477]/30">
+                      <AdminDetailsSummary
+                        description="Produkty, dostawa, historia"
+                        icon={Eye}
+                        title="Pokaż szczegóły"
+                      />
                       <div className="grid gap-4 border-t border-[#eee7db] p-4 xl:grid-cols-[minmax(0,1fr)_320px]">
                         <div className="rounded-lg bg-[#fffdf8] p-4">
                           <p className="text-sm font-semibold text-[#1f1f1f]">
@@ -650,6 +653,42 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         )}
       </div>
     </section>
+  );
+}
+
+function AdminDetailsSummary({
+  description,
+  icon: Icon,
+  title,
+}: {
+  description: string;
+  icon: LucideIcon;
+  title: string;
+}) {
+  return (
+    <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-[#fffdf8] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#f4a261]/45 marker:hidden [&::-webkit-details-marker]:hidden">
+      <span className="flex min-w-0 items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#fff7e8] text-[#b65320] ring-1 ring-[#d7cab9]">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold text-[#1f1f1f]">
+            {title}
+          </span>
+          <span className="mt-0.5 block truncate text-xs font-medium text-[#7a746d]">
+            {description}
+          </span>
+        </span>
+      </span>
+      <span className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-[#d7cab9] bg-[#fffdf8] px-3 text-xs font-semibold text-[#1f1f1f] transition group-open:border-[#f4a261] group-open:bg-[#f4a261] group-open:text-[#11151b]">
+        <span className="group-open:hidden">Otwórz</span>
+        <span className="hidden group-open:inline">Otwarte</span>
+        <ChevronDown
+          className="h-4 w-4 transition group-open:rotate-180"
+          aria-hidden="true"
+        />
+      </span>
+    </summary>
   );
 }
 

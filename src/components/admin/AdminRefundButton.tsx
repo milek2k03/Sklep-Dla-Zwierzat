@@ -1,5 +1,6 @@
 "use client";
 
+import { RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -71,10 +72,11 @@ export function AdminRefundButton({
   return (
     <button
       type="button"
-      className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-full border border-[#f0b8a5] bg-[#fff6f1] px-4 text-sm font-semibold text-[#a64022] transition hover:border-[#a64022] disabled:cursor-not-allowed disabled:opacity-50"
+      className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[#f0b8a5] bg-[#fff6f1] px-4 text-sm font-semibold text-[#a64022] transition hover:border-[#a64022] hover:bg-[#fff1e8] focus:outline-none focus:ring-2 focus:ring-[#f0b8a5]/60 disabled:cursor-not-allowed disabled:opacity-50"
       onClick={refundOrder}
       disabled={isRefunding || isPending}
     >
+      <RotateCcw className="h-4 w-4" aria-hidden="true" />
       {isRefunding || isPending ? "Zwracanie..." : "Anuluj i zwróć płatność"}
     </button>
   );
