@@ -21,7 +21,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await expireUnpaidOrders();
+    const result = await expireUnpaidOrders({ notifyOnError: true });
+
+    if ("failed" in result && result.failed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          ...result,
+        },
+        { status: 503 },
+      );
+    }
 
     return NextResponse.json({
       ok: true,
