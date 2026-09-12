@@ -467,7 +467,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                   <div className="mt-4 grid gap-3 lg:grid-cols-[380px_minmax(0,1fr)]">
                     <details className="group overflow-hidden rounded-lg border border-transparent bg-transparent">
                       <AdminDetailsSummary
-                        actionLabel="Obsłuż"
+                        actionLabel="Otwórz obsługę"
                         description="Status, tracking, zwrot"
                         icon={ClipboardCheck}
                         title="Obsługa zamówienia"
@@ -505,7 +505,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
                     <details className="group overflow-hidden rounded-lg border border-transparent bg-transparent">
                       <AdminDetailsSummary
-                        actionLabel="Pokaż"
+                        actionLabel="Otwórz szczegóły"
                         description="Produkty, dostawa, historia"
                         icon={Eye}
                         title="Szczegóły"
@@ -678,31 +678,31 @@ function AdminDetailsSummary({
   return (
     <summary
       className={[
-        "flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#11151b] group-open:rounded-b-none marker:hidden [&::-webkit-details-marker]:hidden",
+        "flex min-h-[76px] cursor-pointer list-none select-none items-center justify-between gap-4 rounded-lg border-2 px-4 py-3 text-left shadow-lg transition hover:-translate-y-0.5 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#11151b] group-open:rounded-b-none marker:hidden [&::-webkit-details-marker]:hidden",
         isPrimary
-          ? "border-[#f4a261] bg-[#f4a261] text-[#11151b] shadow-[0_14px_28px_rgba(244,162,97,0.18)] hover:bg-[#ffb06f] focus:ring-[#f4a261]/60 group-open:bg-[#ffb06f]"
-          : "border-[#dce7f3] bg-[#dce7f3] text-[#11151b] shadow-[0_14px_28px_rgba(148,163,184,0.14)] hover:bg-white focus:ring-[#dce7f3]/60 group-open:bg-white",
+          ? "border-[#ffb06f] bg-[#f4a261] text-[#11151b] shadow-[0_16px_34px_rgba(244,162,97,0.28)] hover:bg-[#ffb06f] focus:ring-[#f4a261]/60 group-open:bg-[#ffb06f]"
+          : "border-white bg-white text-[#11151b] shadow-[0_16px_34px_rgba(226,232,240,0.18)] hover:border-[#f4a261] hover:bg-[#fff7e8] focus:ring-[#f4a261]/50 group-open:border-[#f4a261] group-open:bg-[#fff7e8]",
       ].join(" ")}
     >
       <span className="flex min-w-0 items-center gap-3">
         <span
           className={[
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ring-1",
             isPrimary
-              ? "bg-[#11151b]/12 text-[#11151b]"
-              : "bg-[#11151b] text-white",
+              ? "bg-[#11151b] text-white ring-[#11151b]"
+              : "bg-[#f4a261] text-[#11151b] ring-[#f4a261]",
           ].join(" ")}
         >
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
         <span className="min-w-0">
-          <span className="block text-sm font-semibold leading-5">
+          <span className="block text-base font-semibold leading-5">
             {title}
           </span>
           <span
             className={[
-              "mt-0.5 block truncate text-xs font-semibold leading-5",
-              isPrimary ? "text-[#4b2f18]" : "text-[#475569]",
+              "mt-1.5 block text-sm font-semibold leading-5",
+              isPrimary ? "text-[#4b2f18]" : "text-[#334155]",
             ].join(" ")}
           >
             {description}
@@ -710,12 +710,7 @@ function AdminDetailsSummary({
         </span>
       </span>
       <span
-        className={[
-          "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold transition",
-          isPrimary
-            ? "bg-[#11151b] text-white"
-            : "bg-[#f4a261] text-[#11151b]",
-        ].join(" ")}
+        className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[#11151b] px-4 text-sm font-semibold text-white shadow-sm transition"
       >
         <span className="group-open:hidden">{actionLabel}</span>
         <span className="hidden group-open:inline">Zamknij</span>
