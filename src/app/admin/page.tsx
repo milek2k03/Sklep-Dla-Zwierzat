@@ -26,7 +26,7 @@ import { AdminRefundButton } from "@/components/admin/AdminRefundButton";
 import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
 import { storeBrandName } from "@/lib/brand";
 import { deliveryOptions, getShippingCarrierForDeliveryMethod } from "@/lib/delivery";
-import { formatPrice } from "@/lib/format";
+import { formatPercent, formatPrice } from "@/lib/format";
 import {
   isOrderStatus,
   orderStatusLabels,
@@ -1038,9 +1038,14 @@ function AdminDashboard({
               </AutoFitText>
             </div>
             <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
-              <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#c8b987]">
+              <AutoFitText
+                className="font-semibold uppercase leading-4 tracking-wide text-[#c8b987]"
+                maxFontSize={12}
+                minFontSize={9}
+                title="Wykorzystanie"
+              >
                 Wykorzystanie
-              </p>
+              </AutoFitText>
               <AutoFitText
                 className="mt-2 font-semibold leading-6 text-white tabular-nums"
                 maxFontSize={18}
@@ -1567,7 +1572,7 @@ function getUnregisteredActivityDashboardSummary(
     quarterLimit,
     quarterRevenue,
     remaining,
-    usagePercent: `${Math.round(usageRatio * 1000) / 10}%`,
+    usagePercent: formatPercent(usageRatio),
     warning:
       quarterLimit === 0
         ? "Sprawdź i ustaw aktualny limit dla tego roku."
