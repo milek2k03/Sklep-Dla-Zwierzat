@@ -47,6 +47,7 @@ export const dynamic = "force-dynamic";
 const unregisteredActivityQuarterlyLimit2026 = 10813.5;
 const limitWarningRatio = 0.8;
 const ordersPerPage = 5;
+const ordersListAnchor = "admin-orders-list";
 
 type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
   order_items: Database["public"]["Tables"]["order_items"]["Row"][];
@@ -384,7 +385,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         ) : null}
       </form>
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm">
+      <div
+        className="mt-6 scroll-mt-6 overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm"
+        id={ordersListAnchor}
+      >
         {orders.length === 0 ? (
           <div className="p-8 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#f5efe5] text-[#b65320]">
@@ -1307,6 +1311,18 @@ function buildAdminHref({
   return queryString ? `/admin?${queryString}` : "/admin";
 }
 
+function buildAdminOrdersPageHref({
+  page,
+  q,
+  status,
+}: {
+  page?: number;
+  q?: string;
+  status?: OrderStatus;
+}) {
+  return `${buildAdminHref({ page, q, status })}#${ordersListAnchor}`;
+}
+
 async function getStatusCounts(orderSearch: string) {
   const supabase = await createSupabaseServerClient();
   let query = supabase.from("orders").select("status");
@@ -1631,12 +1647,11 @@ function AdminOrdersPagination({
         <div className="flex flex-wrap items-center gap-2">
           {currentPage > 1 ? (
             <Link
-              href={buildAdminHref({
+              href={buildAdminOrdersPageHref({
                 page: currentPage - 1,
                 q,
                 status: status ?? undefined,
               })}
-              scroll={false}
               className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#344252] bg-[#151b22] px-4 text-sm font-semibold text-white transition hover:border-[#f4a261] hover:bg-[#1b232d]"
             >
               Poprzednia
@@ -1660,12 +1675,11 @@ function AdminOrdersPagination({
                 ) : null}
                 <Link
                   aria-current={page === currentPage ? "page" : undefined}
-                  href={buildAdminHref({
+                  href={buildAdminOrdersPageHref({
                     page,
                     q,
                     status: status ?? undefined,
                   })}
-                  scroll={false}
                   className={[
                     "inline-flex h-10 min-w-10 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition",
                     page === currentPage
@@ -1681,12 +1695,11 @@ function AdminOrdersPagination({
 
           {currentPage < totalPages ? (
             <Link
-              href={buildAdminHref({
+              href={buildAdminOrdersPageHref({
                 page: currentPage + 1,
                 q,
                 status: status ?? undefined,
               })}
-              scroll={false}
               className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#344252] bg-[#151b22] px-4 text-sm font-semibold text-white transition hover:border-[#f4a261] hover:bg-[#1b232d]"
             >
               Następna
