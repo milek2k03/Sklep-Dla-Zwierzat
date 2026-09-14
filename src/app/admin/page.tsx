@@ -46,6 +46,7 @@ export const dynamic = "force-dynamic";
 
 const unregisteredActivityQuarterlyLimit2026 = 10813.5;
 const limitWarningRatio = 0.8;
+const ordersPerPage = 5;
 
 type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
   order_items: Database["public"]["Tables"]["order_items"]["Row"][];
@@ -108,6 +109,7 @@ type DashboardCustomerReturn = {
 
 type AdminPageProps = {
   searchParams: Promise<{
+    page?: string | string[];
     q?: string | string[];
     status?: string | string[];
   }>;
@@ -141,14 +143,17 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const resolvedSearchParams = await searchParams;
   const orderSearch = normalizeOrderSearch(resolvedSearchParams.q);
   const statusFilter = normalizeOrderStatus(resolvedSearchParams.status);
+  const currentPage = normalizePage(resolvedSearchParams.page);
+  const ordersFrom = (currentPage - 1) * ordersPerPage;
+  const ordersTo = ordersFrom + ordersPerPage - 1;
   const hasFilters = Boolean(orderSearch || statusFilter);
   await expireUnpaidOrders();
   const supabase = await createSupabaseServerClient();
   let ordersQuery = supabase
     .from("orders")
-    .select("*, order_items(*), order_events(*)")
+    .select("*, order_items(*), order_events(*)", { count: "exact" })
     .order("created_at", { ascending: false })
-    .limit(50);
+    .range(ordersFrom, ordersTo);
 
   if (orderSearch) {
     ordersQuery = ordersQuery.ilike("order_number", `%${orderSearch}%`);
@@ -163,8 +168,22 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     getAdminDashboardData(),
     ordersQuery,
   ]);
-  const { data, error } = ordersResult;
+  const { data, error, count } = ordersResult;
   const orders = (data ?? []) as OrderRow[];
+  const totalOrders = count ?? orders.length;
+  const totalPages = Math.max(1, Math.ceil(totalOrders / ordersPerPage));
+  const pageStart = totalOrders > 0 ? ordersFrom + 1 : 0;
+  const pageEnd = totalOrders > 0 ? Math.min(ordersFrom + orders.length, totalOrders) : 0;
+
+  if (!error && totalOrders > 0 && currentPage > totalPages) {
+    redirect(
+      buildAdminHref({
+        page: totalPages,
+        q: orderSearch,
+        status: statusFilter ?? undefined,
+      }),
+    );
+  }
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
@@ -669,6 +688,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
         )}
       </div>
+
+      {totalPages > 1 ? (
+        <AdminOrdersPagination
+          currentPage={currentPage}
+          pageEnd={pageEnd}
+          pageStart={pageStart}
+          q={orderSearch}
+          status={statusFilter}
+          totalOrders={totalOrders}
+          totalPages={totalPages}
+        />
+      ) : null}
     </section>
   );
 }
@@ -1229,6 +1260,13 @@ function normalizeOrderStatus(value: string | string[] | undefined) {
   return isOrderStatus(rawValue) ? rawValue : null;
 }
 
+function normalizePage(value: string | string[] | undefined) {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const page = Number(rawValue);
+
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
 function formatActiveFilters(
   orderSearch: string,
   statusFilter: OrderStatus | null,
@@ -1242,9 +1280,11 @@ function formatActiveFilters(
 }
 
 function buildAdminHref({
+  page,
   q,
   status,
 }: {
+  page?: number;
   q?: string;
   status?: OrderStatus;
 }) {
@@ -1256,6 +1296,10 @@ function buildAdminHref({
 
   if (status) {
     params.set("status", status);
+  }
+
+  if (page && page > 1) {
+    params.set("page", String(page));
   }
 
   const queryString = params.toString();
@@ -1554,6 +1598,134 @@ function getDashboardReturnDate(
   >,
 ) {
   return returnCase.refunded_at ?? returnCase.updated_at ?? returnCase.created_at;
+}
+
+function AdminOrdersPagination({
+  currentPage,
+  pageEnd,
+  pageStart,
+  q,
+  status,
+  totalOrders,
+  totalPages,
+}: {
+  currentPage: number;
+  pageEnd: number;
+  pageStart: number;
+  q: string;
+  status: OrderStatus | null;
+  totalOrders: number;
+  totalPages: number;
+}) {
+  const pages = getPaginationPages(currentPage, totalPages);
+
+  return (
+    <nav
+      aria-label="Strony zamówień"
+      className="mt-4 rounded-lg border border-[#26313c] bg-[#111820] p-4 shadow-lg shadow-black/20"
+    >
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <p className="text-sm font-semibold text-[#cbd6df]">
+          Pokazuję {pageStart}-{pageEnd} z {totalOrders} zamówień w tym widoku.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {currentPage > 1 ? (
+            <Link
+              href={buildAdminHref({
+                page: currentPage - 1,
+                q,
+                status: status ?? undefined,
+              })}
+              scroll={false}
+              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#344252] bg-[#151b22] px-4 text-sm font-semibold text-white transition hover:border-[#f4a261] hover:bg-[#1b232d]"
+            >
+              Poprzednia
+            </Link>
+          ) : (
+            <span className="inline-flex min-h-10 cursor-not-allowed items-center justify-center rounded-lg border border-[#26313c] bg-black/20 px-4 text-sm font-semibold text-[#6f7f8c]">
+              Poprzednia
+            </span>
+          )}
+
+          {pages.map((page, index) => {
+            const previousPage = pages[index - 1];
+            const showGap = previousPage !== undefined && page - previousPage > 1;
+
+            return (
+              <span className="flex items-center gap-2" key={page}>
+                {showGap ? (
+                  <span className="px-1 text-sm font-semibold text-[#6f7f8c]">
+                    ...
+                  </span>
+                ) : null}
+                <Link
+                  aria-current={page === currentPage ? "page" : undefined}
+                  href={buildAdminHref({
+                    page,
+                    q,
+                    status: status ?? undefined,
+                  })}
+                  scroll={false}
+                  className={[
+                    "inline-flex h-10 min-w-10 items-center justify-center rounded-lg border px-3 text-sm font-semibold transition",
+                    page === currentPage
+                      ? "border-[#f4a261] bg-[#f4a261] text-[#11151b]"
+                      : "border-[#344252] bg-[#151b22] text-white hover:border-[#f4a261] hover:bg-[#1b232d]",
+                  ].join(" ")}
+                >
+                  {page}
+                </Link>
+              </span>
+            );
+          })}
+
+          {currentPage < totalPages ? (
+            <Link
+              href={buildAdminHref({
+                page: currentPage + 1,
+                q,
+                status: status ?? undefined,
+              })}
+              scroll={false}
+              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#344252] bg-[#151b22] px-4 text-sm font-semibold text-white transition hover:border-[#f4a261] hover:bg-[#1b232d]"
+            >
+              Następna
+            </Link>
+          ) : (
+            <span className="inline-flex min-h-10 cursor-not-allowed items-center justify-center rounded-lg border border-[#26313c] bg-black/20 px-4 text-sm font-semibold text-[#6f7f8c]">
+              Następna
+            </span>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function getPaginationPages(currentPage: number, totalPages: number) {
+  const pages = new Set<number>([1, totalPages, currentPage]);
+
+  for (let page = currentPage - 1; page <= currentPage + 1; page += 1) {
+    if (page >= 1 && page <= totalPages) {
+      pages.add(page);
+    }
+  }
+
+  if (currentPage <= 3) {
+    pages.add(2);
+    pages.add(3);
+    pages.add(4);
+  }
+
+  if (currentPage >= totalPages - 2) {
+    pages.add(totalPages - 3);
+    pages.add(totalPages - 2);
+    pages.add(totalPages - 1);
+  }
+
+  return [...pages]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((firstPage, secondPage) => firstPage - secondPage);
 }
 
 function StatusFilterLink({
