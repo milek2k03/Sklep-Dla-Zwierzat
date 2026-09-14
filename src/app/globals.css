@@ -88,6 +88,10 @@ body {
   color: #7f8a9b !important;
 }
 
+.admin-theme .admin-order-search-input {
+  padding-left: 3.75rem !important;
+}
+
 .admin-theme option {
   background-color: #11151b;
   color: #f5f7fb;

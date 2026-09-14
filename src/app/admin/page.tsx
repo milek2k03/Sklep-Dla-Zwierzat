@@ -345,7 +345,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </span>
             <span className="relative mt-2 block">
               <Search
-                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a746d]"
+                className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a746d]"
                 aria-hidden="true"
               />
               <input
@@ -354,7 +354,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 type="search"
                 defaultValue={orderSearch}
                 placeholder="np. PAWLY-MJ..."
-                className="field-input min-h-11 py-2.5 pl-12"
+                className="field-input admin-order-search-input min-h-11 py-2.5"
               />
             </span>
           </label>
