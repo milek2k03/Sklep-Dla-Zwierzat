@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 const START_EVENT = "pawly-admin-loading-start";
 const STOP_EVENT = "pawly-admin-loading-stop";
 const DEFAULT_LABEL = "Przetwarzanie...";
+const NAVIGATION_LABEL = "Wczytywanie strony...";
 const DEFAULT_TIMEOUT_MS = 20000;
 const EXPORT_TIMEOUT_MS = 3500;
 
@@ -100,13 +101,80 @@ export function AdminLoadingOverlay() {
       showLoading(nextLabel, isExport ? EXPORT_TIMEOUT_MS : DEFAULT_TIMEOUT_MS);
     }
 
+    function handleLinkClick(event: MouseEvent) {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      ) {
+        return;
+      }
+
+      if (!(event.target instanceof Element)) {
+        return;
+      }
+
+      const link = event.target.closest("a[href]");
+
+      if (!(link instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      if (!link.closest(".admin-theme") || link.dataset.adminLoading === "false") {
+        return;
+      }
+
+      if (link.target && link.target !== "_self") {
+        return;
+      }
+
+      if (link.hasAttribute("download")) {
+        return;
+      }
+
+      const rawHref = link.getAttribute("href");
+
+      if (
+        !rawHref ||
+        rawHref.startsWith("#") ||
+        rawHref.startsWith("mailto:") ||
+        rawHref.startsWith("tel:")
+      ) {
+        return;
+      }
+
+      const url = getInternalUrl(link.href);
+
+      if (!url) {
+        return;
+      }
+
+      if (url.pathname.startsWith("/api/") || url.pathname.includes("/export")) {
+        return;
+      }
+
+      const currentPathAndSearch = `${window.location.pathname}${window.location.search}`;
+      const nextPathAndSearch = `${url.pathname}${url.search}`;
+
+      if (currentPathAndSearch === nextPathAndSearch) {
+        return;
+      }
+
+      showLoading(link.dataset.loadingLabel ?? NAVIGATION_LABEL, DEFAULT_TIMEOUT_MS);
+    }
+
     window.addEventListener(START_EVENT, handleStart);
     window.addEventListener(STOP_EVENT, hideLoading);
+    document.addEventListener("click", handleLinkClick, true);
     document.addEventListener("submit", handleSubmit, true);
 
     return () => {
       window.removeEventListener(START_EVENT, handleStart);
       window.removeEventListener(STOP_EVENT, hideLoading);
+      document.removeEventListener("click", handleLinkClick, true);
       document.removeEventListener("submit", handleSubmit, true);
       clearLoadingTimeout(timeoutRef);
     };
@@ -118,17 +186,22 @@ export function AdminLoadingOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#05070b]/62 px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#05070b]/76 px-4 backdrop-blur-[3px]"
       role="status"
       aria-live="polite"
       aria-label={label}
     >
-      <div className="flex min-w-[220px] flex-col items-center rounded-xl border border-white/12 bg-[#11151b]/92 px-7 py-6 text-center shadow-2xl shadow-black/30">
-        <Loader2 className="h-8 w-8 animate-spin text-[#f4a261]" aria-hidden="true" />
+      <div className="flex min-w-[240px] flex-col items-center rounded-xl border border-white/12 bg-[#11151b]/94 px-7 py-6 text-center shadow-2xl shadow-black/40">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f4a261]/12">
+          <Loader2 className="h-8 w-8 animate-spin text-[#f4a261]" aria-hidden="true" />
+        </div>
         <p className="mt-4 text-sm font-semibold text-white">{label}</p>
         <p className="mt-1 text-xs text-[#98a2b3]">
           Poczekaj, operacja jest wykonywana.
         </p>
+        <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <span className="block h-full w-full animate-pulse rounded-full bg-[#f4a261]" />
+        </div>
       </div>
     </div>
   );
@@ -140,5 +213,15 @@ function clearLoadingTimeout(
   if (ref.current) {
     clearTimeout(ref.current);
     ref.current = null;
+  }
+}
+
+function getInternalUrl(href: string) {
+  try {
+    const url = new URL(href, window.location.href);
+
+    return url.origin === window.location.origin ? url : null;
+  } catch {
+    return null;
   }
 }
