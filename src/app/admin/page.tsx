@@ -47,7 +47,7 @@ export const dynamic = "force-dynamic";
 const unregisteredActivityQuarterlyLimit2026 = 10813.5;
 const limitWarningRatio = 0.8;
 const ordersPerPage = 5;
-const ordersListAnchor = "admin-orders-list";
+const ordersControlsAnchor = "admin-orders-controls";
 
 type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
   order_items: Database["public"]["Tables"]["order_items"]["Row"][];
@@ -305,7 +305,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </section>
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-[#eee7db] bg-white p-3 shadow-sm">
+      <div
+        className="mt-6 scroll-mt-6 overflow-x-auto rounded-lg border border-[#eee7db] bg-white p-3 shadow-sm"
+        id={ordersControlsAnchor}
+      >
         <div className="flex min-w-max gap-2">
           <StatusFilterLink
             href={buildAdminHref({ q: orderSearch })}
@@ -385,10 +388,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         ) : null}
       </form>
 
-      <div
-        className="mt-6 scroll-mt-6 overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm"
-        id={ordersListAnchor}
-      >
+      <div className="mt-6 overflow-hidden rounded-lg border border-[#eee7db] bg-white shadow-sm">
         {orders.length === 0 ? (
           <div className="p-8 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#f5efe5] text-[#b65320]">
@@ -1320,7 +1320,7 @@ function buildAdminOrdersPageHref({
   q?: string;
   status?: OrderStatus;
 }) {
-  return `${buildAdminHref({ page, q, status })}#${ordersListAnchor}`;
+  return `${buildAdminHref({ page, q, status })}#${ordersControlsAnchor}`;
 }
 
 async function getStatusCounts(orderSearch: string) {
