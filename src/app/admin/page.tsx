@@ -856,20 +856,20 @@ function AdminDashboard({
 
   return (
     <div className="mt-6 space-y-6">
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <div className="overflow-hidden rounded-lg border border-[#244a34] bg-[#111817] p-5 text-white shadow-sm ring-1 ring-[#62e89c]/10">
-          <div className="flex items-start justify-between gap-4">
+      <div className="grid items-stretch gap-4 lg:grid-cols-3">
+        <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-[#244a34] bg-[#111817] p-5 text-white shadow-sm ring-1 ring-[#62e89c]/10">
+          <div className="flex min-h-[132px] items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#7ff0a6]">
                 Wynik sprzedaży
               </p>
-              <h2 className="mt-2 text-base font-semibold text-white">
+              <h2 className="mt-2 min-h-[24px] text-base font-semibold leading-6 text-white">
                 Czysty zysk z transakcji
               </h2>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
+              <p className="mt-4 truncate text-4xl font-semibold leading-none tracking-tight text-white tabular-nums">
                 {formatPrice(dashboard.financials.netProfit)}
               </p>
-              <p className="mt-2 text-sm font-medium text-[#b7c9c0]">
+              <p className="mt-3 min-h-[40px] text-sm font-medium leading-5 text-[#b7c9c0]">
                 Cena sprzedaży minus cena zakupu
               </p>
             </div>
@@ -877,51 +877,53 @@ function AdminDashboard({
               <TrendingUp className="h-6 w-6" aria-hidden="true" />
             </span>
           </div>
-          <div className="mt-5 grid gap-2 sm:grid-cols-3">
-            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#8ea69a]">
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#8ea69a]">
                 Sprzedaż
               </p>
-              <p className="mt-1 text-lg font-semibold text-white">
+              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
                 {formatPrice(dashboard.financials.salesTotal)}
               </p>
             </div>
-            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#8ea69a]">
+            <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#8ea69a]">
                 Koszt zakupu
               </p>
-              <p className="mt-1 text-lg font-semibold text-white">
+              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
                 {formatPrice(dashboard.financials.purchaseCostTotal)}
               </p>
             </div>
-            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#8ea69a]">
+            <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#8ea69a]">
                 Transakcje
               </p>
-              <p className="mt-1 text-lg font-semibold text-white">
+              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
                 {dashboard.financials.transactionCount}
               </p>
             </div>
           </div>
-          <p className="mt-4 rounded-lg border border-[#244a34] bg-[#0d1412] p-3 text-xs leading-5 text-[#c6d7ce]">
-            Suma z zamówień opłaconych i wysłanych. Nie miesza się z refundami,
-            żeby wynik sprzedaży i straty były widoczne osobno.
-          </p>
+          <div className="mt-auto pt-4">
+            <p className="rounded-lg border border-[#244a34] bg-[#0d1412] p-3 text-xs leading-5 text-[#c6d7ce]">
+              Suma z zamówień opłaconych i wysłanych. Nie miesza się z refundami,
+              żeby wynik sprzedaży i straty były widoczne osobno.
+            </p>
+          </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-[#55302d] bg-[#191313] p-5 text-white shadow-sm ring-1 ring-[#ff9b85]/10">
-          <div className="flex items-start justify-between gap-4">
+        <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-[#55302d] bg-[#191313] p-5 text-white shadow-sm ring-1 ring-[#ff9b85]/10">
+          <div className="flex min-h-[132px] items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#ffb09b]">
                 Koszty po zwrotach
               </p>
-              <h2 className="mt-2 text-base font-semibold text-white">
+              <h2 className="mt-2 min-h-[24px] text-base font-semibold leading-6 text-white">
                 Straty łącznie
               </h2>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
+              <p className="mt-4 truncate text-4xl font-semibold leading-none tracking-tight text-white tabular-nums">
                 {formatPrice(dashboard.financials.totalLoss)}
               </p>
-              <p className="mt-2 text-sm font-medium text-[#d5b7ae]">
+              <p className="mt-3 min-h-[40px] text-sm font-medium leading-5 text-[#d5b7ae]">
                 Refundy klientom plus towar poza sprzedażą
               </p>
             </div>
@@ -929,43 +931,45 @@ function AdminDashboard({
               <PackageX className="h-6 w-6" aria-hidden="true" />
             </span>
           </div>
-          <div className="mt-5 grid gap-2 sm:grid-cols-2">
-            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#bfa098]">
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#bfa098]">
                 Zwroty klientom
               </p>
-              <p className="mt-1 text-lg font-semibold text-white">
+              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
                 {formatPrice(dashboard.financials.customerRefundLoss)}
               </p>
             </div>
-            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#bfa098]">
+            <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#bfa098]">
                 Towar poza sprzedażą
               </p>
-              <p className="mt-1 text-lg font-semibold text-white">
+              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
                 {formatPrice(dashboard.financials.inventoryLoss)}
               </p>
             </div>
           </div>
-          <p className="mt-4 rounded-lg border border-[#55302d] bg-[#120e0e] p-3 text-xs leading-5 text-[#e2c7bf]">
-            Towar nienadający się do sprzedaży jest liczony po cenie zakupu.
-            Refundy są liczone oddzielnie od straty magazynowej.
-          </p>
+          <div className="mt-auto pt-4">
+            <p className="rounded-lg border border-[#55302d] bg-[#120e0e] p-3 text-xs leading-5 text-[#e2c7bf]">
+              Towar nienadający się do sprzedaży jest liczony po cenie zakupu.
+              Refundy są liczone oddzielnie od straty magazynowej.
+            </p>
+          </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-[#594b2b] bg-[#181610] p-5 text-white shadow-sm ring-1 ring-[#f0c36a]/10">
-          <div className="flex items-start justify-between gap-4">
+        <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-[#594b2b] bg-[#181610] p-5 text-white shadow-sm ring-1 ring-[#f0c36a]/10">
+          <div className="flex min-h-[132px] items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#f0c36a]">
                 Limit działalności nierejestrowanej
               </p>
-              <h2 className="mt-2 text-base font-semibold text-white">
+              <h2 className="mt-2 min-h-[24px] text-base font-semibold leading-6 text-white">
                 Bieżący kwartał
               </h2>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-white">
+              <p className="mt-4 truncate text-4xl font-semibold leading-none tracking-tight text-white tabular-nums">
                 {formatPrice(dashboard.unregisteredActivity.quarterRevenue)}
               </p>
-              <p className="mt-2 text-sm font-medium text-[#d8c69a]">
+              <p className="mt-3 min-h-[40px] text-sm font-medium leading-5 text-[#d8c69a]">
                 Limit: {formatPrice(dashboard.unregisteredActivity.quarterLimit)}
               </p>
             </div>
@@ -973,35 +977,37 @@ function AdminDashboard({
               <AlertTriangle className="h-6 w-6" aria-hidden="true" />
             </span>
           </div>
-          <div className="mt-5 grid gap-2 sm:grid-cols-3">
-            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#c8b987]">
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#c8b987]">
                 Ten miesiąc
               </p>
-              <p className="mt-1 text-lg font-semibold text-white">
+              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
                 {formatPrice(dashboard.unregisteredActivity.monthRevenue)}
               </p>
             </div>
-            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#c8b987]">
+            <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#c8b987]">
                 Wykorzystanie
               </p>
-              <p className="mt-1 text-lg font-semibold text-white">
+              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
                 {dashboard.unregisteredActivity.usagePercent}
               </p>
             </div>
-            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#c8b987]">
+            <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
+              <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#c8b987]">
                 Zostało
               </p>
-              <p className="mt-1 text-lg font-semibold text-white">
+              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
                 {formatPrice(dashboard.unregisteredActivity.remaining)}
               </p>
             </div>
           </div>
-          <p className="mt-4 rounded-lg border border-[#594b2b] bg-[#11100c] p-3 text-xs leading-5 text-[#e3d3a7]">
-            {dashboard.unregisteredActivity.warning}
-          </p>
+          <div className="mt-auto pt-4">
+            <p className="rounded-lg border border-[#594b2b] bg-[#11100c] p-3 text-xs leading-5 text-[#e3d3a7]">
+              {dashboard.unregisteredActivity.warning}
+            </p>
+          </div>
         </div>
       </div>
 
