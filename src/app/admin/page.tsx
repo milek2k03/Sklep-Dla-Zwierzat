@@ -20,6 +20,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { AutoFitText } from "@/components/admin/AutoFitText";
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
 import { AdminRefundButton } from "@/components/admin/AdminRefundButton";
 import { AdminSignOutButton } from "@/components/admin/AdminSignOutButton";
@@ -866,9 +867,14 @@ function AdminDashboard({
               <h2 className="mt-2 min-h-[24px] text-base font-semibold leading-6 text-white">
                 Czysty zysk z transakcji
               </h2>
-              <p className="mt-4 truncate text-4xl font-semibold leading-none tracking-tight text-white tabular-nums">
+              <AutoFitText
+                className="mt-4 font-semibold leading-none tracking-tight text-white tabular-nums"
+                maxFontSize={36}
+                minFontSize={18}
+                title={formatPrice(dashboard.financials.netProfit)}
+              >
                 {formatPrice(dashboard.financials.netProfit)}
-              </p>
+              </AutoFitText>
               <p className="mt-3 min-h-[40px] text-sm font-medium leading-5 text-[#b7c9c0]">
                 Cena sprzedaży minus cena zakupu
               </p>
@@ -882,25 +888,40 @@ function AdminDashboard({
               <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#8ea69a]">
                 Sprzedaż
               </p>
-              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
+              <AutoFitText
+                className="mt-2 font-semibold leading-6 text-white tabular-nums"
+                maxFontSize={18}
+                minFontSize={11}
+                title={formatPrice(dashboard.financials.salesTotal)}
+              >
                 {formatPrice(dashboard.financials.salesTotal)}
-              </p>
+              </AutoFitText>
             </div>
             <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
               <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#8ea69a]">
                 Koszt zakupu
               </p>
-              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
+              <AutoFitText
+                className="mt-2 font-semibold leading-6 text-white tabular-nums"
+                maxFontSize={18}
+                minFontSize={11}
+                title={formatPrice(dashboard.financials.purchaseCostTotal)}
+              >
                 {formatPrice(dashboard.financials.purchaseCostTotal)}
-              </p>
+              </AutoFitText>
             </div>
             <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
               <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#8ea69a]">
                 Transakcje
               </p>
-              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
+              <AutoFitText
+                className="mt-2 font-semibold leading-6 text-white tabular-nums"
+                maxFontSize={18}
+                minFontSize={11}
+                title={String(dashboard.financials.transactionCount)}
+              >
                 {dashboard.financials.transactionCount}
-              </p>
+              </AutoFitText>
             </div>
           </div>
           <div className="mt-auto pt-4">
@@ -920,9 +941,14 @@ function AdminDashboard({
               <h2 className="mt-2 min-h-[24px] text-base font-semibold leading-6 text-white">
                 Straty łącznie
               </h2>
-              <p className="mt-4 truncate text-4xl font-semibold leading-none tracking-tight text-white tabular-nums">
+              <AutoFitText
+                className="mt-4 font-semibold leading-none tracking-tight text-white tabular-nums"
+                maxFontSize={36}
+                minFontSize={18}
+                title={formatPrice(dashboard.financials.totalLoss)}
+              >
                 {formatPrice(dashboard.financials.totalLoss)}
-              </p>
+              </AutoFitText>
               <p className="mt-3 min-h-[40px] text-sm font-medium leading-5 text-[#d5b7ae]">
                 Refundy klientom plus towar poza sprzedażą
               </p>
@@ -936,17 +962,27 @@ function AdminDashboard({
               <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#bfa098]">
                 Zwroty klientom
               </p>
-              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
+              <AutoFitText
+                className="mt-2 font-semibold leading-6 text-white tabular-nums"
+                maxFontSize={18}
+                minFontSize={11}
+                title={formatPrice(dashboard.financials.customerRefundLoss)}
+              >
                 {formatPrice(dashboard.financials.customerRefundLoss)}
-              </p>
+              </AutoFitText>
             </div>
             <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
               <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#bfa098]">
                 Towar poza sprzedażą
               </p>
-              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
+              <AutoFitText
+                className="mt-2 font-semibold leading-6 text-white tabular-nums"
+                maxFontSize={18}
+                minFontSize={11}
+                title={formatPrice(dashboard.financials.inventoryLoss)}
+              >
                 {formatPrice(dashboard.financials.inventoryLoss)}
-              </p>
+              </AutoFitText>
             </div>
           </div>
           <div className="mt-auto pt-4">
@@ -966,12 +1002,22 @@ function AdminDashboard({
               <h2 className="mt-2 min-h-[24px] text-base font-semibold leading-6 text-white">
                 Bieżący kwartał
               </h2>
-              <p className="mt-4 truncate text-4xl font-semibold leading-none tracking-tight text-white tabular-nums">
+              <AutoFitText
+                className="mt-4 font-semibold leading-none tracking-tight text-white tabular-nums"
+                maxFontSize={36}
+                minFontSize={18}
+                title={formatPrice(dashboard.unregisteredActivity.quarterRevenue)}
+              >
                 {formatPrice(dashboard.unregisteredActivity.quarterRevenue)}
-              </p>
-              <p className="mt-3 min-h-[40px] text-sm font-medium leading-5 text-[#d8c69a]">
+              </AutoFitText>
+              <AutoFitText
+                className="mt-3 min-h-[40px] font-medium leading-5 text-[#d8c69a]"
+                maxFontSize={14}
+                minFontSize={10}
+                title={`Limit: ${formatPrice(dashboard.unregisteredActivity.quarterLimit)}`}
+              >
                 Limit: {formatPrice(dashboard.unregisteredActivity.quarterLimit)}
-              </p>
+              </AutoFitText>
             </div>
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#80662f] bg-[#332817] text-[#f0c36a]">
               <AlertTriangle className="h-6 w-6" aria-hidden="true" />
@@ -982,25 +1028,40 @@ function AdminDashboard({
               <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#c8b987]">
                 Ten miesiąc
               </p>
-              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
+              <AutoFitText
+                className="mt-2 font-semibold leading-6 text-white tabular-nums"
+                maxFontSize={18}
+                minFontSize={11}
+                title={formatPrice(dashboard.unregisteredActivity.monthRevenue)}
+              >
                 {formatPrice(dashboard.unregisteredActivity.monthRevenue)}
-              </p>
+              </AutoFitText>
             </div>
             <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
               <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#c8b987]">
                 Wykorzystanie
               </p>
-              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
+              <AutoFitText
+                className="mt-2 font-semibold leading-6 text-white tabular-nums"
+                maxFontSize={18}
+                minFontSize={11}
+                title={dashboard.unregisteredActivity.usagePercent}
+              >
                 {dashboard.unregisteredActivity.usagePercent}
-              </p>
+              </AutoFitText>
             </div>
             <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-3">
               <p className="text-xs font-semibold uppercase leading-4 tracking-wide text-[#c8b987]">
                 Zostało
               </p>
-              <p className="mt-2 break-words text-lg font-semibold leading-6 text-white tabular-nums">
+              <AutoFitText
+                className="mt-2 font-semibold leading-6 text-white tabular-nums"
+                maxFontSize={18}
+                minFontSize={11}
+                title={formatPrice(dashboard.unregisteredActivity.remaining)}
+              >
                 {formatPrice(dashboard.unregisteredActivity.remaining)}
-              </p>
+              </AutoFitText>
             </div>
           </div>
           <div className="mt-auto pt-4">
