@@ -97,8 +97,10 @@ export function CartRecommendationsDialog({ open, onClose }: { open: boolean; on
                   <div className="flex min-w-0 flex-1 flex-col">
                     <p className="text-xs text-[#7a746d]">{product.category}</p>
                     <Link href={`/produkt/${product.slug}`} onClick={onClose} className="mt-1 line-clamp-2 text-sm font-semibold text-[#1f1f1f] hover:underline">{product.name}</Link>
-                    <p className="mt-1 text-sm font-semibold text-[#1f1f1f]">{formatPrice(product.price)}</p>
-                    <AddToCartButton product={product} variant="recommendation" className="mt-auto w-full" />
+                    <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                      <p className="min-w-0 text-sm font-semibold text-[#1f1f1f]">{formatPrice(product.price)}</p>
+                      <AddToCartButton product={product} variant="recommendation" />
+                    </div>
                   </div>
                 </article>
               ))}

@@ -33,11 +33,13 @@ export function AddToCartButton({
       className={cn(
         "inline-flex items-center justify-center gap-2 font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#e86f2c] focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#8a8177] disabled:text-white",
         variant === "recommendation"
-          ? "min-h-9 rounded-md border border-[#e7b48e] bg-[#fff1e5] px-3 text-xs text-[#873d16] hover:border-[#d7793e] hover:bg-[#ffe3cc]"
+          ? "h-9 w-9 shrink-0 rounded-full border border-[#d9a47f] bg-white text-[#a24e20] hover:border-[#b65320] hover:bg-[#fff1e5]"
           : "min-h-12 rounded-full bg-[#1f1f1f] px-5 text-sm text-white hover:bg-[#34302d]",
         className,
       )}
       disabled={isUnavailable}
+      aria-label={variant === "recommendation" ? `Dodaj ${product.name} do koszyka` : undefined}
+      title={variant === "recommendation" ? `Dodaj ${product.name} do koszyka` : undefined}
       onClick={() => {
         const result = addItem(product, quantity);
 
@@ -76,7 +78,7 @@ export function AddToCartButton({
       }}
     >
       {variant === "recommendation" ? <Plus className="h-4 w-4 shrink-0" aria-hidden="true" /> : <ShoppingBag className="h-4 w-4" aria-hidden="true" />}
-      {isUnavailable ? "Brak w magazynie" : label}
+      {variant === "recommendation" ? null : isUnavailable ? "Brak w magazynie" : label}
     </button>
   );
 }
