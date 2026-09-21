@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Home,
   LayoutDashboard,
+  MailCheck,
   ReceiptText,
   RotateCcw,
   Store,
@@ -57,6 +58,12 @@ const adminNavItems = [
     label: "Konwersja",
     description: "Lejek i produkty",
     icon: BarChart3,
+  },
+  {
+    href: "/admin/marketing",
+    label: "Zgody e-mail",
+    description: "Marketing i wypisania",
+    icon: MailCheck,
   },
 ];
 

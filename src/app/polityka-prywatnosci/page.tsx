@@ -72,7 +72,7 @@ const sections = [
       "Masz prawo dostępu do swoich danych, otrzymania ich kopii, sprostowania danych, usunięcia danych, ograniczenia przetwarzania, przenoszenia danych, wniesienia sprzeciwu oraz cofnięcia zgody, jeżeli przetwarzanie odbywa się na podstawie zgody.",
       "Nie wszystkie żądania mogą zostać zrealizowane w pełnym zakresie, jeżeli dalsze przechowywanie danych jest wymagane przez przepisy prawa albo potrzebne do ustalenia, dochodzenia lub obrony roszczeń.",
       `Aby skorzystać z praw, napisz na adres: ${contactEmail}.`,
-      `Zgodę na wiadomości o produktach można wycofać w każdej chwili, pisząc na adres ${contactEmail}. Wycofanie nie wpływa na zgodność wcześniejszego przetwarzania z prawem.`,
+      `Zgodę na wiadomości o produktach można wycofać w każdej chwili, pisząc na adres ${contactEmail}. Po wycofaniu wyłączamy adres z przyszłych wiadomości promocyjnych. Ponowna, wyraźna zgoda przy późniejszym zakupie może je ponownie włączyć. Wycofanie nie wpływa na zgodność wcześniejszego przetwarzania z prawem.`,
       "Masz także prawo wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych.",
     ],
   },

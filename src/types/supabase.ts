@@ -243,6 +243,28 @@ export type Database = {
         };
         Relationships: [];
       };
+      marketing_preferences: {
+        Row: {
+          email: string;
+          is_active: boolean;
+          last_consented_at: string;
+          revoked_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          email: string;
+          is_active?: boolean;
+          last_consented_at: string;
+          revoked_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          is_active?: boolean;
+          revoked_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       orders: {
         Row: {
           id: string;
@@ -713,6 +735,10 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      revoke_marketing_preference: {
+        Args: { p_email: string };
+        Returns: boolean;
+      };
       cancel_paid_order_after_refund: {
         Args: {
           p_order_id: string;
