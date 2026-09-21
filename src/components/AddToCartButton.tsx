@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingBag } from "lucide-react";
+import { Plus, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { trackConversionEvent } from "@/lib/conversion-client";
 import { useCartStore } from "@/lib/cart-store";
@@ -13,6 +13,7 @@ type AddToCartButtonProps = {
   quantity?: number;
   label?: string;
   className?: string;
+  variant?: "default" | "recommendation";
 };
 
 export function AddToCartButton({
@@ -20,6 +21,7 @@ export function AddToCartButton({
   quantity = 1,
   label = "Dodaj do koszyka",
   className,
+  variant = "default",
 }: AddToCartButtonProps) {
   const addItem = useCartStore((state) => state.addItem);
   const availableStock = getAvailableStock(product);
@@ -29,7 +31,10 @@ export function AddToCartButton({
     <button
       type="button"
       className={cn(
-        "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#1f1f1f] px-5 text-sm font-semibold text-white transition hover:bg-[#34302d] focus:outline-none focus:ring-2 focus:ring-[#e86f2c] focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#8a8177] disabled:hover:bg-[#8a8177]",
+        "inline-flex items-center justify-center gap-2 font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#e86f2c] focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#8a8177] disabled:text-white",
+        variant === "recommendation"
+          ? "min-h-9 rounded-md border border-[#e7b48e] bg-[#fff1e5] px-3 text-xs text-[#873d16] hover:border-[#d7793e] hover:bg-[#ffe3cc]"
+          : "min-h-12 rounded-full bg-[#1f1f1f] px-5 text-sm text-white hover:bg-[#34302d]",
         className,
       )}
       disabled={isUnavailable}
@@ -70,7 +75,7 @@ export function AddToCartButton({
         });
       }}
     >
-      <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+      {variant === "recommendation" ? <Plus className="h-4 w-4 shrink-0" aria-hidden="true" /> : <ShoppingBag className="h-4 w-4" aria-hidden="true" />}
       {isUnavailable ? "Brak w magazynie" : label}
     </button>
   );

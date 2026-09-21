@@ -98,7 +98,7 @@ export function CartRecommendationsDialog({ open, onClose }: { open: boolean; on
                     <p className="text-xs text-[#7a746d]">{product.category}</p>
                     <Link href={`/produkt/${product.slug}`} onClick={onClose} className="mt-1 line-clamp-2 text-sm font-semibold text-[#1f1f1f] hover:underline">{product.name}</Link>
                     <p className="mt-1 text-sm font-semibold text-[#1f1f1f]">{formatPrice(product.price)}</p>
-                    <AddToCartButton product={product} label="Dodaj" className="mt-auto min-h-9 w-fit px-4 text-xs" />
+                    <AddToCartButton product={product} variant="recommendation" className="mt-auto w-full" />
                   </div>
                 </article>
               ))}
