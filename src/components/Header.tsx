@@ -7,10 +7,12 @@ import {
   type FocusEvent,
   type FormEvent,
   type KeyboardEvent,
+  useCallback,
   useEffect,
   useState,
 } from "react";
 import { storeBrandSuffix, storeShortName } from "@/lib/brand";
+import { CartRecommendationsDialog } from "@/components/CartRecommendationsDialog";
 import {
   getCartItemsCount,
   useCartHydrated,
@@ -40,6 +42,8 @@ export function Header() {
   const router = useRouter();
   const itemCount = useCartStore((state) => getCartItemsCount(state.items));
   const [isOpen, setIsOpen] = useState(false);
+  const [recommendationsOpen, setRecommendationsOpen] = useState(false);
+  const closeRecommendations = useCallback(() => setRecommendationsOpen(false), []);
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<ProductSuggestion[]>([]);
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
@@ -318,6 +322,12 @@ export function Header() {
         <div className="col-start-3 row-start-1 flex items-center justify-end gap-2 md:col-start-4">
           <Link
             href="/koszyk"
+            onClick={(event) => {
+              if (visibleCount > 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+                event.preventDefault();
+                setRecommendationsOpen(true);
+              }
+            }}
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#e7dfd2] bg-white text-[#1f1f1f] transition hover:border-[#1f1f1f]"
             aria-label={`Koszyk, liczba produktów: ${visibleCount}`}
           >
@@ -365,13 +375,20 @@ export function Header() {
             <Link
               href="/koszyk"
               className="rounded-lg px-3 py-3 text-sm font-semibold text-[#1f1f1f]"
-              onClick={() => setIsOpen(false)}
+              onClick={(event) => {
+                setIsOpen(false);
+                if (visibleCount > 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+                  event.preventDefault();
+                  setRecommendationsOpen(true);
+                }
+              }}
             >
               Koszyk ({visibleCount})
             </Link>
           </nav>
         </div>
       ) : null}
+      <CartRecommendationsDialog open={recommendationsOpen && visibleCount > 0} onClose={closeRecommendations} />
     </header>
   );
 }
