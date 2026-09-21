@@ -82,9 +82,8 @@ export function buildMarketingEmail({
       <tr>
         <td width="38%" valign="top" style="padding:12px;width:38%;">
           <a href="${escapeHtml(item.href)}" style="text-decoration:none;">
-            <img src="${escapeHtml(item.image.url)}" alt="${escapeHtml(item.image.isFallback ? `Zdjęcie kategorii ${item.category}` : `Zdjęcie produktu ${item.name}`)}" width="190" style="display:block;width:100%;max-width:190px;height:auto;border:0;border-radius:4px;" />
+            <img src="${escapeHtml(item.image.url)}" alt="${escapeHtml(item.image.isFallback ? `Akcesoria Pawly: ${item.category}` : `Zdjęcie produktu ${item.name}`)}" width="190" style="display:block;width:100%;max-width:190px;height:auto;border:0;border-radius:4px;" />
           </a>
-          ${item.image.isFallback ? '<p style="margin:6px 0 0;font:11px/1.4 Arial,sans-serif;color:#77736d;">Zdjęcie kategorii</p>' : ""}
         </td>
         <td width="62%" valign="top" style="padding:16px 16px 16px 4px;width:62%;font-family:Arial,sans-serif;">
           <p style="margin:0 0 7px;color:#88735e;font-size:11px;line-height:16px;text-transform:uppercase;font-weight:700;">${escapeHtml(item.category)}</p>
