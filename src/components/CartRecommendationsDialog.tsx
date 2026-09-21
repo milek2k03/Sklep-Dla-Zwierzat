@@ -92,7 +92,7 @@ export function CartRecommendationsDialog({ open, onClose }: { open: boolean; on
               {products.map((product) => (
                 <article key={product.slug} className="flex min-w-0 gap-3 rounded-lg border border-[#e8dfd2] bg-white p-3">
                   <Link href={`/produkt/${product.slug}`} onClick={onClose} className="w-20 shrink-0 self-start sm:w-24" aria-label={`Zobacz ${product.name}`}>
-                    <ProductImagePlaceholder product={product} className="aspect-square" />
+                    <ProductImagePlaceholder product={product} className="aspect-square" showCategoryBadge={false} />
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col">
                     <p className="text-xs text-[#7a746d]">{product.category}</p>
