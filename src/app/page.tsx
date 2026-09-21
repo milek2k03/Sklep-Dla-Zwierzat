@@ -79,7 +79,7 @@ export default async function Home() {
             return (
               <div
                 key={item.title}
-                className="rounded-lg border border-[#eee7db] bg-white p-6"
+                className="rounded-lg border border-[#e3ad72] bg-white p-6 shadow-sm shadow-[#b65320]/5"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f5efe5] text-[#b65320]">
                   <Icon className="h-5 w-5" aria-hidden="true" />
@@ -132,7 +132,7 @@ export default async function Home() {
             ].map((opinion) => (
               <figure
                 key={opinion.author}
-                className="rounded-lg border border-[#eee7db] bg-[#fffdf8] p-6"
+                className="rounded-lg border border-[#e3ad72] bg-[#fffdf8] p-6 shadow-sm shadow-[#b65320]/5"
               >
                 <blockquote className="text-base leading-7 text-[#1f1f1f]">
                   „{opinion.quote}”
