@@ -378,6 +378,36 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (parsedPayload.data.marketingConsent) {
+    const { error: consentError } = await supabase
+      .from("marketing_consents")
+      .insert({
+        order_id: insertedOrder.order_id,
+        email: order.customer.email.trim().toLowerCase(),
+        consent_version: "checkout-email-products-v1",
+        consent_text:
+          "Chcę otrzymywać od Pawly na podany adres e-mail wiadomości o produktach i promocjach. Zgoda jest opcjonalna, można ją wycofać w każdej chwili, pisząc na adres kontaktowy sklepu. Zakup nie wymaga tej zgody.",
+      });
+
+    if (consentError) {
+      await cleanupCheckoutFailure({
+        checkoutSessionId: checkoutSession.id,
+        error: consentError,
+        orderId: insertedOrder.order_id,
+        orderNumber: insertedOrder.order_number,
+        source: "orders.storeMarketingConsent",
+        supabase,
+      });
+      return NextResponse.json(
+        {
+          error: "CONSENT_STORE_FAILED",
+          message: "Nie udało się zapisać zgody. Spróbuj ponownie za chwilę.",
+        },
+        { status: 500 },
+      );
+    }
+  }
+
   await recordConversionEvent({
     event_type: "order_created",
     ...conversionIdentity,

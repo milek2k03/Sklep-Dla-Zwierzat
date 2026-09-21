@@ -220,6 +220,29 @@ export type Database = {
         };
         Relationships: [];
       };
+      marketing_consents: {
+        Row: {
+          order_id: string;
+          email: string;
+          consent_version: string;
+          consent_text: string;
+          consented_at: string;
+        };
+        Insert: {
+          order_id: string;
+          email: string;
+          consent_version: string;
+          consent_text: string;
+          consented_at?: string;
+        };
+        Update: {
+          email?: string;
+          consent_version?: string;
+          consent_text?: string;
+          consented_at?: string;
+        };
+        Relationships: [];
+      };
       orders: {
         Row: {
           id: string;

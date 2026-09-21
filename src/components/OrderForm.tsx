@@ -58,6 +58,7 @@ const orderSchema = z
     termsAccepted: z
       .boolean()
       .refine((value) => value, "Zaakceptuj regulamin sklepu."),
+    marketingConsent: z.boolean(),
   })
   .superRefine((data, context) => {
     const requiredAddressFields = [
@@ -104,6 +105,7 @@ const defaultValues: OrderFormValues = {
   notes: "",
   discountCode: "",
   termsAccepted: false,
+  marketingConsent: false,
 };
 
 function readLocalOrders() {
@@ -133,6 +135,7 @@ export function OrderForm() {
   const clearCart = useCartStore((state) => state.clearCart);
   const isHydrated = useCartHydrated();
   const [submittedOrder, setSubmittedOrder] = useState<LocalOrder | null>(null);
+  const [consentDetailsOpen, setConsentDetailsOpen] = useState(false);
 
   const {
     control,
@@ -150,6 +153,8 @@ export function OrderForm() {
     control,
     name: "deliveryMethod",
   }) ?? DEFAULT_DELIVERY_METHOD) as DeliveryMethod;
+  const termsAccepted = useWatch({ control, name: "termsAccepted" }) ?? false;
+  const marketingConsent = useWatch({ control, name: "marketingConsent" }) ?? false;
 
   const subtotal = useMemo(
     () =>
@@ -424,21 +429,29 @@ export function OrderForm() {
 
           <form
             className="mt-5 rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm sm:p-6"
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit, (validationErrors) => {
+              if (validationErrors.termsAccepted) {
+                setConsentDetailsOpen(true);
+              }
+            })}
           >
             <FormSection
               title="Kontakt"
               description="Na te dane wyślemy potwierdzenie i szczegóły płatności."
             >
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Imię i nazwisko" error={errors.fullName?.message}>
+                <Field
+                  label="Imię i nazwisko"
+                  required
+                  error={errors.fullName?.message}
+                >
                   <input
                     {...register("fullName")}
                     className="field-input"
                     autoComplete="name"
                   />
                 </Field>
-                <Field label="E-mail" error={errors.email?.message}>
+                <Field label="E-mail" required error={errors.email?.message}>
                   <input
                     {...register("email")}
                     className="field-input"
@@ -448,7 +461,7 @@ export function OrderForm() {
                 </Field>
               </div>
 
-              <Field label="Telefon" error={errors.phone?.message}>
+              <Field label="Telefon" required error={errors.phone?.message}>
                 <input
                   {...register("phone")}
                   className="field-input"
@@ -515,14 +528,22 @@ export function OrderForm() {
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Miejscowość" error={errors.city?.message}>
+                <Field
+                  label="Miejscowość"
+                  required
+                  error={errors.city?.message}
+                >
                   <input
                     {...register("city")}
                     className="field-input"
                     autoComplete="address-level2"
                   />
                 </Field>
-                <Field label="Kod pocztowy" error={errors.postalCode?.message}>
+                <Field
+                  label="Kod pocztowy"
+                  required
+                  error={errors.postalCode?.message}
+                >
                   <input
                     {...register("postalCode")}
                     className="field-input"
@@ -531,7 +552,7 @@ export function OrderForm() {
                     autoComplete="postal-code"
                   />
                 </Field>
-                <Field label="Ulica" error={errors.street?.message}>
+                <Field label="Ulica" required error={errors.street?.message}>
                   <input
                     {...register("street")}
                     className="field-input"
@@ -540,6 +561,7 @@ export function OrderForm() {
                 </Field>
                 <Field
                   label="Numer domu / mieszkania"
+                  required
                   error={errors.buildingNumber?.message}
                 >
                   <input
@@ -572,24 +594,72 @@ export function OrderForm() {
                 />
               </Field>
 
-              <div>
-                <label className="flex items-start gap-3 rounded-lg bg-[#f7f1e8] p-4 text-sm text-[#5f5a52]">
+              <div className="rounded-lg border border-[#e9dcc8] bg-[#fffaf2] p-4">
+                <label className="flex cursor-pointer items-start gap-3 text-sm font-semibold text-[#1f1f1f]">
                   <input
-                    {...register("termsAccepted")}
                     type="checkbox"
-                    className="mt-1 accent-[#1f1f1f]"
+                    checked={termsAccepted && marketingConsent}
+                    onChange={(event) => {
+                      setValue("termsAccepted", event.target.checked, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                      setValue("marketingConsent", event.target.checked, {
+                        shouldDirty: true,
+                      });
+                    }}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-[#b65320]"
                   />
                   <span>
-                    Akceptuję{" "}
-                    <Link
-                      href="/regulamin"
-                      className="font-semibold text-[#1f1f1f] underline-offset-4 hover:underline"
-                    >
-                      regulamin
-                    </Link>{" "}
-                    sklepu {storeBrandName}.
+                    Zaznacz wszystkie zgody
+                    <span className="mt-1 block text-xs font-normal leading-5 text-[#6d675f]">
+                      Regulamin * oraz opcjonalne maile o produktach Pawly.
+                    </span>
                   </span>
                 </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue("termsAccepted", true, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                    setValue("marketingConsent", false, { shouldDirty: true });
+                  }}
+                  className="mt-3 text-xs font-semibold text-[#a24e20] underline underline-offset-2 hover:text-[#873d16]"
+                >
+                  Tylko wymagany regulamin
+                </button>
+                {termsAccepted && !marketingConsent ? (
+                  <p className="mt-2 text-xs font-medium text-[#2f6b4d]">
+                    Regulamin zaakceptowany. Maile o produktach wyłączone.
+                  </p>
+                ) : null}
+                <details
+                  open={consentDetailsOpen}
+                  onToggle={(event) => setConsentDetailsOpen(event.currentTarget.open)}
+                  className="mt-3 border-t border-[#e9dcc8] pt-3 text-sm text-[#5f5a52]"
+                >
+                  <summary className="cursor-pointer font-semibold text-[#a24e20] hover:underline">
+                    Rozwiń, przeczytaj i wybierz zgody osobno
+                  </summary>
+                  <div className="mt-4 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <input id="terms-accepted" {...register("termsAccepted")} type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-[#b65320]" />
+                      <div>
+                        <label htmlFor="terms-accepted" className="cursor-pointer font-medium text-[#1f1f1f]">Akceptuję regulamin sklepu {storeBrandName}. <span className="text-[#a64022]">*</span></label>{" "}
+                        <Link href="/regulamin" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#a24e20] underline underline-offset-2">Przeczytaj regulamin</Link>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <input id="marketing-consent" {...register("marketingConsent")} type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-[#b65320]" />
+                      <div>
+                        <label htmlFor="marketing-consent" className="cursor-pointer font-medium text-[#1f1f1f]">Chcę otrzymywać od Pawly na podany adres e-mail wiadomości o produktach i promocjach.</label>
+                        <p className="mt-1 text-xs leading-5 text-[#6d675f]">Opcjonalne. Zgodę mogę wycofać w każdej chwili, pisząc na adres kontaktowy sklepu. Zakup nie wymaga tej zgody. <Link href="/polityka-prywatnosci" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Polityka prywatności</Link></p>
+                      </div>
+                    </div>
+                  </div>
+                </details>
                 {errors.termsAccepted?.message ? (
                   <p className="mt-2 text-sm font-medium text-[#a64022]">
                     {errors.termsAccepted.message}
@@ -702,16 +772,21 @@ function FormSection({
 
 function Field({
   label,
+  required = false,
   error,
   children,
 }: {
   label: string;
+  required?: boolean;
   error?: string;
   children: ReactNode;
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-semibold text-[#1f1f1f]">{label}</span>
+      <span className="text-sm font-semibold text-[#1f1f1f]">
+        {label}
+        {required ? <span className="ml-1 text-[#a64022]">*</span> : null}
+      </span>
       <span className="mt-2 block">{children}</span>
       {error ? (
         <span className="mt-2 block text-sm font-medium text-[#a64022]">

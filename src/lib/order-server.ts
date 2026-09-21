@@ -40,6 +40,7 @@ export const orderRequestSchema = z
       .optional()
       .nullable(),
     termsAccepted: z.literal(true),
+    marketingConsent: z.boolean().default(false),
     items: z
       .array(
         z.object({
