@@ -2,6 +2,12 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+## E-mail marketing
+
+Apply Supabase migrations `029`, `030`, then `031` before enabling campaigns. The Vercel cron calls `/api/cron/marketing` on Thursdays at 10:00 UTC (11:00 or 12:00 in Poland); the application sends only once every four weeks. The campaign uses up to three active, in-stock products and sends only to addresses with an active marketing preference. Each address is claimed once per campaign. Failed or uncertain deliveries are not retried automatically, to avoid duplicates.
+
+Before activation, verify your Resend sending domain and set `CRON_SECRET`, `RESEND_API_KEY`, `STORE_FROM_EMAIL`, production `NEXT_PUBLIC_APP_URL` (HTTPS), `MARKETING_UNSUBSCRIBE_SECRET` (random 32+ characters), and `MARKETING_POSTAL_ADDRESS` (the real sender's postal address) in production. Set `MARKETING_ENABLED=true` only after reviewing a test email and the unsubscribe flow. The default is disabled. The current runner stops if more than 50 active recipients exist; increase capacity with a proper mailing provider/queue before growing beyond that size. Transactional order emails are unaffected.
+
 First, run the development server:
 
 ```bash

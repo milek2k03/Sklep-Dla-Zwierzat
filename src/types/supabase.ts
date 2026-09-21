@@ -265,6 +265,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      marketing_mailings: {
+        Row: {
+          campaign_key: string;
+          email: string;
+          status: "claimed" | "sent" | "failed";
+          provider_id: string | null;
+          attempted_at: string;
+          sent_at: string | null;
+        };
+        Insert: {
+          campaign_key: string;
+          email: string;
+          status?: "claimed" | "sent" | "failed";
+          provider_id?: string | null;
+          attempted_at?: string;
+          sent_at?: string | null;
+        };
+        Update: {
+          status?: "claimed" | "sent" | "failed";
+          provider_id?: string | null;
+          sent_at?: string | null;
+        };
+        Relationships: [];
+      };
       orders: {
         Row: {
           id: string;
@@ -735,6 +759,14 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      claim_marketing_mailing: {
+        Args: { p_campaign_key: string; p_email: string };
+        Returns: boolean;
+      };
+      unsubscribe_marketing: {
+        Args: { p_email: string; p_consented_at: string };
+        Returns: boolean;
+      };
       revoke_marketing_preference: {
         Args: { p_email: string };
         Returns: boolean;
