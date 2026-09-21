@@ -1,42 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pawly
 
-## Getting Started
+Sklep z akcesoriami dla psów i kotów z panelem administracyjnym. Projekt korzysta z Next.js, Supabase, Stripe i Resend.
 
-## E-mail marketing
+## Uruchomienie lokalne
 
-Apply Supabase migrations `029`, `030`, then `031` before enabling campaigns. The Vercel cron calls `/api/cron/marketing` on Thursdays at 10:00 UTC (11:00 or 12:00 in Poland); the application sends only once every four weeks. The campaign uses up to three active, in-stock products and sends only to addresses with an active marketing preference. Each address is claimed once per campaign. Failed or uncertain deliveries are not retried automatically, to avoid duplicates.
+1. Zainstaluj zależności: `npm install`.
+2. Skopiuj `.env.example` do `.env.local` i uzupełnij potrzebne zmienne środowiskowe. Nie dodawaj `.env.local` do repozytorium.
+3. Uruchom aplikację: `npm run dev`.
+4. Otwórz [http://localhost:3000](http://localhost:3000).
 
-Before activation, verify your Resend sending domain and set `CRON_SECRET`, `RESEND_API_KEY`, `STORE_FROM_EMAIL`, production `NEXT_PUBLIC_APP_URL` (HTTPS), `MARKETING_UNSUBSCRIBE_SECRET` (random 32+ characters), and `MARKETING_POSTAL_ADDRESS` (the real sender's postal address) in production. Set `MARKETING_ENABLED=true` only after reviewing a test email and the unsubscribe flow. The default is disabled. The current runner stops if more than 50 active recipients exist; increase capacity with a proper mailing provider/queue before growing beyond that size. Transactional order emails are unaffected.
+Przed wdrożeniem uruchom `npm run quality` (lint, sprawdzenie typów i build).
 
-First, run the development server:
+## Maile promocyjne
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Kampania jest domyślnie **wyłączona**. Przed jej włączeniem uruchom w Supabase migracje `029`, `030` i `031` w tej kolejności. Sprawdź również domenę nadawczą w Resend oraz wypisanie się z mailingu.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ustaw w środowisku produkcyjnym:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Zmienna | Znaczenie |
+| --- | --- |
+| `CRON_SECRET` | Sekret chroniący endpoint harmonogramu. |
+| `RESEND_API_KEY` | Klucz Resend do wysyłania maili. |
+| `STORE_FROM_EMAIL` | Adres nadawcy w zweryfikowanej domenie. |
+| `NEXT_PUBLIC_APP_URL` | Publiczny adres sklepu zaczynający się od `https://`. |
+| `MARKETING_UNSUBSCRIBE_SECRET` | Losowy sekret o długości co najmniej 32 znaków do podpisywania linków wypisu. |
+| `MARKETING_POSTAL_ADDRESS` | Rzeczywisty adres pocztowy nadawcy, wyświetlany w stopce maila. |
+| `MARKETING_ENABLED` | Ustaw `true` dopiero po sprawdzeniu treści testowego maila i wypisu. Domyślnie `false`. |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Harmonogram w `vercel.json` wywołuje `/api/cron/marketing` w czwartki o 10:00 UTC, czyli o 11:00 lub 12:00 czasu polskiego. Aplikacja wysyła kampanię **raz na cztery tygodnie**. Wybiera maksymalnie trzy aktywne produkty dostępne w magazynie i wysyła mail tylko na adresy z aktywną zgodą. Każdy adres może otrzymać daną kampanię tylko raz. Nieudane lub niepewne próby wysyłki nie są automatycznie ponawiane, aby uniknąć duplikatów.
 
-## Learn More
+Obecny mechanizm zatrzymuje kampanię, jeżeli liczba aktywnych odbiorców przekracza 50. Przed powiększeniem listy należy dodać obsługę większych partii wysyłki. Maile transakcyjne dotyczące zamówień działają niezależnie od kampanii.
 
-To learn more about Next.js, take a look at the following resources:
+## Wdrożenie
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Projekt można wdrożyć na Vercel. Ustaw tam zmienne środowiskowe, uruchom migracje Supabase i sprawdź poprawność webhooka Stripe oraz domeny Resend przed rozpoczęciem sprzedaży.
