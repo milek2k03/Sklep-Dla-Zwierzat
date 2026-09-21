@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getResendClient } from "@/lib/email/server";
+import { buildMarketingEmail } from "@/lib/email/marketing-template";
 
 const CAMPAIGN_EPOCH = Date.UTC(2026, 0, 1);
 
@@ -42,12 +43,6 @@ export function verifyUnsubscribeToken(token: string, secret: string) {
   }
 }
 
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  })[character] ?? character);
-}
-
 export async function sendMarketingCampaign(now = new Date()) {
   const campaignKey = getCampaignKey(now);
   if (!campaignKey) return { skipped: "outside_window" };
@@ -68,17 +63,13 @@ export async function sendMarketingCampaign(now = new Date()) {
   if (!recipients?.length) return { sent: 0, failed: 0 };
 
   const { data: products, error: productError } = await supabase.from("products")
-    .select("name, slug, price").eq("is_active", true).gt("stock_quantity", 0)
+    .select("name, slug, category, price, image_url, image_urls")
+    .eq("is_active", true).gt("stock_quantity", 0)
     .order("created_at", { ascending: false }).limit(3);
   if (productError) throw productError;
   if (!products?.length) return { skipped: "no_products" };
 
   const resend = getResendClient();
-  const featured = products.map((product) => `${product.name} - ${Number(product.price).toFixed(2)} zł`);
-  const links = products.map((product) => ({
-    label: `${product.name} - ${Number(product.price).toFixed(2)} zł`,
-    href: new URL(`/produkt/${encodeURIComponent(product.slug)}`, origin).toString(),
-  }));
   let sent = 0;
   let failed = 0;
   for (const recipient of recipients) {
@@ -99,8 +90,7 @@ export async function sendMarketingCampaign(now = new Date()) {
     const token = makeUnsubscribeToken(recipient.email, recipient.last_consented_at, secret);
     const unsubscribe = new URL(`/wypisz?token=${encodeURIComponent(token)}`, origin).toString();
     const oneClickUnsubscribe = new URL(`/api/marketing/unsubscribe?token=${encodeURIComponent(token)}`, origin).toString();
-    const text = `Pawly: praktyczne akcesoria dla psów i kotów.\n\n${featured.join("\n")}\n\nZobacz produkty: ${origin}/produkty\n\nWypisz się: ${unsubscribe}\n${postalAddress}`;
-    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#252525"><h1 style="font-size:24px">Pawly</h1><p>Praktyczne akcesoria dla psów i kotów</p><ul>${links.map((link) => `<li style="margin:12px 0"><a href="${escapeHtml(link.href)}">${escapeHtml(link.label)}</a></li>`).join("")}</ul><p><a href="${escapeHtml(new URL("/produkty", origin).toString())}">Zobacz wszystkie produkty</a></p><hr><p style="font-size:12px;color:#666">Otrzymujesz tę wiadomość, ponieważ wyrażono zgodę na maile promocyjne Pawly. <a href="${escapeHtml(unsubscribe)}">Wypisz się</a><br>${escapeHtml(postalAddress)}</p></div>`;
+    const { text, html } = buildMarketingEmail({ products, origin, unsubscribe, postalAddress });
     try {
       const { data, error: sendError } = await resend.emails.send({
         from, to: recipient.email, subject: "Pawly: akcesoria dla psa i kota",
