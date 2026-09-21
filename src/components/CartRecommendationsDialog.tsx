@@ -50,7 +50,7 @@ export function CartRecommendationsDialog({ open, onClose }: { open: boolean; on
   }, [open, onClose]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!slugs) return;
     const controller = new AbortController();
     fetch("/api/products/recommendations", {
       method: "POST",
@@ -68,7 +68,7 @@ export function CartRecommendationsDialog({ open, onClose }: { open: boolean; on
         setResult({ key: slugs, products: [], error: true });
       });
     return () => controller.abort();
-  }, [open, slugs]);
+  }, [slugs]);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -87,7 +87,7 @@ export function CartRecommendationsDialog({ open, onClose }: { open: boolean; on
           </button>
         </div>
         <div className="min-h-0 overflow-y-auto px-5 py-5 sm:px-7">
-          {loading ? <p role="status" className="py-12 text-center text-sm text-[#6d675f]">Szukamy pasujących produktów...</p> : error ? <p className="py-12 text-center text-sm text-[#6d675f]">Nie udało się pobrać propozycji.</p> : products.length === 0 ? <p className="py-12 text-center text-sm text-[#6d675f]">Wszystkie dostępne produkty są już w koszyku.</p> : (
+          {loading ? <div role="status" aria-label="Ładowanie propozycji" className="grid gap-3 sm:grid-cols-2">{Array.from({ length: 6 }, (_, index) => <div key={index} className="flex h-28 animate-pulse gap-3 rounded-lg border border-[#e8dfd2] bg-white p-3"><div className="aspect-square h-full rounded bg-[#f1e9dd]" /><div className="flex flex-1 flex-col gap-2 py-2"><div className="h-3 w-1/3 rounded bg-[#f1e9dd]" /><div className="h-4 w-4/5 rounded bg-[#f1e9dd]" /><div className="mt-auto h-7 w-20 rounded-full bg-[#f1e9dd]" /></div></div>)}</div> : error ? <p className="py-12 text-center text-sm text-[#6d675f]">Nie udało się pobrać propozycji.</p> : products.length === 0 ? <p className="py-12 text-center text-sm text-[#6d675f]">Wszystkie dostępne produkty są już w koszyku.</p> : (
             <div className="grid gap-3 sm:grid-cols-2">
               {products.map((product) => (
                 <article key={product.slug} className="flex min-w-0 gap-3 rounded-lg border border-[#e8dfd2] bg-white p-3">
@@ -107,7 +107,7 @@ export function CartRecommendationsDialog({ open, onClose }: { open: boolean; on
         </div>
         <div className="flex flex-col-reverse gap-2 border-t border-[#e8dfd2] px-5 py-4 sm:flex-row sm:justify-end sm:px-7">
           <button type="button" onClick={onClose} className="min-h-11 rounded-full border border-[#ddd3c4] px-5 text-sm font-semibold text-[#1f1f1f] hover:bg-[#f5efe5]">Kontynuuj zakupy</button>
-          <Link href="/koszyk" onClick={onClose} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#1f1f1f] px-5 text-sm font-semibold text-white hover:bg-[#34302d]"><ShoppingBag className="h-4 w-4" aria-hidden="true" /> Przejdź do koszyka <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          {loading ? <button type="button" disabled className="inline-flex min-h-11 cursor-wait items-center justify-center gap-2 rounded-full bg-[#a9a39b] px-5 text-sm font-semibold text-white" aria-label="Trwa ładowanie propozycji"><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Przejdź do koszyka</button> : <Link href="/koszyk" onClick={onClose} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#1f1f1f] px-5 text-sm font-semibold text-white hover:bg-[#34302d]"><ShoppingBag className="h-4 w-4" aria-hidden="true" /> Przejdź do koszyka <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>}
         </div>
       </section>
     </div>, document.body,
