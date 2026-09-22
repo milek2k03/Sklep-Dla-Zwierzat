@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowRight,
   Check,
+  ChevronDown,
   HandCoins,
   PackageCheck,
   ShoppingBag,
@@ -135,6 +136,7 @@ export function OrderForm() {
   const clearCart = useCartStore((state) => state.clearCart);
   const isHydrated = useCartHydrated();
   const [submittedOrder, setSubmittedOrder] = useState<LocalOrder | null>(null);
+  const [consentsExpanded, setConsentsExpanded] = useState(false);
 
   const {
     control,
@@ -428,7 +430,9 @@ export function OrderForm() {
 
           <form
             className="mt-5 rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm sm:p-6"
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(onSubmit, (validationErrors) => {
+              if (validationErrors.termsAccepted) setConsentsExpanded(true);
+            })}
           >
             <FormSection
               title="Kontakt"
@@ -590,9 +594,21 @@ export function OrderForm() {
               </Field>
 
               <section aria-labelledby="formal-consents-title" className="rounded-lg border border-[#ddd7cd] bg-white p-5 sm:p-6">
-                <h3 id="formal-consents-title" className="text-lg font-semibold text-[#1f1f1f]">
-                  Zgody formalne
-                </h3>
+                <div className="flex items-center justify-between gap-4">
+                  <h3 id="formal-consents-title" className="text-lg font-semibold text-[#1f1f1f]">
+                    Zgody formalne
+                  </h3>
+                  <button
+                    type="button"
+                    title={consentsExpanded ? "Zwiń treść zgód" : "Rozwiń treść zgód"}
+                    aria-label={consentsExpanded ? "Zwiń treść zgód" : "Rozwiń treść zgód"}
+                    aria-expanded={consentsExpanded}
+                    onClick={() => setConsentsExpanded((expanded) => !expanded)}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[#ddd7cd] text-[#6d675f] transition hover:border-[#b65320] hover:text-[#b65320]"
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform ${consentsExpanded ? "rotate-180" : ""}`} aria-hidden="true" />
+                  </button>
+                </div>
                 <label className="mt-5 flex cursor-pointer items-center gap-3 text-sm font-semibold text-[#1f1f1f]">
                   <input
                     type="checkbox"
@@ -611,7 +627,8 @@ export function OrderForm() {
                   <span>Zaznacz wszystkie</span>
                 </label>
 
-                <div className="mt-4 space-y-5 sm:pl-6">
+                {consentsExpanded ? <div className="mt-5 border-t border-[#eee7db] pt-5">
+                <div className="space-y-5 sm:pl-6">
                   <div className="flex items-start gap-3">
                     <input id="marketing-consent" {...register("marketingConsent")} type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#b65320]" />
                     <div className="text-sm leading-6 text-[#35312d]">
@@ -640,6 +657,7 @@ export function OrderForm() {
                 <p className="mt-3 text-xs font-medium text-[#5f5a52]">
                   Pola oznaczone gwiazdką (*) są wymagane.
                 </p>
+                </div> : null}
                 {errors.termsAccepted?.message ? (
                   <p className="mt-2 text-sm font-medium text-[#a64022]">
                     {errors.termsAccepted.message}
