@@ -37,7 +37,7 @@ const sections = [
       "Wypełnianie obowiązków prawnych, w tym obowiązków konsumenckich, podatkowych, księgowych i archiwizacyjnych: art. 6 ust. 1 lit. c RODO.",
       "Kontakt z klientem, dochodzenie lub obrona roszczeń, zapobieganie nadużyciom, prowadzenie historii zdarzeń zamówienia oraz zapewnienie bezpieczeństwa sklepu: art. 6 ust. 1 lit. f RODO, czyli prawnie uzasadniony interes administratora.",
       "Pomiar skuteczności sklepu i poprawa ścieżki zakupowej na podstawie własnych zdarzeń konwersji: art. 6 ust. 1 lit. f RODO, czyli prawnie uzasadniony interes administratora.",
-      "Przy składaniu zamówienia można opcjonalnie wyrazić osobną zgodę na e-maile Pawly o produktach i promocjach. Podstawą przetwarzania adresu e-mail w tym celu jest art. 6 ust. 1 lit. a RODO, a kontakt marketingowy wymaga uprzedniej zgody zgodnie z art. 398 Prawa komunikacji elektronicznej. Zgoda nie jest warunkiem zakupu. Obecnie sklep nie wysyła newslettera.",
+      "Przy składaniu zamówienia można opcjonalnie wyrazić osobną zgodę na e-maile Pawly o produktach i promocjach. Podstawą przetwarzania adresu e-mail w tym celu jest art. 6 ust. 1 lit. a RODO, a kontakt marketingowy wymaga uprzedniej zgody zgodnie z art. 398 Prawa komunikacji elektronicznej. Zgoda nie jest warunkiem zakupu.",
     ],
   },
   {
@@ -97,7 +97,7 @@ const sections = [
       "Strona może korzystać z technicznych cookies lub podobnych technologii potrzebnych do działania aplikacji, bezpieczeństwa, utrzymania sesji administracyjnej i poprawnego wyświetlania strony.",
       "Koszyk klienta jest zapisywany w localStorage przeglądarki. Dane te są przechowywane lokalnie na urządzeniu użytkownika i mogą zostać usunięte przez wyczyszczenie danych strony w przeglądarce.",
       "Sklep używa własnych identyfikatorów w localStorage i sessionStorage do pomiaru konwersji oraz poprawy działania koszyka i checkoutu.",
-      "Obecnie sklep nie wysyła newslettera ani nie korzysta z zewnętrznych pikseli reklamowych opisujących zachowanie klienta w celach reklamowych. Opcjonalne zgody na przyszłe wiadomości o produktach są zapisywane przy zamówieniach.",
+      "Sklep wysyła wiadomości o produktach wyłącznie osobom, które wyraziły osobną zgodę marketingową. Sklep nie korzysta z zewnętrznych pikseli reklamowych opisujących zachowanie klienta w celach reklamowych. Opcjonalne zgody na wiadomości o produktach są zapisywane przy zamówieniach.",
     ],
   },
   {
@@ -134,8 +134,8 @@ export default function PrivacyPage() {
 
       <div className="mt-8 rounded-lg border border-[#e9dcc8] bg-[#fffaf2] p-5 text-sm leading-6 text-[#5f5a52]">
         Sklep prowadzi własną techniczną analitykę konwersji, ale nie prowadzi
-        obecnie newslettera ani profilowania marketingowego. Zapisuje jedynie
-        dobrowolne zgody na przyszłe wiadomości o produktach. Jeżeli zostaną
+        profilowania marketingowego. Wiadomości o produktach wysyła wyłącznie
+        osobom z aktywną, dobrowolną zgodą. Jeżeli zostaną
         wdrożone zewnętrzne narzędzia analityczne lub marketingowe, polityka
         prywatności zostanie zaktualizowana.
       </div>

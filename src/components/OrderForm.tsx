@@ -135,7 +135,6 @@ export function OrderForm() {
   const clearCart = useCartStore((state) => state.clearCart);
   const isHydrated = useCartHydrated();
   const [submittedOrder, setSubmittedOrder] = useState<LocalOrder | null>(null);
-  const [consentDetailsOpen, setConsentDetailsOpen] = useState(false);
 
   const {
     control,
@@ -429,11 +428,7 @@ export function OrderForm() {
 
           <form
             className="mt-5 rounded-lg border border-[#eee7db] bg-white p-5 shadow-sm sm:p-6"
-            onSubmit={handleSubmit(onSubmit, (validationErrors) => {
-              if (validationErrors.termsAccepted) {
-                setConsentDetailsOpen(true);
-              }
-            })}
+            onSubmit={handleSubmit(onSubmit)}
           >
             <FormSection
               title="Kontakt"
@@ -594,8 +589,11 @@ export function OrderForm() {
                 />
               </Field>
 
-              <div className="rounded-lg border border-[#e9dcc8] bg-[#fffaf2] p-4">
-                <label className="flex cursor-pointer items-start gap-3 text-sm font-semibold text-[#1f1f1f]">
+              <section aria-labelledby="formal-consents-title" className="rounded-lg border border-[#ddd7cd] bg-white p-5 sm:p-6">
+                <h3 id="formal-consents-title" className="text-lg font-semibold text-[#1f1f1f]">
+                  Zgody formalne
+                </h3>
+                <label className="mt-5 flex cursor-pointer items-center gap-3 text-sm font-semibold text-[#1f1f1f]">
                   <input
                     type="checkbox"
                     checked={termsAccepted && marketingConsent}
@@ -608,64 +606,46 @@ export function OrderForm() {
                         shouldDirty: true,
                       });
                     }}
-                    className="mt-0.5 h-4 w-4 shrink-0 accent-[#b65320]"
+                    className="h-5 w-5 shrink-0 accent-[#b65320]"
                   />
-                  <span>
-                    Zaznacz wszystkie zgody
-                    <span className="mt-1 block text-xs font-normal leading-5 text-[#6d675f]">
-                      Regulamin * oraz opcjonalne maile o produktach Pawly.
-                    </span>
-                  </span>
+                  <span>Zaznacz wszystkie</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setValue("termsAccepted", true, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    });
-                    setValue("marketingConsent", false, { shouldDirty: true });
-                  }}
-                  className="mt-3 text-xs font-semibold text-[#a24e20] underline underline-offset-2 hover:text-[#873d16]"
-                >
-                  Tylko wymagany regulamin
-                </button>
-                {termsAccepted && !marketingConsent ? (
-                  <p className="mt-2 text-xs font-medium text-[#2f6b4d]">
-                    Regulamin zaakceptowany. Maile o produktach wyłączone.
-                  </p>
-                ) : null}
-                <details
-                  open={consentDetailsOpen}
-                  onToggle={(event) => setConsentDetailsOpen(event.currentTarget.open)}
-                  className="mt-3 border-t border-[#e9dcc8] pt-3 text-sm text-[#5f5a52]"
-                >
-                  <summary className="cursor-pointer font-semibold text-[#a24e20] hover:underline">
-                    Rozwiń, przeczytaj i wybierz zgody osobno
-                  </summary>
-                  <div className="mt-4 space-y-4">
-                    <div className="flex items-start gap-3">
-                      <input id="terms-accepted" {...register("termsAccepted")} type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-[#b65320]" />
-                      <div>
-                        <label htmlFor="terms-accepted" className="cursor-pointer font-medium text-[#1f1f1f]">Akceptuję regulamin sklepu {storeBrandName}. <span className="text-[#a64022]">*</span></label>{" "}
-                        <Link href="/regulamin" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#a24e20] underline underline-offset-2">Przeczytaj regulamin</Link>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <input id="marketing-consent" {...register("marketingConsent")} type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-[#b65320]" />
-                      <div>
-                        <label htmlFor="marketing-consent" className="cursor-pointer font-medium text-[#1f1f1f]">Chcę otrzymywać od Pawly na podany adres e-mail wiadomości o produktach i promocjach.</label>
-                        <p className="mt-1 text-xs leading-5 text-[#6d675f]">Opcjonalne. Zgodę mogę wycofać w każdej chwili, pisząc na adres kontaktowy sklepu. Zakup nie wymaga tej zgody. <Link href="/polityka-prywatnosci" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Polityka prywatności</Link></p>
-                      </div>
+
+                <div className="mt-4 space-y-5 sm:pl-6">
+                  <div className="flex items-start gap-3">
+                    <input id="marketing-consent" {...register("marketingConsent")} type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#b65320]" />
+                    <div className="text-sm leading-6 text-[#35312d]">
+                      <label htmlFor="marketing-consent" className="cursor-pointer">
+                        Chcę otrzymywać od Pawly na podany adres e-mail informacje o limitowanych okazjach, najlepszych promocjach, kodach rabatowych i produktach.
+                      </label>
+                      <p className="mt-1 text-xs leading-5 text-[#6d675f]">
+                        Zgoda jest opcjonalna i nie wpływa na możliwość złożenia zamówienia.
+                      </p>
                     </div>
                   </div>
-                </details>
+                  <div className="flex items-start gap-3">
+                    <input id="terms-accepted" {...register("termsAccepted")} type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#b65320]" />
+                    <div className="text-sm leading-6 text-[#35312d]">
+                      <label htmlFor="terms-accepted" className="cursor-pointer">
+                        <span className="font-semibold text-[#a64022]">* </span>Oświadczam, że zapoznałem(-am) się i akceptuję treść{" "}
+                      </label>
+                      <Link href="/regulamin" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#a24e20] underline underline-offset-2">regulaminu</Link>.
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-5 text-xs leading-5 text-[#5f5a52] sm:text-sm sm:leading-6">
+                  Administratorem danych jest Miłosz Czech, prowadzący sklep {storeBrandName}. Dane przetwarzamy w celu realizacji zamówienia, a po wyrażeniu dobrowolnej zgody także w celu wysyłania komunikacji marketingowej. Zgodę możesz w każdej chwili wycofać przez link w wiadomości lub kontakt ze sklepem. Masz prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania i przenoszenia oraz wniesienia sprzeciwu. Szczegóły znajdziesz w{" "}
+                  <Link href="/polityka-prywatnosci" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#a24e20] underline underline-offset-2">polityce prywatności</Link>.
+                </p>
+                <p className="mt-3 text-xs font-medium text-[#5f5a52]">
+                  Pola oznaczone gwiazdką (*) są wymagane.
+                </p>
                 {errors.termsAccepted?.message ? (
                   <p className="mt-2 text-sm font-medium text-[#a64022]">
                     {errors.termsAccepted.message}
                   </p>
                 ) : null}
-              </div>
+              </section>
 
               <button
                 type="submit"
