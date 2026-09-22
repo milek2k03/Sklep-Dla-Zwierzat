@@ -3,7 +3,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getResendClient } from "@/lib/email/server";
 import { buildMarketingEmail } from "@/lib/email/marketing-template";
 
-const CAMPAIGN_EPOCH = Date.UTC(2026, 0, 1);
+const CAMPAIGN_EPOCH = Date.UTC(2026, 8, 24);
 
 export function getCampaignKey(now: Date) {
   const local = new Intl.DateTimeFormat("en-GB", {
