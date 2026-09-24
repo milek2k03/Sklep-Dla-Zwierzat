@@ -4,6 +4,11 @@ import { getResendClient } from "@/lib/email/server";
 import { buildMarketingEmail } from "@/lib/email/marketing-template";
 
 const CAMPAIGN_EPOCH = Date.UTC(2026, 8, 24);
+const DELIVERY_RETRY_DELAYS_MS = [0, 750, 2_000] as const;
+
+function wait(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
 
 export function getCampaignKey(now: Date) {
   const local = new Intl.DateTimeFormat("en-GB", {
@@ -92,13 +97,23 @@ export async function sendMarketingCampaign(now = new Date()) {
     const oneClickUnsubscribe = new URL(`/api/marketing/unsubscribe?token=${encodeURIComponent(token)}`, origin).toString();
     const { text, html } = buildMarketingEmail({ products, origin, unsubscribe, postalAddress });
     try {
-      const { data, error: sendError } = await resend.emails.send({
-        from, to: recipient.email, subject: "Pawly: akcesoria dla psa i kota",
-        text, html, headers: { "List-Unsubscribe": `<${oneClickUnsubscribe}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
-      }, { idempotencyKey: `${campaignKey}/${recipient.email}` });
-      if (sendError || !data?.id) throw sendError ?? new Error("RESEND_NO_ID");
+      let providerId: string | null = null;
+      let lastSendError: unknown = new Error("RESEND_NO_ID");
+      for (const delay of DELIVERY_RETRY_DELAYS_MS) {
+        if (delay) await wait(delay);
+        const { data, error: sendError } = await resend.emails.send({
+          from, to: recipient.email, subject: "Pawly: akcesoria dla psa i kota",
+          text, html, headers: { "List-Unsubscribe": `<${oneClickUnsubscribe}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
+        }, { idempotencyKey: `${campaignKey}/${recipient.email}` });
+        if (data?.id) {
+          providerId = data.id;
+          break;
+        }
+        lastSendError = sendError ?? lastSendError;
+      }
+      if (!providerId) throw lastSendError;
       const { error: saveError } = await supabase.from("marketing_mailings")
-        .update({ status: "sent", provider_id: data.id, sent_at: new Date().toISOString() })
+        .update({ status: "sent", provider_id: providerId, sent_at: new Date().toISOString() })
         .eq("campaign_key", campaignKey).eq("email", recipient.email);
       if (saveError) throw saveError;
       sent++;
