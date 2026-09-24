@@ -448,7 +448,7 @@ function FunnelRow({
         </div>
         <p className="text-2xl font-semibold text-[#1f1f1f]">{count}</p>
       </div>
-      <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#f3ede3]">
+      <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#343b46]">
         <div className="h-full rounded-full bg-[#f4a261]" style={{ width }} />
       </div>
     </div>
