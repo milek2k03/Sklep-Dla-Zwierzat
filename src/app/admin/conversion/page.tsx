@@ -138,10 +138,10 @@ export default async function AdminConversionPage() {
         <section className="rounded-lg border border-[#eee7db] bg-white shadow-sm">
           <div className="border-b border-[#eee7db] p-5">
             <h2 className="text-xl font-semibold text-[#1f1f1f]">
-              Najciekawsze produkty
+              Najpopularniejsze produkty
             </h2>
             <p className="mt-1 text-sm text-[#6d675f]">
-              Produkty z największą liczbą wejść i dodań do koszyka.
+              Porównanie wyświetleń i dodań do koszyka z ostatnich 30 dni.
             </p>
           </div>
           {summary.topProducts.length === 0 ? (
@@ -150,23 +150,19 @@ export default async function AdminConversionPage() {
             <div className="divide-y divide-[#eee7db]">
               {summary.topProducts.map((product) => (
                 <div key={product.key} className="p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-[#1f1f1f]">
-                        {product.name}
-                      </p>
-                      <p className="mt-1 text-xs text-[#8a8177]">
-                        {product.category || "Bez kategorii"}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-[#f5efe5] px-3 py-1 text-xs font-semibold text-[#9b4f1f]">
-                      {formatPercent(product.cartRate)}
-                    </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold leading-5 text-[#1f1f1f]">
+                      {product.name}
+                    </p>
+                    <p className="mt-1 text-xs text-[#8a8177]">
+                      {product.category || "Bez kategorii"}
+                    </p>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                    <MiniStat label="Wyświetlenia" value={product.views} />
-                    <MiniStat label="Koszyk" value={product.adds} />
-                  </div>
+                  <dl className="mt-4 grid grid-cols-3 overflow-hidden rounded-md border border-[#303744] bg-[#11151b]">
+                    <ProductStat label="Wyświetlenia" value={String(product.views)} />
+                    <ProductStat label="Dodania" value={String(product.adds)} />
+                    <ProductStat label="Dodania / wyświetlenia" value={formatPercent(product.cartRate)} accent />
+                  </dl>
                 </div>
               ))}
             </div>
@@ -459,11 +455,23 @@ function FunnelRow({
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: number }) {
+function ProductStat({
+  accent = false,
+  label,
+  value,
+}: {
+  accent?: boolean;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="rounded-lg bg-[#faf7f0] px-3 py-2">
-      <p className="text-xs text-[#8a8177]">{label}</p>
-      <p className="mt-1 font-semibold text-[#1f1f1f]">{value}</p>
+    <div className="min-w-0 border-r border-[#303744] px-3 py-3 last:border-r-0">
+      <dt className="min-h-8 text-[11px] font-semibold leading-4 text-[#a8b3c3]">
+        {label}
+      </dt>
+      <dd className={`mt-1 text-lg font-semibold leading-6 ${accent ? "text-[#f4a261]" : "text-[#f5f7fb]"}`}>
+        {value}
+      </dd>
     </div>
   );
 }
